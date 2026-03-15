@@ -1,0 +1,66 @@
+<div class="min-h-screen bg-white">
+
+  <app-navbar />
+
+  <div class="max-w-2xl mx-auto py-8 px-4">
+    <a routerLink="/patient/dashboard" class="text-[#1a3a5c] font-bold text-sm mb-6 inline-block hover:underline">← Retour</a>
+
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-md p-8">
+      <h2 class="text-[#1a3a5c] text-2xl font-bold mb-6">Prendre un nouveau rendez-vous</h2>
+
+      <!-- Calendar Header -->
+      <div class="flex justify-between items-center mb-4">
+        <span class="text-[#1a3a5c] font-semibold">Sélectionnez une date</span>
+        <span class="text-emerald-500 font-semibold">{{ currentMonthLabel }}</span>
+      </div>
+
+      <!-- Days Header -->
+      <div class="grid grid-cols-7 gap-1 mb-2">
+        <div *ngFor="let day of dayNames" class="text-center text-xs text-gray-400 py-1">{{ day }}</div>
+      </div>
+
+      <!-- Calendar Days -->
+      <div class="grid grid-cols-7 gap-1 mb-4">
+        <div *ngFor="let day of calendarDays"
+             [ngClass]="{
+            'bg-gray-100 text-gray-300 cursor-not-allowed': day.disabled,
+            'bg-emerald-500 text-white border-emerald-500': day.selected,
+            'border border-[#2ec4a0] text-[#1a3a5c] cursor-pointer hover:bg-[#e6f7f4]': !day.disabled && !day.selected
+          }"
+             class="text-center py-2 rounded-lg text-sm font-medium transition"
+             (click)="!day.disabled && selectDate(day)">
+          {{ day.number }}
+        </div>
+      </div>
+
+      <!-- Prev / Next -->
+      <div class="flex justify-between mb-6">
+        <button (click)="prevMonth()" class="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm cursor-pointer">‹ Précédent</button>
+        <button (click)="nextMonth()" class="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm cursor-pointer">Suivant ›</button>
+      </div>
+
+      <!-- Time Slots -->
+      <div *ngIf="selectedDate">
+        <p class="text-[#1a3a5c] font-semibold mb-3">Sélectionnez un créneau</p>
+        <div class="grid grid-cols-4 gap-2 mb-6">
+          <div *ngFor="let slot of timeSlots"
+               [ngClass]="{
+              'bg-gray-100 text-gray-400 cursor-not-allowed': !slot.available,
+              'bg-emerald-500 text-white': slot.selected,
+              'bg-[#d4f5ec] text-emerald-500 cursor-pointer hover:bg-emerald-500 hover:text-white': slot.available && !slot.selected
+            }"
+               class="text-center py-2 rounded-lg text-sm transition"
+               (click)="slot.available && selectSlot(slot)">
+            {{ slot.time }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirm Button -->
+      <button *ngIf="selectedSlot" class="w-full bg-emerald-500 text-white py-3 rounded-xl font-semibold text-base hover:bg-emerald-600 transition cursor-pointer">
+        Confirmer le RDV
+      </button>
+
+    </div>
+  </div>
+</div>
