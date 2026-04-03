@@ -1,0 +1,88 @@
+<div class="ml-52 mt-14 p-8 bg-slate-50 min-h-screen">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-2xl font-semibold text-gray-800">File d'Attente</h1>
+    <p class="text-sm text-gray-400 mt-1">Gestion des patients en file d'attente aujourd'huit</p>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <table class="w-full">
+
+      <!-- Head -->
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+      <thead>
+      <tr class="border-b border-gray-100 bg-green-50">
+        <th class="text-left text-sm font-bold text-gray-800 px-6 py-4">Patient</th>
+        <th class="text-left text-sm font-bold text-gray-800 px-6 py-4">Heure d'arrivée</th>
+        <th class="text-left text-sm font-bold text-gray-800 px-6 py-4">Temps d'attente</th>
+        <th class="text-left text-sm font-bold text-gray-800 px-6 py-4">Statut</th>
+        <th class="text-left text-sm font-bold text-gray-800 px-6 py-4">Check-in</th>
+        <th class="text-left text-sm font-bold text-gray-800 px-6 py-4">Actions</th>
+      </tr>
+      </thead>
+
+      <!-- Body -->
+      <tbody>
+      <tr *ngFor="let patient of patients"
+          class="border-b border-gray-50 hover:bg-green-50 transition">
+
+        <!-- Patient -->
+        <td class="px-6 py-4 text-sm font-normal text-gray-800">
+          {{ patient.nom }}
+        </td>
+
+        <!-- Heure arrivée -->
+        <td class="px-6 py-4">
+          <div class="flex items-center gap-2 text-sm text-gray-500">
+            <span class="material-symbols-outlined text-[16px] text-gray-400">schedule</span>
+            {{ patient.heureArrivee }}
+          </div>
+        </td>
+
+        <!-- Temps attente -->
+        <td class="px-6 py-4">
+            <span class="text-sm font-medium"
+                  [ngClass]="patient.tempsNegatif ? 'text-green-600' : 'text-orange-600'">
+              {{ patient.tempsAttente }}
+            </span>
+        </td>
+
+        <!-- Statut -->
+        <td class="px-6 py-4">
+            <span class="text-xs font-medium px-3 py-1 rounded-full border border-gray-200 text-gray-500 bg-white">
+              {{ patient.statut }}
+            </span>
+        </td>
+
+        <!-- Check-in -->
+        <td class="px-6 py-4">
+            <span class="text-sm font-medium"
+            [ngClass]="patient.checkIn ? 'text-teal-600' : 'text-gray-400'">
+            {{ patient.checkIn ? 'Oui' : 'Non' }}
+            </span>
+        </td>
+
+        <!-- Actions - replace the td -->
+        <td class="px-6 py-4">
+          <button (click)="voirDossier(patient)"
+                  class="flex items-center gap-2 text-sm text-white bg-teal-500 px-4 py-1.5 rounded-lg hover:bg-teal-600 transition">
+            Voir dossier
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </button>
+        </td>
+
+      </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty state -->
+    <div *ngIf="patients.length === 0"
+         class="flex flex-col items-center justify-center py-16 text-gray-300">
+      <span class="material-symbols-outlined text-5xl mb-3">group</span>
+      <p class="text-sm">Aucun patient en attente</p>
+    </div>
+
+  </div>
+</div>
