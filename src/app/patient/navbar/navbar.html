@@ -1,32 +1,33 @@
-<div class="flex items-center justify-between px-8 py-3 border-b border-gray-200 bg-white relative z-50">
-  <img src="logo.png" alt="Dockt" class="h-22 cursor-pointer" routerLink="/patient/dashboard" />
-  <p class="text-[#1a3a5c] text-xl font-medium">Bienvenue, Patient</p>
-  <div class="flex items-center gap-4">
+<div class="flex items-center justify-between px-4 sm:px-6 md:px-8 py-2 sm:py-3 border-b border-gray-200 bg-white relative z-50">
+  <img src="logo.png" alt="Dockt" class="h-14 sm:h-18 md:h-22 cursor-pointer" routerLink="/patient/dashboard" />
+  <p class="text-[#1a3a5c] text-sm sm:text-base md:text-xl font-medium hidden sm:block">Bienvenue, Patient</p>
+  <div class="flex items-center gap-2 sm:gap-4">
 
     <!-- Notification Icon -->
     <div class="relative cursor-pointer">
-      <i class="fa-regular fa-bell text-2xl text-[#1a3a5c]"></i>
+      <i class="fa-regular fa-bell text-lg sm:text-xl md:text-2xl text-[#1a3a5c]"></i>
       <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">3</span>
     </div>
 
     <!-- Profil Button -->
     <div class="relative">
-      <button (click)="toggleMenu()" class="text-[#1a3a5c] border-2 border-[#1a3a5c] px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-medium">
+      <button (click)="toggleMenu()"
+              class="text-[#1a3a5c] border-2 border-[#1a3a5c] px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm flex items-center gap-1 sm:gap-2 font-medium">
         <i class="fa-regular fa-user text-[#1a3a5c]"></i>
-        Profil ▾
+        <span>Profil ▾</span>
       </button>
-      <div *ngIf="menuOpen" class="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-2">
-        <a class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer">
+      <div *ngIf="menuOpen"
+           class="absolute right-0 mt-2 w-44 sm:w-56 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-2">
+        <a class="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer">
           <i class="fa-regular fa-address-card"></i> Mon profil
         </a>
-        <a class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer border-y border-gray-50">
+        <a class="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer border-y border-gray-50">
           <i class="fa-solid fa-key"></i> Changer mot de passe
         </a>
-        <a class="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 font-medium flex items-center gap-2 cursor-pointer">
+        <a class="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-500 hover:bg-red-50 font-medium flex items-center gap-2 cursor-pointer">
           <i class="fa-solid fa-arrow-right-from-bracket"></i> Déconnexion
         </a>
       </div>
     </div>
-
   </div>
 </div>

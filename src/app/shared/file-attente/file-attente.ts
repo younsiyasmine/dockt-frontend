@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NgFor, NgClass } from '@angular/common';
+import { NgFor, NgClass, NgIf } from '@angular/common';
 
 interface PatientAttente {
   nom: string;
@@ -13,7 +13,7 @@ interface PatientAttente {
 @Component({
   selector: 'app-file-attente',
   standalone: true,
-  imports: [NgFor, NgClass],
+  imports: [NgFor, NgClass, NgIf],
   templateUrl: './file-attente.html',
   styleUrl: './file-attente.css',
 })

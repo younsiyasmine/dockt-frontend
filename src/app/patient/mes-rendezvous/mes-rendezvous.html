@@ -1,0 +1,54 @@
+<div class="min-h-screen bg-gray-50 font-sans">
+  <app-navbar></app-navbar>
+
+  <main class="max-w-3xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4 md:px-6">
+    <a (click)="goBack()"
+       class="text-[#1a3a5c] font-bold text-sm mb-4 sm:mb-6 inline-block hover:underline cursor-pointer">
+      ← Retour
+    </a>
+
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-8 border border-gray-100">
+      <h1 class="text-lg sm:text-xl md:text-2xl font-semibold text-[#1a3a5c] mb-4 sm:mb-6 text-center">
+        Mes Rendez-vous
+      </h1>
+
+      <div class="space-y-3 sm:space-y-4">
+        @for (rdv of rendezVousList; track rdv.id_rdv) {
+          <div class="border border-gray-100 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 hover:shadow-sm transition-all duration-300">
+
+            <div class="flex justify-between items-start sm:items-center gap-3 mb-3 sm:mb-4">
+              <div>
+                <h3 class="text-sm sm:text-base font-semibold text-[#1a3a5c]">
+                  {{ rdv.date_prevue }} à {{ rdv.heure_prevue }}
+                </h3>
+                <p class="text-gray-400 text-xs sm:text-sm mt-0.5">{{ rdv.medecin }}</p>
+              </div>
+              <span [class]="getStatusClass(rdv.statut)"
+                    class="text-white px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0">
+                {{ rdv.statut }}
+              </span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <button (click)="modifierRdv(rdv)"
+                      class="flex-1 bg-[#34495e] text-white py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-90 transition cursor-pointer">
+                <i class="fa-regular fa-pen-to-square"></i> Modifier
+              </button>
+              <button (click)="annulerRdv(rdv.id_rdv)"
+                      class="flex-1 bg-red-400 text-white py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-90 transition cursor-pointer">
+                <i class="fa-regular fa-trash-can"></i> Annuler
+              </button>
+            </div>
+
+          </div>
+        } @empty {
+          <div class="text-center py-6 sm:py-8">
+            <p class="text-gray-400 text-xs sm:text-sm italic">
+              Vous n'avez aucun rendez-vous enregistré.
+            </p>
+          </div>
+        }
+      </div>
+    </div>
+  </main>
+</div>

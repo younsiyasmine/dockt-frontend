@@ -1,0 +1,26 @@
+:host {
+  display: block;
+  background-color: #f3f4f6;
+}
+
+.group:hover {
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.bg-black\/50 {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.z-50 { z-index: 50; }
+.z-60 { z-index: 60; }
+
+input[readonly] {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -98,4 +98,14 @@ export class PrendreRdv implements OnInit {
     this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
     this.generateCalendar();
   }
+
+  showToast = false;
+
+  confirmerRdv() {
+    // API call later
+    this.showToast = true;
+    setTimeout(() => {
+      this.showToast = false;
+    }, 3000);
+  }
 }
