@@ -1,0 +1,132 @@
+<div class="min-h-screen bg-gray-50 font-sans">
+  <app-navbar />
+
+  <main class="max-w-3xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4 md:px-6">
+    <a (click)="goBack()"
+       class="text-[#1a3a5c] hover:underline mb-4 sm:mb-6 inline-block font-bold text-sm cursor-pointer">
+      ← Retour
+    </a>
+
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-8 border border-gray-100">
+
+      <!-- Title + Button -->
+      <div class="flex justify-between items-center mb-4 sm:mb-6">
+        <h1 class="text-lg sm:text-xl md:text-2xl font-semibold text-[#1a3a5c]">
+          Mes Comptes-rendus
+        </h1>
+        <button (click)="showDemandeModal = true"
+                class="flex items-center gap-2 bg-emerald-500 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-emerald-600 transition cursor-pointer">
+          <i class="fa-solid fa-plus"></i>
+          Demander un CR
+        </button>
+      </div>
+
+      <!-- List -->
+      <div class="space-y-3 sm:space-y-4">
+        @for (cr of compteRendusList; track cr.id_cr) {
+          <div class="border border-gray-100 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 hover:shadow-sm transition-all duration-300">
+
+            <div class="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+              <div class="bg-teal-50 p-2 sm:p-3 rounded-lg sm:rounded-xl text-emerald-500 flex-shrink-0">
+                <i class="fa-solid fa-file-medical text-base sm:text-lg"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start gap-2">
+                  <h3 class="text-sm sm:text-base font-semibold text-[#1a3a5c]">
+                    Compte-rendu Médical
+                  </h3>
+                  <span [class]="getStatusClass(cr.statut)"
+                        class="px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0">
+                    {{ cr.statut }}
+                  </span>
+                </div>
+                <p class="text-gray-400 text-xs sm:text-sm mt-0.5">
+                  {{ cr.date_redaction }} • {{ cr.medecin }}
+                </p>
+                <p class="text-gray-400 text-xs sm:text-sm mt-2 italic leading-relaxed">
+                  {{ cr.contenu }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <button (click)="viewReport(cr)"
+                      class="flex-1 bg-[#34495e]  text-white py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-gray-800 transition cursor-pointer">
+                <i class="fa-regular fa-eye"></i> Voir
+              </button>
+              <button (click)="downloadPDF(cr)"
+                      class="flex-1 bg-emerald-500 text-white py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-emerald-600 transition cursor-pointer">
+                <i class="fa-solid fa-cloud-arrow-down"></i> Télécharger PDF
+              </button>
+            </div>
+
+          </div>
+        } @empty {
+          <div class="text-center py-6 sm:py-8">
+            <p class="text-gray-400 text-xs sm:text-sm italic">
+              Aucun compte-rendu disponible pour le moment.
+            </p>
+          </div>
+        }
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Demande Modal — outside main for proper overlay -->
+<div *ngIf="showDemandeModal"
+     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+  <div class="bg-white rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl">
+
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-base sm:text-lg font-semibold text-gray-800">
+        Demander un Compte-rendu
+      </h2>
+      <button (click)="showDemandeModal = false"
+              class="text-gray-400 hover:text-gray-600 transition">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <!-- RDV Select -->
+    <div class="mb-4">
+      <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        Rendez-vous concerné
+      </label>
+      <select [(ngModel)]="demandeRdvId"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400">
+        <option value="" disabled selected>Sélectionnez un rendez-vous</option>
+        <option *ngFor="let rdv of rendezVousList" [value]="rdv.id_rdv">
+          {{ rdv.date_prevue }} à {{ rdv.heure_prevue }} — {{ rdv.medecin }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Message -->
+    <div class="mb-5">
+      <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        Message <span class="text-gray-400 font-normal">(optionnel)</span>
+      </label>
+      <textarea [(ngModel)]="demandeMessage"
+                rows="3"
+                placeholder="Ex: Pouvez-vous me fournir le compte-rendu de ma dernière consultation ?"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none">
+      </textarea>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex gap-3">
+      <button (click)="showDemandeModal = false"
+              class="flex-1 border border-gray-200 text-gray-600 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-50 transition">
+        Annuler
+      </button>
+      <button (click)="envoyerDemande()"
+              [disabled]="!demandeRdvId"
+              class="flex-1 bg-teal-500 text-white py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-teal-600 transition disabled:opacity-50">
+        Envoyer
+      </button>
+    </div>
+
+  </div>
+</div>
