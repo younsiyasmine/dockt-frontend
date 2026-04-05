@@ -1,19 +1,21 @@
 <div class="min-h-screen bg-white">
 
-  <app-navbar />
+  <app-navbar></app-navbar>
 
   <!-- Toast -->
   <div *ngIf="showToast"
-       class="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-white border border-emerald-500 text-[#1a3a5c] px-5 py-3 rounded-2xl shadow-lg animate-fade-down">
+       class="fixed top-5 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 bg-white border border-emerald-500 text-[#1a3a5c] px-5 py-3 rounded-2xl shadow-lg animate-fade-down">
     <i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>
-    <span class="text-sm font-medium">C'est confirmé ! Votre rendez-vous a bien été enregistré.</span>
+    <span class="text-sm font-medium">{{ toastMessage }}</span>
   </div>
 
   <div class="max-w-2xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
     <a routerLink="/patient/dashboard" class="text-[#1a3a5c] font-bold text-sm mb-4 sm:mb-6 inline-block hover:underline">← Retour</a>
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-md p-4 sm:p-6 md:p-8">
-      <h2 class="text-[#1a3a5c] text-lg sm:text-xl md:text-2xl font-bold mb-4 sm:mb-6">Prendre un nouveau rendez-vous</h2>
+      <h2 class="text-[#1a3a5c] text-lg sm:text-xl md:text-2xl font-bold mb-4 sm:mb-6">
+        {{ isEditMode ? 'Modifier le rendez-vous' : 'Prendre un nouveau rendez-vous' }}
+      </h2>
 
       <!-- Calendar Header -->
       <div class="flex justify-between items-center mb-3 sm:mb-4">
@@ -70,11 +72,11 @@
         </div>
       </div>
 
-      <!-- Confirm Button -->
-      <button *ngIf="selectedSlot"
+      <!-- Confirm / Modifier Button -->
+      <button *ngIf="selectedDate && selectedSlot"
               (click)="confirmerRdv()"
               class="w-full bg-emerald-500 text-white py-2.5 sm:py-3 rounded-xl font-semibold text-sm sm:text-base hover:bg-emerald-600 transition cursor-pointer">
-        Confirmer le RDV
+        {{ isEditMode ? 'Modifier le rendez-vous' : 'Confirmer le rendez-vous' }}
       </button>
 
     </div>

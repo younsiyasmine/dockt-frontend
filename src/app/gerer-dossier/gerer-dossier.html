@@ -1,121 +1,188 @@
-<div *ngIf="!afficherApercuA4 && !afficherApercuCompteRenduA4" class="p-6 bg-gray-50 min-h-screen">
+<div *ngIf="!afficherApercuA4 && !afficherApercuCompteRenduA4" class="ml-0 sm:ml-64 mt-14 p-4 sm:p-6 bg-gray-50 min-h-screen">
 
-  <h1 class="text-2xl font-bold text-gray-800 mb-6">Dossier Patient</h1>
-  <button class="flex items-center text-teal-600 hover:text-teal-700 hover:underline cursor-pointer font-medium mb-4 transition">
-    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+  <h1 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Dossier Patient</h1>
+
+  <button class="flex items-center text-teal-600 hover:text-teal-700 hover:underline cursor-pointer font-medium mb-4 transition text-sm">
+    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+    </svg>
     Retour à la liste des patients
   </button>
 
-  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6 flex justify-between items-center">
-    <div class="flex items-center space-x-4">
-      <div class="w-16 h-16 rounded-full overflow-hidden bg-gray-100 border-2 border-teal-500 shadow-sm flex items-center justify-center">
-        <img *ngIf="patient.image_biometrique" [src]="patient.image_biometrique" alt="Photo biometrique" class="w-full h-full object-cover">
-        <span *ngIf="!patient.image_biometrique" class="text-teal-600 font-bold text-xl uppercase">
+  <!-- Patient Header -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-5 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border-2 border-teal-500 shadow-sm flex items-center justify-center flex-shrink-0">
+        <img *ngIf="patient.image_biometrique" [src]="patient.image_biometrique" alt="Photo" class="w-full h-full object-cover">
+        <span *ngIf="!patient.image_biometrique" class="text-teal-600 font-bold text-base uppercase">
           {{ patient.nom[0] }}{{ patient.prenom[0] }}
         </span>
       </div>
-      <div>
-        <h2 class="text-2xl font-bold text-gray-800">{{ patient.nom }} {{ patient.prenom }}</h2>
-      </div>
+      <h2 class="text-base sm:text-lg font-bold text-gray-800">{{ patient.nom }} {{ patient.prenom }}</h2>
     </div>
 
-    <div class="flex space-x-3">
-      <button (click)="ouvrirModaleOrdonnance()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition cursor-pointer flex items-center">
-        <svg class="w-4 h-4 mr-2 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+    <div class="flex gap-2 w-full sm:w-auto">
+      <button (click)="ouvrirModaleOrdonnance()"
+              class="flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-50 transition cursor-pointer flex items-center justify-center gap-2">
+        <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+        </svg>
         Dicter ordonnance
       </button>
-      <button (click)="ouvrirModaleCompteRendu()" class="px-4 py-2 bg-teal-500 rounded-md text-white font-medium hover:bg-teal-600 transition shadow-sm cursor-pointer">
+      <button (click)="ouvrirModaleCompteRendu()"
+              class="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-800 rounded-lg text-white text-sm font-medium hover:bg-teal-600 transition shadow-sm cursor-pointer">
         Dicter compte rendu
       </button>
     </div>
   </div>
 
+  <!-- Tabs + Content -->
   <div class="bg-white rounded-lg shadow-sm border border-gray-100">
 
-    <div class="flex border-b border-gray-200 px-6 pt-4 space-x-8">
-      <button (click)="changerOnglet('infos')" [ngClass]="{'border-b-2 border-teal-500 text-teal-600 font-semibold': ongletActif === 'infos', 'text-gray-500 hover:text-gray-700 font-medium': ongletActif !== 'infos'}" class="pb-3 px-1 transition flex items-center space-x-2 cursor-pointer">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+    <!-- Tabs -->
+    <div class="flex border-b border-gray-200 px-4 sm:px-6 pt-3 overflow-x-auto gap-4 sm:gap-6">
+      <button (click)="changerOnglet('infos')"
+              [ngClass]="ongletActif === 'infos' ? 'border-b-2 border-teal-500 text-teal-600 font-semibold' : 'text-gray-500 hover:text-gray-700 font-medium'"
+              class="pb-3 px-1 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap text-xs sm:text-sm flex-shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+        </svg>
         <span>Informations personnelles</span>
       </button>
 
-      <button (click)="changerOnglet('historique')" [ngClass]="{'border-b-2 border-teal-500 text-teal-600 font-semibold': ongletActif === 'historique', 'text-gray-500 hover:text-gray-700 font-medium': ongletActif !== 'historique'}" class="pb-3 px-1 transition flex items-center space-x-2 cursor-pointer">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+      <button (click)="changerOnglet('historique')"
+              [ngClass]="ongletActif === 'historique' ? 'border-b-2 border-teal-500 text-teal-600 font-semibold' : 'text-gray-500 hover:text-gray-700 font-medium'"
+              class="pb-3 px-1 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap text-xs sm:text-sm flex-shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
         <span>Historique RDV</span>
       </button>
 
-      <button (click)="changerOnglet('ordonnances')" [ngClass]="{'border-b-2 border-teal-500 text-teal-600 font-semibold': ongletActif === 'ordonnances', 'text-gray-500 hover:text-gray-700 font-medium': ongletActif !== 'ordonnances'}" class="pb-3 px-1 transition flex items-center space-x-2 cursor-pointer">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+      <button (click)="changerOnglet('ordonnances')"
+              [ngClass]="ongletActif === 'ordonnances' ? 'border-b-2 border-teal-500 text-teal-600 font-semibold' : 'text-gray-500 hover:text-gray-700 font-medium'"
+              class="pb-3 px-1 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap text-xs sm:text-sm flex-shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
         <span>Ordonnance</span>
       </button>
 
-      <button (click)="changerOnglet('comptesRendus')" [ngClass]="{'border-b-2 border-teal-500 text-teal-600 font-semibold': ongletActif === 'comptesRendus', 'text-gray-500 hover:text-gray-700 font-medium': ongletActif !== 'comptesRendus'}" class="pb-3 px-1 transition flex items-center space-x-2 cursor-pointer">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+      <button (click)="changerOnglet('comptesRendus')"
+              [ngClass]="ongletActif === 'comptesRendus' ? 'border-b-2 border-teal-500 text-teal-600 font-semibold' : 'text-gray-500 hover:text-gray-700 font-medium'"
+              class="pb-3 px-1 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap text-xs sm:text-sm flex-shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
         <span>Compte rendu</span>
       </button>
     </div>
 
-    <div class="p-6">
-      <div *ngIf="ongletActif === 'infos'" class="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-12">
-        <div><p class="text-sm text-gray-500 mb-1">Nom</p><p class="text-gray-800 font-medium">{{ patient.nom }}</p></div>
-        <div><p class="text-sm text-gray-500 mb-1">Prénom</p><p class="text-gray-800 font-medium">{{ patient.prenom }}</p></div>
-        <div><p class="text-sm text-gray-500 mb-1">CIN</p><p class="text-gray-800 font-medium">{{ patient.cin }}</p></div>
-        <div><p class="text-sm text-gray-500 mb-1">Date de naissance</p><p class="text-gray-800 font-medium">{{ patient.date_naissance }}</p></div>
-        <div><p class="text-sm text-gray-500 mb-1">Téléphone</p><p class="text-gray-800 font-medium">{{ patient.num_telephone }}</p></div>
-        <div><p class="text-sm text-gray-500 mb-1">Sexe</p><p class="text-gray-800 font-medium">{{ patient.sex ? 'Homme' : 'Femme' }}</p></div>
-        <div class="col-span-2"><p class="text-sm text-gray-500 mb-1">Adresse</p><p class="text-gray-800 font-medium">{{ patient.adresse }}</p></div>
+    <!-- Tab Content -->
+    <div class="p-4 sm:p-6">
+
+      <!-- Infos -->
+      <div *ngIf="ongletActif === 'infos'" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-5 gap-x-8">
+        <div>
+          <p class="text-xs text-gray-500 mb-1">Nom</p>
+          <p class="text-sm text-gray-800 font-medium">{{ patient.nom }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 mb-1">Prénom</p>
+          <p class="text-sm text-gray-800 font-medium">{{ patient.prenom }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 mb-1">CIN</p>
+          <p class="text-sm text-gray-800 font-medium">{{ patient.cin }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 mb-1">Date de naissance</p>
+          <p class="text-sm text-gray-800 font-medium">{{ patient.date_naissance }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 mb-1">Téléphone</p>
+          <p class="text-sm text-gray-800 font-medium">{{ patient.num_telephone }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 mb-1">Sexe</p>
+          <p class="text-sm text-gray-800 font-medium">{{ patient.sex ? 'Homme' : 'Femme' }}</p>
+        </div>
+        <div class="sm:col-span-2 md:col-span-3">
+          <p class="text-xs text-gray-500 mb-1">Adresse</p>
+          <p class="text-sm text-gray-800 font-medium">{{ patient.adresse }}</p>
+        </div>
       </div>
 
+      <!-- Historique -->
       <div *ngIf="ongletActif === 'historique'">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Rendez-vous</h3>
-        <div class="space-y-3">
-          <div *ngFor="let rdv of historiqueRdv" class="border border-gray-200 rounded-lg p-4 flex justify-between items-center bg-white shadow-sm hover:shadow transition">
-            <div class="flex items-center space-x-4">
-              <div class="text-teal-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
-              <div><p class="font-medium text-gray-800 text-sm">{{ rdv.titre }}</p><p class="text-xs text-gray-500 mt-0.5">{{ rdv.date_prevue }} à {{ rdv.heure_prevue }}</p></div>
+        <h3 class="text-sm font-bold text-gray-800 mb-3">Rendez-vous</h3>
+        <div class="space-y-2">
+          <div *ngFor="let rdv of historiqueRdv"
+               class="border border-gray-200 rounded-lg p-3 flex justify-between items-center bg-white shadow-sm hover:shadow transition">
+            <div class="flex items-center gap-3">
+              <div class="text-teal-500 flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-medium text-gray-800 text-xs">{{ rdv.titre }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ rdv.date_prevue }} à {{ rdv.heure_prevue }}</p>
+              </div>
             </div>
-            <span class="px-3 py-1 rounded-full text-xs font-semibold" [ngClass]="{'bg-green-100 text-green-700': rdv.statut_consultation === 'terminé', 'bg-gray-100 text-gray-600': rdv.statut_consultation !== 'terminé'}">{{ rdv.statut_consultation }}</span>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0"
+                  [ngClass]="rdv.statut_consultation === 'terminé' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'">
+              {{ rdv.statut_consultation }}
+            </span>
           </div>
         </div>
       </div>
 
+      <!-- Ordonnances -->
       <div *ngIf="ongletActif === 'ordonnances'">
-        <div *ngFor="let ord of ordonnances" class="p-4 bg-teal-50 border border-teal-100 rounded-md mb-3">
-          <div class="flex justify-between mb-2"><span class="font-bold text-teal-800">Ordonnance ({{ ord.type }}) du {{ ord.date_emmission }}</span></div>
-          <p class="text-gray-700">{{ ord.contenu_texte }}</p>
+        <div *ngFor="let ord of ordonnances" class="p-4 bg-teal-50 border border-teal-100 rounded-lg mb-3">
+          <p class="font-bold text-teal-800 text-sm mb-1">Ordonnance ({{ ord.type }}) du {{ ord.date_emmission }}</p>
+          <p class="text-gray-700 text-sm">{{ ord.contenu_texte }}</p>
         </div>
       </div>
 
-      <div *ngIf="ongletActif === 'comptesRendus'" class="space-y-4">
-        <div *ngFor="let cr of comptesRendus" class="p-5 bg-white border rounded-xl shadow-sm hover:shadow-md transition group"
-             [ngClass]="{'border-yellow-200': cr.statut === 'Brouillon', 'border-gray-200': cr.statut === 'Validé'}">
+      <!-- Comptes Rendus -->
+      <div *ngIf="ongletActif === 'comptesRendus'" class="space-y-3">
+        <div *ngFor="let cr of comptesRendus"
+             class="p-4 bg-white border rounded-xl shadow-sm hover:shadow-md transition"
+             [ngClass]="cr.statut === 'Brouillon' ? 'border-yellow-200' : 'border-gray-200'">
 
-          <div class="flex justify-between items-start mb-3">
-            <div>
-              <p class="font-bold text-gray-800 text-lg">Compte Rendu du {{ cr.date_redaction }}</p>
-              <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{ cr.contenu }}</p>
+          <div class="flex justify-between items-start mb-2 gap-3">
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-gray-800 text-sm">Compte Rendu du {{ cr.date_redaction }}</p>
+              <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ cr.contenu }}</p>
             </div>
-
-            <span class="px-3 py-1 text-xs rounded-full font-bold uppercase tracking-wider ml-4"
-                  [ngClass]="{'bg-yellow-100 text-yellow-800': cr.statut === 'Brouillon', 'bg-green-100 text-green-700': cr.statut === 'Validé'}">
+            <span class="px-2.5 py-1 text-xs rounded-full font-bold uppercase tracking-wider flex-shrink-0"
+                  [ngClass]="cr.statut === 'Brouillon' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-700'">
               {{ cr.statut }}
             </span>
           </div>
 
-          <div class="mt-4 pt-4 border-t flex justify-end"
-               [ngClass]="{'border-yellow-100': cr.statut === 'Brouillon', 'border-gray-100': cr.statut === 'Validé'}">
-
-            <button *ngIf="cr.statut === 'Brouillon'" (click)="ouvrirModaleCompteRendu()" class="text-yellow-700 hover:text-yellow-900 font-medium text-sm flex items-center transition cursor-pointer bg-yellow-50 px-4 py-2 rounded-lg hover:bg-yellow-100">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+          <div class="mt-3 pt-3 border-t flex justify-end"
+               [ngClass]="cr.statut === 'Brouillon' ? 'border-yellow-100' : 'border-gray-100'">
+            <button *ngIf="cr.statut === 'Brouillon'" (click)="ouvrirModaleCompteRendu()"
+                    class="text-yellow-700 hover:text-yellow-900 font-medium text-xs flex items-center transition cursor-pointer bg-yellow-50 px-3 py-1.5 rounded-lg hover:bg-yellow-100">
+              <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
               Reprendre la dictée
             </button>
-
-            <button *ngIf="cr.statut === 'Validé'" (click)="ouvrirApercuCompteRendu()" class="text-teal-600 hover:text-teal-800 font-medium text-sm flex items-center transition cursor-pointer hover:bg-teal-50 px-4 py-2 rounded-lg">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            <button *ngIf="cr.statut === 'Validé'" (click)="ouvrirApercuCompteRendu()"
+                    class="text-teal-600 hover:text-teal-800 font-medium text-xs flex items-center transition cursor-pointer hover:bg-teal-50 px-3 py-1.5 rounded-lg">
+              <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+              </svg>
               Aperçu & Impression A4
             </button>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>

@@ -2,7 +2,7 @@
   <app-navbar />
 
   <main class="max-w-3xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4 md:px-6">
-    <a (click)="goBack()"
+    <a routerLink="/patient/dashboard"
        class="text-[#1a3a5c] hover:underline mb-4 sm:mb-6 inline-block font-bold text-sm cursor-pointer">
       ← Retour
     </a>
@@ -95,7 +95,7 @@
         Rendez-vous concerné
       </label>
       <select [(ngModel)]="demandeRdvId"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400">
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400 cursor-pointer">
         <option value="" disabled selected>Sélectionnez un rendez-vous</option>
         <option *ngFor="let rdv of rendezVousList" [value]="rdv.id_rdv">
           {{ rdv.date_prevue }} à {{ rdv.heure_prevue }} — {{ rdv.medecin }}
@@ -118,12 +118,12 @@
     <!-- Buttons -->
     <div class="flex gap-3">
       <button (click)="showDemandeModal = false"
-              class="flex-1 border border-gray-200 text-gray-600 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-50 transition">
+              class="flex-1 border border-gray-200 text-gray-600 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-50 transition cursor-pointer">
         Annuler
       </button>
       <button (click)="envoyerDemande()"
               [disabled]="!demandeRdvId"
-              class="flex-1 bg-teal-500 text-white py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-teal-600 transition disabled:opacity-50">
+              class="flex-1 bg-teal-500 text-white py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-teal-600 transition disabled:opacity-50 cursor-pointer">
         Envoyer
       </button>
     </div>

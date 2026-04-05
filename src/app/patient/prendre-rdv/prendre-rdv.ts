@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
 
 interface CalendarDay {
@@ -17,11 +17,17 @@ interface TimeSlot {
 
 @Component({
   selector: 'app-prendre-rdv',
+  standalone: true,
   imports: [CommonModule, RouterLink, Navbar],
   templateUrl: './prendre-rdv.html',
   styleUrl: './prendre-rdv.css',
 })
 export class PrendreRdv implements OnInit {
+  isEditMode = false;
+  rdvId: string | null = null;
+  showToast = false;
+  toastMessage = '';
+
   currentDate = new Date();
   selectedDate: CalendarDay | null = null;
   selectedSlot: TimeSlot | null = null;
@@ -44,12 +50,37 @@ export class PrendreRdv implements OnInit {
     { time: '16:30', available: true, selected: false },
   ];
 
+  // ✅ Single constructor with both dependencies
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+  ) {}
+
   get currentMonthLabel(): string {
     return this.currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   }
 
   ngOnInit() {
     this.generateCalendar();
+    this.rdvId = this.route.snapshot.paramMap.get('id');
+    if (this.rdvId) {
+      this.isEditMode = true;
+    }
+  }
+
+  // ✅ Single confirmerRdv with redirect after toast
+  confirmerRdv() {
+    if (this.isEditMode) {
+      this.toastMessage = 'Rendez-vous modifié avec succès !';
+    } else {
+      this.toastMessage = "C'est Confirmé ! Votre rendez-vous a bien été enregistrer.";
+    }
+
+    this.showToast = true;
+    setTimeout(() => {
+      this.showToast = false;
+      this.router.navigate(['/patient/mes-rendezvous']);
+    }, 3000);
   }
 
   generateCalendar() {
@@ -58,13 +89,10 @@ export class PrendreRdv implements OnInit {
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = new Date();
-
     this.calendarDays = [];
-
     for (let i = 0; i < firstDay; i++) {
       this.calendarDays.push({ number: '', disabled: true, selected: false });
     }
-
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
       this.calendarDays.push({
@@ -76,6 +104,7 @@ export class PrendreRdv implements OnInit {
   }
 
   selectDate(day: CalendarDay) {
+    if (day.disabled) return;
     this.calendarDays.forEach((d) => (d.selected = false));
     day.selected = true;
     this.selectedDate = day;
@@ -84,6 +113,7 @@ export class PrendreRdv implements OnInit {
   }
 
   selectSlot(slot: TimeSlot) {
+    if (!slot.available) return;
     this.timeSlots.forEach((s) => (s.selected = false));
     slot.selected = true;
     this.selectedSlot = slot;
@@ -97,15 +127,5 @@ export class PrendreRdv implements OnInit {
   nextMonth() {
     this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
     this.generateCalendar();
-  }
-
-  showToast = false;
-
-  confirmerRdv() {
-    // API call later
-    this.showToast = true;
-    setTimeout(() => {
-      this.showToast = false;
-    }, 3000);
   }
 }

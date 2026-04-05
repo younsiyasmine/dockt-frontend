@@ -20,6 +20,7 @@ export const routes: Routes = [
   { path: '', redirectTo: 'patient/dashboard', pathMatch: 'full' },
   { path: 'patient/dashboard', component: Dashboard },
   { path: 'patient/prendre-rdv', component: PrendreRdv },
+  { path: 'patient/prendre-rdv/:id', component: PrendreRdv },
   { path: 'patient/mes-rendezvous', component: MesRendezvousComponent },
   { path: 'patient/ma-position', component: MaPosition },
   { path: 'patient/mes-ordonnances', component: MesOrdonnancesComponent },
@@ -35,16 +36,15 @@ export const routes: Routes = [
   // URL : http://localhost:4200/mes-actes
   { path: 'mes-actes', component: ActeMedicaleComponent },
 
-  // Redirection si l'URL est erronée
-  { path: '**', redirectTo: '' },
-
   //dial marwa
-  { path: 'dossier-patient', component: GererDossier },
   { path: 'dossier-patient', component: GererDossier },
   { path: 'dicter-ordonnance', component: DicterOrdonnance },
   { path: 'dicter-compte-rendu', component: DicterCompteRendu },
   { path: 'voir-ordonnance', component: VueOrdonnance },
   { path: 'ajouter-rdv', component: AjouterRdv },
   { path: 'voir-compte-rendu', component: VueCompteRendu },
+
+  // Redirection si l'URL est erronée
+  { path: '**', redirectTo: '' },
 ];
 

@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { Navbar } from '../navbar/navbar'; // Vérifie le chemin relatif vers ton composant navbar
+import { RouterModule, Router } from '@angular/router'; // 1. Added Router import
+import { Navbar } from '../navbar/navbar';
 
-// Interface basée sur la table SQL "rdv"
 export interface RendezVous {
   id_rdv: number;
   date_prevue: string;
@@ -15,14 +14,18 @@ export interface RendezVous {
 @Component({
   selector: 'app-mes-rendezvous',
   standalone: true,
-  // AJOUT du NavbarComponent dans les imports
   imports: [CommonModule, RouterModule, Navbar],
   templateUrl: './mes-rendezvous.html',
   styleUrl: './mes-rendezvous.css',
 })
 export class MesRendezvousComponent {
-  // La variable isProfileMenuOpen peut être supprimée si la Navbar gère son propre état
+  // --- UI State ---
   isProfileMenuOpen = false;
+  showCancelModal = false;
+  selectedRdv: RendezVous | null = null;
+
+  // 2. Inject Router in the constructor
+  constructor(private router: Router) {}
 
   rendezVousList: RendezVous[] = [
     {
@@ -41,25 +44,32 @@ export class MesRendezvousComponent {
     },
   ];
 
-  // --- NOUVELLES MÉTHODES ---
-
   goBack(): void {
     window.history.back();
   }
 
+  // 3. Updated this function to navigate to the route we created
   modifierRdv(rdv: RendezVous): void {
-    console.log('Modifier le rendez-vous ID :', rdv.id_rdv);
-    // Logique de redirection ou ouverture de formulaire
+    console.log('Redirection vers modification pour ID :', rdv.id_rdv);
+
+    // Navigates to /patient/prendre-rdv/1 or /patient/prendre-rdv/2
+    this.router.navigate(['/patient/prendre-rdv', rdv.id_rdv]);
   }
 
-  annulerRdv(id: number): void {
-    if (confirm('Êtes-vous sûr de vouloir annuler ce rendez-vous ?')) {
-      console.log('Annulation du rendez-vous ID :', id);
-      // Logique pour appeler ton service Spring Boot
+  // --- MODAL LOGIC (KEEPING YOUR WORK) ---
+
+  openCancelModal(rdv: RendezVous): void {
+    this.selectedRdv = rdv;
+    this.showCancelModal = true;
+  }
+
+  confirmCancel(): void {
+    if (this.selectedRdv) {
+      console.log('Annulation confirmée pour le RDV ID :', this.selectedRdv.id_rdv);
+      this.showCancelModal = false;
+      this.selectedRdv = null;
     }
   }
-
-  // --- LOGIQUE EXISTANTE ---
 
   toggleProfileMenu() {
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
@@ -68,11 +78,11 @@ export class MesRendezvousComponent {
   getStatusClass(statut: string): string {
     switch (statut) {
       case 'Confirmé':
-        return 'bg-[#2ecc71]'; // Vert
+        return 'bg-[#2ecc71]';
       case 'En attente':
-        return 'bg-yellow-500'; // Orange
+        return 'bg-yellow-500';
       case 'Annulé':
-        return 'bg-red-400'; // Rouge
+        return 'bg-red-400';
       default:
         return 'bg-[#1a3a5c]';
     }

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 interface RdvData {
   id_rdv: number;
@@ -13,12 +14,12 @@ interface RdvData {
 @Component({
   selector: 'app-planning',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './planning.html',
   styleUrls: ['./planning.css'],
 })
 export class Planning implements OnInit {
-  currentDate: Date = new Date(2026, 1, 2); // Février 2026 pour correspondre à ton Figma
+  currentDate: Date = new Date(2026, 1, 2);
   daysOfWeek: any[] = [];
   hours = [
     '8:00',
@@ -43,7 +44,6 @@ export class Planning implements OnInit {
     '17:30',
   ];
 
-  // Données de test basées sur ta structure SQL
   rdvList: RdvData[] = [
     {
       id_rdv: 1,
@@ -116,11 +116,13 @@ export class Planning implements OnInit {
   }
 
   prevWeek() {
+    this.currentDate = new Date(this.currentDate);
     this.currentDate.setDate(this.currentDate.getDate() - 7);
     this.generateWeek();
   }
 
   nextWeek() {
+    this.currentDate = new Date(this.currentDate);
     this.currentDate.setDate(this.currentDate.getDate() + 7);
     this.generateWeek();
   }
@@ -132,8 +134,7 @@ export class Planning implements OnInit {
     );
   }
 
-  openAddRdvModal() {
-    console.log('open add rdv modal');
-    // modal logic later when we connect to backend
+  isFullHour(hour: string): boolean {
+    return hour.endsWith(':00');
   }
 }
