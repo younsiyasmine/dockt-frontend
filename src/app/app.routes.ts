@@ -8,6 +8,12 @@ import { ActeMedicaleComponent } from './acte-medicale/acte-medicale';
 import { MesRendezvousComponent } from './patient/mes-rendezvous/mes-rendezvous';
 import { MesOrdonnancesComponent } from './patient/mes-ordonnances/mes-ordonnances';
 import { MesCompterenduComponent } from './patient/mes-compterendu/mes-compterendu';
+import { GererDossier } from './gerer-dossier/gerer-dossier';
+import { DicterOrdonnance } from './dicter-ordonnance/dicter-ordonnance';
+import { DicterCompteRendu } from './dicter-compte-rendu/dicter-compte-rendu';
+import { VueOrdonnance } from './vue-ordonnance/vue-ordonnance';
+import { AjouterRdv } from './ajouter-rdv/ajouter-rdv';
+import { VueCompteRendu } from './vue-compte-rendu/vue-compte-rendu';
 
 export const routes: Routes = [
   //Patient
@@ -31,5 +37,14 @@ export const routes: Routes = [
 
   // Redirection si l'URL est erronée
   { path: '**', redirectTo: '' },
+
+  //dial marwa
+  { path: 'dossier-patient', component: GererDossier },
+  { path: 'dossier-patient', component: GererDossier },
+  { path: 'dicter-ordonnance', component: DicterOrdonnance },
+  { path: 'dicter-compte-rendu', component: DicterCompteRendu },
+  { path: 'voir-ordonnance', component: VueOrdonnance },
+  { path: 'ajouter-rdv', component: AjouterRdv },
+  { path: 'voir-compte-rendu', component: VueCompteRendu },
 ];
 
