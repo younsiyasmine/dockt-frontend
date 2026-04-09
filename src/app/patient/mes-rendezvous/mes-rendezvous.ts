@@ -1,90 +1,159 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router'; // 1. Added Router import
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
-
-export interface RendezVous {
-  id_rdv: number;
-  date_prevue: string;
-  heure_prevue: string;
-  statut: string;
-  medecin?: string;
-}
+import { RdvService } from '../../core/services/rdv.service';
+import { RDV, StatutRDV } from '../../core/models';
 
 @Component({
   selector: 'app-mes-rendezvous',
   standalone: true,
-  imports: [CommonModule, RouterModule, Navbar],
+  imports: [RouterModule, Navbar, CommonModule],
   templateUrl: './mes-rendezvous.html',
   styleUrl: './mes-rendezvous.css',
 })
-export class MesRendezvousComponent {
-  // --- UI State ---
-  isProfileMenuOpen = false;
+export class MesRendezvousComponent implements OnInit {
   showCancelModal = false;
-  selectedRdv: RendezVous | null = null;
+  selectedRdv: RDV | null = null;
+  isLoading = false;
+  errorMessage = '';
+  rendezVousList: RDV[] = [];
+  private idPatient = 2;
+  showToast = false;
+  toastMessage = '';
 
-  // 2. Inject Router in the constructor
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private rdvService: RdvService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
-  rendezVousList: RendezVous[] = [
-    {
-      id_rdv: 1,
-      date_prevue: '15 Février 2026',
-      heure_prevue: '10:00',
-      medecin: 'Dr. Amina Benali',
-      statut: 'Confirmé',
-    },
-    {
-      id_rdv: 2,
-      date_prevue: '20 Mars 2026',
-      heure_prevue: '14:30',
-      medecin: 'Dr. Karim Tazi',
-      statut: 'En attente',
-    },
-  ];
+  ngOnInit(): void {
+    this.chargerMesRdv();
 
-  goBack(): void {
-    window.history.back();
+    this.route.queryParams.subscribe((params) => {
+      console.log('Query params:', params);
+      if (params['success']) {
+        this.toastMessage = params['success'];
+        this.showToast = true;
+        setTimeout(() => {
+          this.showToast = false;
+          this.cdr.detectChanges();
+        }, 3000);
+      }
+    });
   }
 
-  // 3. Updated this function to navigate to the route we created
-  modifierRdv(rdv: RendezVous): void {
-    console.log('Redirection vers modification pour ID :', rdv.id_rdv);
+  chargerMesRdv(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
 
-    // Navigates to /patient/prendre-rdv/1 or /patient/prendre-rdv/2
-    this.router.navigate(['/patient/prendre-rdv', rdv.id_rdv]);
+    this.rdvService.getRDVByPatient(this.idPatient).subscribe({
+      next: (data) => {
+        this.rendezVousList = data.reverse();
+        this.isLoading = false;
+        this.cdr.detectChanges(); // ← forces Angular to re-render
+      },
+      error: (err) => {
+        console.error('Erreur chargement RDV :', err);
+        this.errorMessage = 'Impossible de charger vos rendez-vous.';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
-  // --- MODAL LOGIC (KEEPING YOUR WORK) ---
+  modifierRdv(rdv: RDV): void {
+    this.router.navigate(['/patient/prendre-rdv', rdv.id]);
+  }
 
-  openCancelModal(rdv: RendezVous): void {
+  openCancelModal(rdv: RDV): void {
+    const demain = new Date();
+    demain.setDate(demain.getDate() + 1);
+    demain.setHours(0, 0, 0, 0);
+
+    const dateRdv = new Date(rdv.datePrevue);
+    dateRdv.setHours(0, 0, 0, 0);
+
+    if (dateRdv <= demain) {
+      this.errorMessage = 'Annulation impossible : le rendez-vous est dans moins de 24 heures.';
+      return; // ← don't open modal, show message instead
+    }
+
     this.selectedRdv = rdv;
     this.showCancelModal = true;
   }
 
   confirmCancel(): void {
-    if (this.selectedRdv) {
-      console.log('Annulation confirmée pour le RDV ID :', this.selectedRdv.id_rdv);
-      this.showCancelModal = false;
-      this.selectedRdv = null;
-    }
+    if (!this.selectedRdv?.id) return;
+
+    this.rdvService.mettreAJourStatut(this.selectedRdv.id, StatutRDV.ANNULE).subscribe({
+      next: () => {
+        this.rendezVousList = this.rendezVousList.map((r) =>
+          r.id === this.selectedRdv!.id ? { ...r, statutRdv: StatutRDV.ANNULE } : r,
+        );
+        this.showCancelModal = false;
+        this.selectedRdv = null;
+        this.toastMessage = 'Rendez-vous annulé avec succès !'; // ← ADD
+        this.showToast = true; // ← ADD
+        setTimeout(() => {
+          this.showToast = false;
+          this.cdr.detectChanges();
+        }, 3000);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur annulation RDV :', err);
+        this.errorMessage = "Erreur lors de l'annulation.";
+        this.showCancelModal = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
-  toggleProfileMenu() {
-    this.isProfileMenuOpen = !this.isProfileMenuOpen;
-  }
-
-  getStatusClass(statut: string): string {
+  getStatusClass(statut: string | undefined): string {
     switch (statut) {
-      case 'Confirmé':
+      case StatutRDV.CONFIRME:
         return 'bg-[#2ecc71]';
-      case 'En attente':
-        return 'bg-yellow-500';
-      case 'Annulé':
+      case StatutRDV.ANNULE:
         return 'bg-red-400';
+      case StatutRDV.MODIFIE_CONFIRME:
+        return 'bg-blue-400';
+      case StatutRDV.PASSE:
+        return 'bg-yellow-500';
       default:
-        return 'bg-[#1a3a5c]';
+        return 'bg-gray-400';
     }
+  }
+
+  getStatusLabel(statut: string | undefined): string {
+    switch (statut) {
+      case StatutRDV.CONFIRME:
+        return 'Confirmé';
+      case StatutRDV.ANNULE:
+        return 'Annulé';
+      case StatutRDV.MODIFIE_CONFIRME:
+        return 'Modifié';
+      case StatutRDV.PASSE:
+        return 'Passé';
+      default:
+        return 'En attente';
+    }
+  }
+
+  formatDate(date: string): string {
+    if (!date) return '';
+    const [year, month, day] = date.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  formatTime(time: string): string {
+    if (!time) return '';
+    return time.substring(0, 5);
   }
 }

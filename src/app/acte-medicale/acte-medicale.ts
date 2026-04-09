@@ -1,12 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-export interface ActeMedicale {
-  id_acte: number;
-  libelle_acte: string;
-  duree_estime: number;
-}
+import { ActeMedicaleService } from '../core/services/acte-medicale.service';
+import { ActeMedicale } from '../core/models';
 
 @Component({
   selector: 'app-acte-medicale',
@@ -16,87 +12,127 @@ export interface ActeMedicale {
   styleUrls: ['./acte-medicale.css'],
 })
 export class ActeMedicaleComponent implements OnInit {
-  // Liste simulée (sera remplacée par le service Spring Boot)
-  actes: ActeMedicale[] = [
-    { id_acte: 101, libelle_acte: 'Consultation Générale', duree_estime: 20 },
-    { id_acte: 102, libelle_acte: "Renouvellement d'ordonnance", duree_estime: 10 },
-    { id_acte: 103, libelle_acte: 'Électrocardiogramme (ECG)', duree_estime: 30 },
-    { id_acte: 104, libelle_acte: 'Suture (petite blessure)', duree_estime: 45 },
-    { id_acte: 105, libelle_acte: 'Vaccination acte', duree_estime: 15 },
-  ];
 
+  actes: ActeMedicale[] = [];
   openedMenuId: number | null = null;
   acteSelectionne: ActeMedicale | null = null;
 
-  // Contrôle des modales
   showDeleteModal = false;
   showEditModal = false;
   showAddModal = false;
 
-  // Modèle pour le nouvel acte
-  nouvelActe: ActeMedicale = { id_acte: 0, libelle_acte: '', duree_estime: 1 };
+  isLoading = false;
+  errorMessage = '';
 
-  constructor() {}
-  ngOnInit(): void {}
+  nouvelActe: ActeMedicale = { libelleActe: '', dureeEstime: 1 };
 
-  // --- GESTION DE L'AJOUT ---
-  openAddModal() {
-    // Calcul dynamique de l'ID suivant basé sur le maximum actuel
-    const maxId = this.actes.length > 0 ? Math.max(...this.actes.map((a) => a.id_acte)) : 100;
-    this.nouvelActe = {
-      id_acte: maxId + 1,
-      libelle_acte: '',
-      duree_estime: 1,
-    };
+  constructor(
+    private acteMedicaleService: ActeMedicaleService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.chargerActes();
+  }
+
+  chargerActes(): void {
+    this.isLoading = true;
+    this.acteMedicaleService.getAllActes().subscribe({
+      next: (data) => {
+        this.actes = data;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur chargement actes:', err);
+        this.errorMessage = 'Impossible de charger les actes médicaux.';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // --- ADD ---
+  openAddModal(): void {
+    this.nouvelActe = { libelleActe: '', dureeEstime: 1 };
     this.showAddModal = true;
     this.openedMenuId = null;
   }
 
-  confirmAdd() {
-    if (this.nouvelActe.libelle_acte && this.nouvelActe.duree_estime >= 1) {
-      // Simulation de l'ajout (Le Backend générera l'ID final plus tard)
-      this.actes.push({ ...this.nouvelActe });
-      this.showAddModal = false;
-    }
+  confirmAdd(): void {
+    if (!this.nouvelActe.libelleActe || this.nouvelActe.dureeEstime < 1) return;
+
+    this.acteMedicaleService.addActe(this.nouvelActe).subscribe({
+      next: (added) => {
+        this.actes = [...this.actes, added];
+        this.showAddModal = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur ajout acte:', err);
+        this.errorMessage = 'Erreur lors de l\'ajout.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  // --- GESTION DE LA MODIFICATION ---
-  openEditModal(acte: ActeMedicale) {
+  // --- EDIT ---
+  openEditModal(acte: ActeMedicale): void {
     this.acteSelectionne = { ...acte };
     this.showEditModal = true;
     this.openedMenuId = null;
   }
 
-  saveEdit() {
-    if (this.acteSelectionne && this.acteSelectionne.duree_estime >= 1) {
-      const index = this.actes.findIndex((a) => a.id_acte === this.acteSelectionne?.id_acte);
-      this.actes[index] = { ...this.acteSelectionne };
-      this.showEditModal = false;
-    }
+  saveEdit(): void {
+    if (!this.acteSelectionne?.id_acte || this.acteSelectionne.dureeEstime < 1) return;
+
+    this.acteMedicaleService.updateActe(this.acteSelectionne.id_acte, this.acteSelectionne).subscribe({
+      next: (updated) => {
+        this.actes = this.actes.map(a =>
+          a.id_acte === updated.id_acte ? updated : a
+        );
+        this.showEditModal = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur modification acte:', err);
+        this.errorMessage = 'Erreur lors de la modification.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  // --- GESTION DE LA SUPPRESSION ---
-  openDeleteModal(acte: ActeMedicale) {
+  // --- DELETE ---
+  openDeleteModal(acte: ActeMedicale): void {
     this.acteSelectionne = { ...acte };
     this.showDeleteModal = true;
     this.openedMenuId = null;
   }
 
-  confirmDelete() {
-    if (this.acteSelectionne) {
-      this.actes = this.actes.filter((a) => a.id_acte !== this.acteSelectionne?.id_acte);
-      this.showDeleteModal = false;
-    }
+  confirmDelete(): void {
+    if (!this.acteSelectionne?.id_acte) return;
+
+    this.acteMedicaleService.deleteActe(this.acteSelectionne.id_acte).subscribe({
+      next: () => {
+        this.actes = this.actes.filter(a => a.id_acte !== this.acteSelectionne!.id_acte);
+        this.showDeleteModal = false;
+        this.acteSelectionne = null;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur suppression acte:', err);
+        this.errorMessage = 'Erreur lors de la suppression.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  // Utilitaires interface
-  toggleMenu(id: number, event: Event) {
+  toggleMenu(id: number | undefined, event: Event): void {
     event.stopPropagation();
-    this.openedMenuId = this.openedMenuId === id ? null : id;
+    this.openedMenuId = this.openedMenuId === id ? null : (id ?? null);
   }
 
-  closeAllMenus() {
+  closeAllMenus(): void {
     this.openedMenuId = null;
   }
-
 }

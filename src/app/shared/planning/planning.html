@@ -55,10 +55,11 @@
 
           <!-- Day cells -->
           <div *ngFor="let day of daysOfWeek"
-               class="border-r border-slate-200 last:border-r-0 relative cursor-pointer transition-colors duration-150 hover:bg-slate-50">
+               class="border-r border-slate-200 last:border-r-0 relative transition-colors duration-150 hover:bg-slate-50">
             <div *ngIf="getAppForCell(hour, day.fullDate) as app"
                  [ngClass]="app.colorClass"
-                 class="absolute inset-1 p-1.5 sm:p-2 rounded-lg border flex flex-col justify-between shadow-sm cursor-default">
+                 (click)="openMenu($event, app)"
+                 class="absolute inset-1 p-1.5 sm:p-2 rounded-lg border flex flex-col justify-between shadow-sm cursor-default cursor-pointer">
               <div>
                 <p class="text-[9px] font-medium opacity-80 mb-0.5">{{ hour }}</p>
                 <p class="text-[10px] sm:text-[11px] font-semibold leading-tight">{{ app.patientNom }}</p>
@@ -75,4 +76,27 @@
 
     </div>
   </div>
+
+  <!-- Backdrop -->
+  <div *ngIf="showMenu"
+       class="fixed inset-0 z-[998]"
+       (click)="closeMenu()">
+  </div>
+
+  <!-- Context Menu -->
+  <div *ngIf="showMenu"
+       [style.top.px]="menuY"
+       [style.left.px]="menuX"
+       class="fixed z-[999] bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden w-44">
+    <button class="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition cursor-pointer">
+      <i class="fa-regular fa-pen-to-square text-slate-500"></i>
+      Modifier le RDV
+    </button>
+    <div class="border-t border-slate-100"></div>
+    <button class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition cursor-pointer">
+      <i class="fa-regular fa-trash-can text-red-400"></i>
+      Supprimer le RDV
+    </button>
+  </div>
+
 </div>

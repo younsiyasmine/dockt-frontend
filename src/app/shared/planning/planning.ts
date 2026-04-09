@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { RdvService } from '../../core/services/rdv.service';
+import { RDV } from '../../core/models';
 
 interface RdvData {
   id_rdv: number;
@@ -9,7 +11,16 @@ interface RdvData {
   patientNom: string;
   statut_consultation: string;
   colorClass: string;
+
 }
+
+const COLORS = [
+  'bg-[#dcfce7] text-[#166534] border-[#bbf7d0]',
+  'bg-[#dbeafe] text-[#1e40af] border-[#bfdbfe]',
+  'bg-[#e0f7fa] text-[#006064] border-[#b2ebf2]',
+  'bg-[#fef9c3] text-[#854d0e] border-[#fef08a]',
+  'bg-[#fce7f3] text-[#9d174d] border-[#fbcfe8]',
+];
 
 @Component({
   selector: 'app-planning',
@@ -19,7 +30,7 @@ interface RdvData {
   styleUrls: ['./planning.css'],
 })
 export class Planning implements OnInit {
-  currentDate: Date = new Date(2026, 1, 2);
+  currentDate: Date = new Date();
   daysOfWeek: any[] = [];
   hours = [
     '8:00',
@@ -42,53 +53,64 @@ export class Planning implements OnInit {
     '16:30',
     '17:00',
     '17:30',
+    '18:00',
+    '18:30',
+    '19:00',
+    '19:30',
   ];
 
-  rdvList: RdvData[] = [
-    {
-      id_rdv: 1,
-      date_prevue: new Date(2026, 1, 5),
-      heure_prevue: '9:00',
-      patientNom: 'Marie Dubois',
-      statut_consultation: 'Consultation de suivi diabète',
-      colorClass: 'bg-[#dcfce7] text-[#166534] border-[#bbf7d0]',
-    },
-    {
-      id_rdv: 2,
-      date_prevue: new Date(2026, 1, 5),
-      heure_prevue: '10:00',
-      patientNom: 'Jean Martin',
-      statut_consultation: 'Contrôle tension artérielle',
-      colorClass: 'bg-[#dbeafe] text-[#1e40af] border-[#bfdbfe]',
-    },
-    {
-      id_rdv: 3,
-      date_prevue: new Date(2026, 1, 5),
-      heure_prevue: '11:00',
-      patientNom: 'Sophie Bernard',
-      statut_consultation: 'Consultation générale',
-      colorClass: 'bg-[#e0f7fa] text-[#006064] border-[#b2ebf2]',
-    },
-    {
-      id_rdv: 4,
-      date_prevue: new Date(2026, 1, 5),
-      heure_prevue: '14:00',
-      patientNom: 'Pierre Petit',
-      statut_consultation: 'Renouvellement ordonnance',
-      colorClass: 'bg-[#e0f7fa] text-[#006064] border-[#b2ebf2]',
-    },
-    {
-      id_rdv: 5,
-      date_prevue: new Date(2026, 1, 5),
-      heure_prevue: '15:00',
-      patientNom: 'Claire Robert',
-      statut_consultation: 'Résultats analyses',
-      colorClass: 'bg-[#e0f7fa] text-[#006064] border-[#b2ebf2]',
-    },
-  ];
+  selectedRdv: RdvData | null = null;
+  menuX = 0;
+  menuY = 0;
+  showMenu = false;
+
+  rdvList: RdvData[] = [];
+
+  constructor(
+    private rdvService: RdvService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.generateWeek();
+    this.loadRdvs();
+  }
+
+  loadRdvs(): void {
+    this.rdvService.listerTousLesRDV().subscribe({
+      next: (rdvs: RDV[]) => {
+        this.rdvList = rdvs.map((rdv, index) => {
+          // Patient name: use patient object if available, fallback to ID
+          const patientNom = rdv.patient
+            ? `${rdv.patient.prenom} ${rdv.patient.nom}`
+            : `Patient #${rdv.idPatient}`;
+
+          // Acte: first medActeRdv's libelleActe if available
+          const statut_consultation =
+            rdv.medActeRdvs?.[0]?.acteMedicale?.libelleActe ?? 'Consultation';
+
+          // Parse date
+          const [year, month, day] = (rdv.datePrevue as string).split('-').map(Number);
+          const date_prevue = new Date(year, month - 1, day);
+
+          // Parse time: "09:00:00" → "9:00"
+          const heure_prevue = rdv.heurePrevue
+            ? rdv.heurePrevue.substring(0, 5).replace(/^0/, '')
+            : '';
+
+          return {
+            id_rdv: rdv.id!,
+            date_prevue,
+            heure_prevue,
+            patientNom,
+            statut_consultation,
+            colorClass: COLORS[index % COLORS.length],
+          };
+        });
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Erreur chargement planning:', err),
+    });
   }
 
   generateWeek() {
@@ -134,7 +156,16 @@ export class Planning implements OnInit {
     );
   }
 
-  isFullHour(hour: string): boolean {
-    return hour.endsWith(':00');
+  openMenu(event: MouseEvent, rdv: RdvData): void {
+    event.stopPropagation();
+    this.selectedRdv = rdv;
+    this.menuX = event.clientX;
+    this.menuY = event.clientY;
+    this.showMenu = true;
+  }
+
+  closeMenu(): void {
+    this.showMenu = false;
+    this.selectedRdv = null;
   }
 }
