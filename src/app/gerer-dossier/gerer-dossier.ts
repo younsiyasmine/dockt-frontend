@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DicterOrdonnance } from '../dicter-ordonnance/dicter-ordonnance';
+import { ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 
 // C'EST CETTE LIGNE QUI RÈGLE TOUT !
 import { VueOrdonnance } from '../vue-ordonnance/vue-ordonnance';
@@ -18,7 +20,24 @@ import { VueCompteRendu } from '../vue-compte-rendu/vue-compte-rendu';
   templateUrl: './gerer-dossier.html',
   styleUrl: './gerer-dossier.css',
 })
-export class GererDossier {
+export class GererDossier implements OnInit {
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    console.log('Patient ID:', id);
+    // Load patient data using this ID from your service
+  }
+
+  // 👇 6. ADD THE retour() FUNCTION
+  retour() {
+    this.router.navigate(['shared/file-attente']);
+  }
+
   // --- GESTION DES ONGLETS ---
   ongletActif: string = 'infos';
 

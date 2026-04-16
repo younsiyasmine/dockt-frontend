@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { NgFor, NgClass, NgIf } from '@angular/common';
 import { FileAttenteService } from '../../core/services/file-attente.service';
 import { RDV, StatutConsultation } from '../../core/models';
+import { Router } from '@angular/router';
 
 interface PatientAttente {
   id: number;
@@ -26,6 +27,7 @@ export class FileAttente implements OnInit {
   constructor(
     private fileAttenteService: FileAttenteService,
     private cdr: ChangeDetectorRef,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -69,15 +71,19 @@ export class FileAttente implements OnInit {
 
   formatStatut(statut: string | undefined): string {
     switch (statut) {
-      case StatutConsultation.EN_ATTENTE: return 'En attente';
-      case StatutConsultation.EN_CONSULTATION: return 'En consultation';
-      case StatutConsultation.TERMINEE: return 'Terminée';
-      default: return 'En attente';
+      case StatutConsultation.EN_ATTENTE:
+        return 'En attente';
+      case StatutConsultation.EN_CONSULTATION:
+        return 'En consultation';
+      case StatutConsultation.TERMINEE:
+        return 'Terminée';
+      default:
+        return 'En attente';
     }
   }
 
   voirDossier(patient: PatientAttente) {
-    console.log('Voir dossier:', patient.nom);
+    this.router.navigate(['/gerer-dossier', patient.id]);
   }
 
   toggleCheckIn(patient: PatientAttente): void {

@@ -56,7 +56,7 @@
               <p class="text-amber-500 text-xs mb-1">⏱ Temps d'attente estimé</p>
               <p class="text-amber-500 text-lg sm:text-xl md:text-2xl font-bold">
                 @if (tempsAttente > 0) {
-                  {{ tempsAttente }} min
+                  {{ formatTempsAttente(tempsAttente) }}
                 } @else {
                   C'est votre tour !
                 }

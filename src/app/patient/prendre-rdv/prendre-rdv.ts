@@ -28,8 +28,7 @@ export class PrendreRdv implements OnInit {
   isEditMode = false;
   rdvId: string | null = null;
 
-  showToast = false;
-  toastMessage = '';
+
   isLoading = false;
   isSlotsLoading = false;
   errorMessage = '';
@@ -39,6 +38,10 @@ export class PrendreRdv implements OnInit {
   selectedSlot: TimeSlot | null = null;
   dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
   calendarDays: CalendarDay[] = [];
+  // Add these to your class properties
+  selectedDayNumber: number | null = null;
+  selectedMonth: number | null = null;
+  selectedYear: number | null = null;
 
   readonly ALL_SLOTS = [
     '09:00',
@@ -95,10 +98,17 @@ export class PrendreRdv implements OnInit {
 
   selectDate(day: CalendarDay) {
     if (day.disabled || !day.number) return;
-    this.calendarDays.forEach((d) => (d.selected = false));
-    day.selected = true;
+
+    // 1. Save the specific date values
+    this.selectedDayNumber = day.number as number;
+    this.selectedMonth = this.currentDate.getMonth();
+    this.selectedYear = this.currentDate.getFullYear();
+
+    // 2. Update the UI objects
+    this.calendarDays.forEach((d) => (d.selected = (d.number === day.number)));
+
     this.selectedDate = day;
-    this.selectedSlot = null;
+    this.selectedSlot = null; // Reset slot when date changes
     this.computeSlots();
   }
 
@@ -106,10 +116,10 @@ export class PrendreRdv implements OnInit {
     const dateStr = this.buildDateString();
 
     const takenTimes = this.allRdvs
-      .filter((rdv) => rdv.datePrevue === dateStr)
+      .filter((rdv) => rdv.datePrevue === dateStr
+        && rdv.statutRdv !== StatutRDV.ANNULE) // ← only active RDVs block slots
       .map((rdv) => rdv.heurePrevue?.substring(0, 5) ?? '');
 
-    // Check if selected date is today → grey past time slots
     const today = new Date();
     const isToday =
       dateStr ===
@@ -126,7 +136,8 @@ export class PrendreRdv implements OnInit {
   private isDateFull(year: number, month: number, day: number): boolean {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const takenTimes = this.allRdvs
-      .filter((rdv) => rdv.datePrevue === dateStr)
+      .filter((rdv) => rdv.datePrevue === dateStr
+        && rdv.statutRdv !== StatutRDV.ANNULE) // ← same fix here
       .map((rdv) => rdv.heurePrevue?.substring(0, 5) ?? '');
     return this.ALL_SLOTS.every((slot) => takenTimes.includes(slot));
   }
@@ -145,13 +156,19 @@ export class PrendreRdv implements OnInit {
     this.errorMessage = '';
 
     if (this.isEditMode && this.rdvId) {
-      // MODIFIER: just update the statut
-      this.rdvService.mettreAJourStatut(Number(this.rdvId), StatutRDV.MODIFIE_CONFIRME).subscribe({
-        next: () => {
-          this.onSuccess('Rendez-vous modifié avec succès !');
-        },
+      // MODIFIER: send new date + time to backend
+      const rdvModifie: Partial<RDV> = {
+        datePrevue: this.buildDateString(),
+        heurePrevue: this.selectedSlot.time + ':00',
+        statutRdv: StatutRDV.MODIFIE_CONFIRME,
+        idPatient: this.PATIENT_ID,
+      };
+
+      this.rdvService.modifierRDVGlobalement(Number(this.rdvId), rdvModifie).subscribe({
+        next: () => this.onSuccess('Rendez-vous modifié avec succès !'),
         error: (err) => this.onError(err),
       });
+
     } else {
       // CRÉER: create new RDV
       const rdv: RDV = {
@@ -173,9 +190,9 @@ export class PrendreRdv implements OnInit {
   }
 
   private buildDateString(): string {
-    const year = this.currentDate.getFullYear();
-    const month = String(this.currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(this.selectedDate!.number).padStart(2, '0');
+    const year = this.selectedYear;
+    const month = String(this.selectedMonth! + 1).padStart(2, '0');
+    const day = String(this.selectedDayNumber).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
 
@@ -195,30 +212,49 @@ export class PrendreRdv implements OnInit {
   generateCalendar() {
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
+
+    // Logic to calculate days
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
     this.calendarDays = [];
 
+    // 1. Fill empty slots for the start of the month
     for (let i = 0; i < firstDay; i++) {
       this.calendarDays.push({ number: '', disabled: true, selected: false });
     }
+
+    // 2. Generate actual days
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
-      const isToday =
-        d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+
+      // Check if "Today" is already finished (after 18:30)
+      const isToday = d === today.getDate() &&
+        month === today.getMonth() &&
+        year === today.getFullYear();
+
       const now = new Date();
-      const todayFullyPassed =
-        isToday && (now.getHours() > 18 || (now.getHours() === 18 && now.getMinutes() >= 30));
+      const todayFullyPassed = isToday && (now.getHours() > 18 || (now.getHours() === 18 && now.getMinutes() >= 30));
+
+      // PERSISTENCE LOGIC:
+      // Check if this day matches the one the user previously clicked
+      const isSelected = d === this.selectedDayNumber &&
+        month === this.selectedMonth &&
+        year === this.selectedYear;
 
       this.calendarDays.push({
         number: d,
-        disabled:
-          date < new Date(today.getFullYear(), today.getMonth(), today.getDate()) ||
-          todayFullyPassed ||
-          this.isDateFull(year, month, d),
-        selected: false,
+        disabled: date < todayMidnight || todayFullyPassed || this.isDateFull(year, month, d),
+        selected: isSelected // This keeps the emerald color visible
       });
+
+      // If this day was selected, make sure the reference is updated
+      // so the time slots section (ngIf="selectedDate") stays visible
+      if (isSelected) {
+        this.selectedDate = this.calendarDays[this.calendarDays.length - 1];
+      }
     }
   }
 

@@ -15,7 +15,7 @@ import { RDV, StatutConsultation } from '../../core/models';
 export class MaPosition implements OnInit {
 
   // ⚠️ Replace with real auth later
-  private idPatient = 1;
+  private idPatient = 5;
 
   fileAttente: RDV[] = [];      // full queue today
   monRdv: RDV | null = null;    // patient's RDV today
@@ -86,6 +86,13 @@ export class MaPosition implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  formatTempsAttente(minutes: number): string {
+    if (minutes < 60) return `${minutes} min`;
+    const heures = Math.floor(minutes / 60);
+    const reste = minutes % 60;
+    return reste === 0 ? `${heures}h` : `${heures}h ${reste}min`;
   }
 
   getStatutLabel(rdv: RDV): string {

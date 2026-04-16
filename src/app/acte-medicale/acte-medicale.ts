@@ -12,7 +12,6 @@ import { ActeMedicale } from '../core/models';
   styleUrls: ['./acte-medicale.css'],
 })
 export class ActeMedicaleComponent implements OnInit {
-
   actes: ActeMedicale[] = [];
   openedMenuId: number | null = null;
   acteSelectionne: ActeMedicale | null = null;
@@ -24,11 +23,14 @@ export class ActeMedicaleComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
 
+  showToast = false;
+  toastAction: 'add' | 'edit' | 'delete' = 'add';
+
   nouvelActe: ActeMedicale = { libelleActe: '', dureeEstime: 1 };
 
   constructor(
     private acteMedicaleService: ActeMedicaleService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -48,7 +50,7 @@ export class ActeMedicaleComponent implements OnInit {
         this.errorMessage = 'Impossible de charger les actes médicaux.';
         this.isLoading = false;
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -66,13 +68,14 @@ export class ActeMedicaleComponent implements OnInit {
       next: (added) => {
         this.actes = [...this.actes, added];
         this.showAddModal = false;
+        this.showSuccessToast('add');
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erreur ajout acte:', err);
-        this.errorMessage = 'Erreur lors de l\'ajout.';
+        this.errorMessage = "Erreur lors de l'ajout.";
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -86,20 +89,21 @@ export class ActeMedicaleComponent implements OnInit {
   saveEdit(): void {
     if (!this.acteSelectionne?.id_acte || this.acteSelectionne.dureeEstime < 1) return;
 
-    this.acteMedicaleService.updateActe(this.acteSelectionne.id_acte, this.acteSelectionne).subscribe({
-      next: (updated) => {
-        this.actes = this.actes.map(a =>
-          a.id_acte === updated.id_acte ? updated : a
-        );
-        this.showEditModal = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Erreur modification acte:', err);
-        this.errorMessage = 'Erreur lors de la modification.';
-        this.cdr.detectChanges();
-      }
-    });
+    this.acteMedicaleService
+      .updateActe(this.acteSelectionne.id_acte, this.acteSelectionne)
+      .subscribe({
+        next: (updated) => {
+          this.actes = this.actes.map((a) => (a.id_acte === updated.id_acte ? updated : a));
+          this.showEditModal = false;
+          this.showSuccessToast('edit');
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Erreur modification acte:', err);
+          this.errorMessage = 'Erreur lors de la modification.';
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   // --- DELETE ---
@@ -114,16 +118,17 @@ export class ActeMedicaleComponent implements OnInit {
 
     this.acteMedicaleService.deleteActe(this.acteSelectionne.id_acte).subscribe({
       next: () => {
-        this.actes = this.actes.filter(a => a.id_acte !== this.acteSelectionne!.id_acte);
+        this.actes = this.actes.filter((a) => a.id_acte !== this.acteSelectionne!.id_acte);
         this.showDeleteModal = false;
         this.acteSelectionne = null;
+        this.showSuccessToast('delete');
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erreur suppression acte:', err);
         this.errorMessage = 'Erreur lors de la suppression.';
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -134,5 +139,15 @@ export class ActeMedicaleComponent implements OnInit {
 
   closeAllMenus(): void {
     this.openedMenuId = null;
+  }
+
+  showSuccessToast(action: 'add' | 'edit' | 'delete') {
+    this.toastAction = action;
+    this.showToast = true;
+
+    setTimeout(() => {
+      this.showToast = false;
+      this.cdr.detectChanges();
+    }, 2500);
   }
 }

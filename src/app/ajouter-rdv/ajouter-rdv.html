@@ -3,13 +3,14 @@
   <!-- Success Toast -->
   @if (showToast) {
     <div class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg z-[200] text-sm font-semibold">
-      Rendez-vous ajouté avec succès !
+      {{ editMode ? 'Rendez-vous modifié avec succès !' : 'Rendez-vous ajouté avec succès !' }}
     </div>
   }
 
   <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 sm:p-8 my-auto">
 
-    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Ajouter un rendez-vous</h2>
+    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">{{ editMode ? 'Modifier le rendez-vous' : 'Ajouter un rendez-vous' }}</h2>
+
 
     <!-- Error -->
     @if (errorMessage) {
@@ -71,7 +72,10 @@
                 }
                 @for (jour of joursCalendrier; track jour) {
                   <button (click)="choisirDate(jour)"
-                          class="p-2 rounded-lg text-xs font-medium text-gray-700 hover:bg-teal-500 hover:text-white transition cursor-pointer">
+                          [disabled]="joursPassesOuAujourdhui.has(jour)"
+                          [ngClass]="joursPassesOuAujourdhui.has(jour)
+            ? 'p-2 rounded-lg text-xs font-medium text-gray-300 bg-gray-50 cursor-not-allowed'
+            : 'p-2 rounded-lg text-xs font-medium text-gray-700 hover:bg-teal-500 hover:text-white transition cursor-pointer'">
                     {{ jour }}
                   </button>
                 }
@@ -108,10 +112,16 @@
               class="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-50 transition cursor-pointer">
         Annuler
       </button>
-      <button (click)="ajouterRdv()"
-              [disabled]="isLoading"
-              class="px-5 py-2.5 bg-teal-500 rounded-lg text-white text-sm font-medium hover:bg-teal-600 transition shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-        @if (isLoading) { Ajout en cours... } @else { Ajouter }
+      <button
+        (click)="ajouterRdv()"
+        [disabled]="isLoading"
+        class="px-5 py-2.5 bg-teal-500 rounded-lg text-white text-sm font-medium hover:bg-teal-600 transition shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+
+        @if (isLoading) {
+          {{ editMode ? 'Modification en cours...' : 'Ajout en cours...' }}
+        } @else {
+          {{ editMode ? 'Modifier' : 'Ajouter' }}
+        }
       </button>
     </div>
 

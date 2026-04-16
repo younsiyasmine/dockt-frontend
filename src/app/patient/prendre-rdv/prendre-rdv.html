@@ -37,10 +37,10 @@
       <div class="grid grid-cols-7 gap-1 mb-3 sm:mb-4">
         <div *ngFor="let day of calendarDays"
              [ngClass]="{
-               'bg-gray-100 text-gray-300 cursor-not-allowed': day.disabled,
-               'bg-emerald-500 text-white border-emerald-500': day.selected,
-               'border border-[#2ec4a0] text-[#1a3a5c] cursor-pointer hover:bg-[#e6f7f4]': !day.disabled && !day.selected
-             }"
+         'bg-gray-100 text-gray-300 cursor-not-allowed': day.disabled && !day.selected,
+         'bg-emerald-500 !text-white border-2 border-emerald-500': day.selected,
+         'border border-[#2ec4a0] text-[#1a3a5c] cursor-pointer hover:bg-[#e6f7f4]': !day.disabled && !day.selected
+       }"
              class="text-center py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition"
              (click)="!day.disabled && selectDate(day)">
           {{ day.number }}

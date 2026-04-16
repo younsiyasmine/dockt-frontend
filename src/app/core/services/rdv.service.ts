@@ -27,6 +27,14 @@ export class RdvService {
     return this.http.put<RDV>(`${this.apiUrl}/${id}/statut`, null, { params });
   }
 
+  modifierRDVGlobalement(id: number, rdvModifie: Partial<RDV>): Observable<RDV> {
+    return this.http.put<RDV>(`${this.apiUrl}/update/${id}`, rdvModifie);
+  }
+
+  modifierRDVParSecretaire(id: number, rdvModifie: Partial<RDV>): Observable<RDV> {
+    return this.http.put<RDV>(`${this.apiUrl}/secretaire/update/${id}`, rdvModifie);
+  }
+
   supprimerRDV(id: number): Observable<string> {
     return this.http.delete(`${this.apiUrl}/supprimer/${id}`, { responseType: 'text' });
   }

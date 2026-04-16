@@ -88,15 +88,23 @@
        [style.top.px]="menuY"
        [style.left.px]="menuX"
        class="fixed z-[999] bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden w-44">
-    <button class="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition cursor-pointer">
-      <i class="fa-regular fa-pen-to-square text-slate-500"></i>
-      Modifier le RDV
-    </button>
-    <div class="border-t border-slate-100"></div>
-    <button class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition cursor-pointer">
+       <button (click)="modifierRdv()"
+            [disabled]="isSelectedRdvPasse"
+            class="w-full flex items-center gap-3 px-4 py-3 text-sm transition cursor-pointer
+               disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-50
+               text-slate-700 hover:bg-slate-50 enabled:cursor-pointer">
+            <i class="fa-regular fa-pen-to-square text-slate-500"></i>
+            Modifier le RDV
+       </button>
+       <div class="border-t border-slate-100"></div>
+        <button (click)="supprimerRdv()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition cursor-pointer">
       <i class="fa-regular fa-trash-can text-red-400"></i>
       Supprimer le RDV
     </button>
+  </div>
+  <div *ngIf="showToast"
+       class="fixed bottom-6 right-6 z-[1000] bg-[#00b5a2] text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all">
+    {{ toastMessage }}
   </div>
 
 </div>

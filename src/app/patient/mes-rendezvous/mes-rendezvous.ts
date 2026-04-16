@@ -18,7 +18,7 @@ export class MesRendezvousComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   rendezVousList: RDV[] = [];
-  private idPatient = 2;
+  private idPatient = 1;
   showToast = false;
   toastMessage = '';
 
@@ -33,7 +33,6 @@ export class MesRendezvousComponent implements OnInit {
     this.chargerMesRdv();
 
     this.route.queryParams.subscribe((params) => {
-      console.log('Query params:', params);
       if (params['success']) {
         this.toastMessage = params['success'];
         this.showToast = true;
@@ -45,15 +44,43 @@ export class MesRendezvousComponent implements OnInit {
     });
   }
 
+  // Two-group sort:
+  // Group 1 (top): CONFIRME + MODIFIE_CONFIRME → sorted by date ASC (soonest first)
+  // Group 2 (bottom): ANNULE + PASSE → sorted by date DESC (most recent first)
+  private trierParDateAsc(): void {
+    const activeStatuts = [StatutRDV.CONFIRME, StatutRDV.MODIFIE_CONFIRME];
+
+    const getDate = (rdv: RDV) =>
+      new Date(`${rdv.datePrevue}T${rdv.heurePrevue ?? '00:00'}`).getTime();
+
+    this.rendezVousList.sort((a, b) => {
+      const aActive = activeStatuts.includes(a.statutRdv as StatutRDV);
+      const bActive = activeStatuts.includes(b.statutRdv as StatutRDV);
+
+      // Different groups: active always goes above inactive
+      if (aActive !== bActive) return aActive ? -1 : 1;
+
+      // Same group
+      if (aActive) {
+        // Active group: soonest first (ASC)
+        return getDate(a) - getDate(b);
+      } else {
+        // Inactive group: most recent first (DESC)
+        return getDate(b) - getDate(a);
+      }
+    });
+  }
+
   chargerMesRdv(): void {
     this.isLoading = true;
     this.errorMessage = '';
 
     this.rdvService.getRDVByPatient(this.idPatient).subscribe({
       next: (data) => {
-        this.rendezVousList = data.reverse();
+        this.rendezVousList = data;
+        this.trierParDateAsc(); // FIX 4: replaces .reverse()
         this.isLoading = false;
-        this.cdr.detectChanges(); // ← forces Angular to re-render
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erreur chargement RDV :', err);
@@ -64,23 +91,38 @@ export class MesRendezvousComponent implements OnInit {
     });
   }
 
+  // FIX 1 & 2: shared 24h guard — mirrors backend logic exactly (date-based, not hour-based)
+  // Backend blocks if datePrevue < tomorrow, so we do the same here for consistent UX
+  private verifier24h(rdv: RDV): boolean {
+    const now = new Date(); // actual current time, no resetting hours
+    const [year, month, day] = (rdv.datePrevue as string).split('-').map(Number);
+    const dateRdv = new Date(
+      year,
+      month - 1,
+      day,
+      ...((rdv.heurePrevue ?? '00:00').split(':').map(Number) as [number, number]),
+    );
+
+    const diff = dateRdv.getTime() - now.getTime();
+    const heures = diff / (1000 * 60 * 60);
+
+    if (heures < 24) {
+      this.errorMessage = 'Action impossible : le rendez-vous est dans moins de 24 heures.';
+      return false;
+    }
+
+    this.errorMessage = '';
+    return true;
+  }
+
+  // FIX 2: modifier now has the same 24h guard as annuler
   modifierRdv(rdv: RDV): void {
+    if (!this.verifier24h(rdv)) return;
     this.router.navigate(['/patient/prendre-rdv', rdv.id]);
   }
 
   openCancelModal(rdv: RDV): void {
-    const demain = new Date();
-    demain.setDate(demain.getDate() + 1);
-    demain.setHours(0, 0, 0, 0);
-
-    const dateRdv = new Date(rdv.datePrevue);
-    dateRdv.setHours(0, 0, 0, 0);
-
-    if (dateRdv <= demain) {
-      this.errorMessage = 'Annulation impossible : le rendez-vous est dans moins de 24 heures.';
-      return; // ← don't open modal, show message instead
-    }
-
+    if (!this.verifier24h(rdv)) return;
     this.selectedRdv = rdv;
     this.showCancelModal = true;
   }
@@ -88,15 +130,19 @@ export class MesRendezvousComponent implements OnInit {
   confirmCancel(): void {
     if (!this.selectedRdv?.id) return;
 
+    // FIX 3: no libererCreneau() needed — ANNULE status already frees the slot
+    // because creerRDV() only blocks on CONFIRME status
     this.rdvService.mettreAJourStatut(this.selectedRdv.id, StatutRDV.ANNULE).subscribe({
       next: () => {
         this.rendezVousList = this.rendezVousList.map((r) =>
           r.id === this.selectedRdv!.id ? { ...r, statutRdv: StatutRDV.ANNULE } : r,
         );
+        this.trierParDateAsc(); // FIX 4: re-sort after mutation
+
         this.showCancelModal = false;
         this.selectedRdv = null;
-        this.toastMessage = 'Rendez-vous annulé avec succès !'; // ← ADD
-        this.showToast = true; // ← ADD
+        this.toastMessage = 'Rendez-vous annulé avec succès !';
+        this.showToast = true;
         setTimeout(() => {
           this.showToast = false;
           this.cdr.detectChanges();
@@ -134,7 +180,7 @@ export class MesRendezvousComponent implements OnInit {
       case StatutRDV.ANNULE:
         return 'Annulé';
       case StatutRDV.MODIFIE_CONFIRME:
-        return 'Modifié';
+        return 'Modifié Confirmé';
       case StatutRDV.PASSE:
         return 'Passé';
       default:

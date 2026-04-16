@@ -27,8 +27,8 @@ export const routes: Routes = [
   { path: 'patient/mes-compterendu', component: MesCompterenduComponent },
 
   //Shared
-  { path: 'medecin/file-attente', component: FileAttente },
-  { path: 'secretaire/file-attente', component: FileAttente },
+  { path: 'shared/file-attente', component: FileAttente },
+  { path: 'gerer-dossier/:id', component: GererDossier },
 
   // URL : http://localhost:4200/shared/planning
   { path: 'shared/planning', component: Planning },
@@ -42,6 +42,7 @@ export const routes: Routes = [
   { path: 'dicter-compte-rendu', component: DicterCompteRendu },
   { path: 'voir-ordonnance', component: VueOrdonnance },
   { path: 'ajouter-rdv', component: AjouterRdv },
+  { path: 'ajouter-rdv/:id', component: AjouterRdv },
   { path: 'voir-compte-rendu', component: VueCompteRendu },
 
   // Redirection si l'URL est erronée

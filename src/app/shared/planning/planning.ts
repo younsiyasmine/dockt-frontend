@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { RdvService } from '../../core/services/rdv.service';
 import { RDV } from '../../core/models';
+import { Router } from '@angular/router';
 
 interface RdvData {
   id_rdv: number;
@@ -11,7 +12,7 @@ interface RdvData {
   patientNom: string;
   statut_consultation: string;
   colorClass: string;
-
+  statutRdv: string;
 }
 
 const COLORS = [
@@ -69,6 +70,7 @@ export class Planning implements OnInit {
   constructor(
     private rdvService: RdvService,
     private cdr: ChangeDetectorRef,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -105,6 +107,7 @@ export class Planning implements OnInit {
             patientNom,
             statut_consultation,
             colorClass: COLORS[index % COLORS.length],
+            statutRdv: rdv.statutRdv ?? '',
           };
         });
         this.cdr.detectChanges();
@@ -167,5 +170,40 @@ export class Planning implements OnInit {
   closeMenu(): void {
     this.showMenu = false;
     this.selectedRdv = null;
+  }
+
+  modifierRdv(): void {
+    if (!this.selectedRdv) return;
+    const id = this.selectedRdv.id_rdv; // ← save it BEFORE closing
+    this.closeMenu();
+    this.router.navigate(['/ajouter-rdv', id]);
+  }
+
+  showToast = false;
+  toastMessage = '';
+
+  supprimerRdv(): void {
+    if (!this.selectedRdv) return;
+    const id = this.selectedRdv.id_rdv;
+    this.closeMenu();
+
+    this.rdvService.supprimerRDV(id).subscribe({
+      next: () => {
+        this.rdvList = this.rdvList.filter((r) => r.id_rdv !== id);
+        this.toastMessage = 'Rendez-vous supprimé avec succès !';
+        this.showToast = true;
+        setTimeout(() => {
+          this.showToast = false;
+          this.cdr.detectChanges();
+        }, 3000);
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Erreur suppression RDV:', err),
+    });
+  }
+
+  get isSelectedRdvPasse(): boolean {
+    if (!this.selectedRdv) return false;
+    return this.selectedRdv.statutRdv === 'PASSE';
   }
 }

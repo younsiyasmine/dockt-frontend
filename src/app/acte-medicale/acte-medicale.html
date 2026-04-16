@@ -10,6 +10,20 @@
     </button>
   </div>
 
+  @if (showToast) {
+    <div class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg z-[200] text-sm font-semibold">
+      @if (toastAction === 'add') {
+        Acte ajouté avec succès !
+      }
+      @if (toastAction === 'edit') {
+        Acte modifié avec succès !
+      }
+      @if (toastAction === 'delete') {
+        Acte supprimé avec succès !
+      }
+    </div>
+  }
+
   @if (errorMessage) {
     <div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 mb-4">
       {{ errorMessage }}
@@ -156,5 +170,6 @@
       </div>
     </div>
   }
+
 
 </div>
