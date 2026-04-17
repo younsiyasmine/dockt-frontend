@@ -14,38 +14,36 @@ import { DicterCompteRendu } from './dicter-compte-rendu/dicter-compte-rendu';
 import { VueOrdonnance } from './vue-ordonnance/vue-ordonnance';
 import { AjouterRdv } from './ajouter-rdv/ajouter-rdv';
 import { VueCompteRendu } from './vue-compte-rendu/vue-compte-rendu';
+import { AuthGuard } from './core/guards/auth-guard';
 
 export const routes: Routes = [
-  //Patient
+  // Public route (no guard)
   { path: '', redirectTo: 'patient/dashboard', pathMatch: 'full' },
-  { path: 'patient/dashboard', component: Dashboard },
-  { path: 'patient/prendre-rdv', component: PrendreRdv },
-  { path: 'patient/prendre-rdv/:id', component: PrendreRdv },
-  { path: 'patient/mes-rendezvous', component: MesRendezvousComponent },
-  { path: 'patient/ma-position', component: MaPosition },
-  { path: 'patient/mes-ordonnances', component: MesOrdonnancesComponent },
-  { path: 'patient/mes-compterendu', component: MesCompterenduComponent },
 
-  //Shared
-  { path: 'shared/file-attente', component: FileAttente },
-  { path: 'gerer-dossier/:id', component: GererDossier },
+  // Patient (protected 🔒)
+  { path: 'patient/dashboard', component: Dashboard, canActivate: [AuthGuard] },
+  { path: 'patient/prendre-rdv', component: PrendreRdv, canActivate: [AuthGuard] },
+  { path: 'patient/prendre-rdv/:id', component: PrendreRdv, canActivate: [AuthGuard] },
+  { path: 'patient/mes-rendezvous', component: MesRendezvousComponent, canActivate: [AuthGuard] },
+  { path: 'patient/ma-position', component: MaPosition, canActivate: [AuthGuard] },
+  { path: 'patient/mes-ordonnances', component: MesOrdonnancesComponent, canActivate: [AuthGuard] },
+  { path: 'patient/mes-compterendu', component: MesCompterenduComponent, canActivate: [AuthGuard] },
 
-  // URL : http://localhost:4200/shared/planning
-  { path: 'shared/planning', component: Planning },
+  // Shared (protected 🔒)
+  { path: 'shared/file-attente', component: FileAttente, canActivate: [AuthGuard] },
+  { path: 'shared/planning', component: Planning, canActivate: [AuthGuard] },
+  { path: 'gerer-dossier/:id', component: GererDossier, canActivate: [AuthGuard] },
 
-  // URL : http://localhost:4200/mes-actes
-  { path: 'mes-actes', component: ActeMedicaleComponent },
+  // Médecin (protected 🔒)
+  { path: 'mes-actes', component: ActeMedicaleComponent, canActivate: [AuthGuard] },
+  { path: 'dossier-patient', component: GererDossier, canActivate: [AuthGuard] },
+  { path: 'dicter-ordonnance', component: DicterOrdonnance, canActivate: [AuthGuard] },
+  { path: 'dicter-compte-rendu', component: DicterCompteRendu, canActivate: [AuthGuard] },
+  { path: 'voir-ordonnance', component: VueOrdonnance, canActivate: [AuthGuard] },
+  { path: 'ajouter-rdv', component: AjouterRdv, canActivate: [AuthGuard] },
+  { path: 'ajouter-rdv/:id', component: AjouterRdv, canActivate: [AuthGuard] },
+  { path: 'voir-compte-rendu', component: VueCompteRendu, canActivate: [AuthGuard] },
 
-  //dial marwa
-  { path: 'dossier-patient', component: GererDossier },
-  { path: 'dicter-ordonnance', component: DicterOrdonnance },
-  { path: 'dicter-compte-rendu', component: DicterCompteRendu },
-  { path: 'voir-ordonnance', component: VueOrdonnance },
-  { path: 'ajouter-rdv', component: AjouterRdv },
-  { path: 'ajouter-rdv/:id', component: AjouterRdv },
-  { path: 'voir-compte-rendu', component: VueCompteRendu },
-
-  // Redirection si l'URL est erronée
+  // Fallback
   { path: '**', redirectTo: '' },
 ];
-
