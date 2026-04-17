@@ -26,23 +26,26 @@ export const routes: Routes = [
   { path: 'patient/prendre-rdv/:id', component: PrendreRdv, canActivate: [AuthGuard] },
   { path: 'patient/mes-rendezvous', component: MesRendezvousComponent, canActivate: [AuthGuard] },
   { path: 'patient/ma-position', component: MaPosition, canActivate: [AuthGuard] },
-  { path: 'patient/mes-ordonnances', component: MesOrdonnancesComponent, canActivate: [AuthGuard] },
-  { path: 'patient/mes-compterendu', component: MesCompterenduComponent, canActivate: [AuthGuard] },
+  //MS3 with no security for now until i connectit with backend and delete the hardcoded info
+  { path: 'patient/mes-ordonnances', component: MesOrdonnancesComponent },
+  { path: 'patient/mes-compterendu', component: MesCompterenduComponent },
 
   // Shared (protected 🔒)
   { path: 'shared/file-attente', component: FileAttente, canActivate: [AuthGuard] },
   { path: 'shared/planning', component: Planning, canActivate: [AuthGuard] },
-  { path: 'gerer-dossier/:id', component: GererDossier, canActivate: [AuthGuard] },
+  //MS3 with no security for now until i connectit with backend and delete the hardcoded info
+  { path: 'gerer-dossier/:id', component: GererDossier },
 
   // Médecin (protected 🔒)
   { path: 'mes-actes', component: ActeMedicaleComponent, canActivate: [AuthGuard] },
-  { path: 'dossier-patient', component: GererDossier, canActivate: [AuthGuard] },
-  { path: 'dicter-ordonnance', component: DicterOrdonnance, canActivate: [AuthGuard] },
-  { path: 'dicter-compte-rendu', component: DicterCompteRendu, canActivate: [AuthGuard] },
-  { path: 'voir-ordonnance', component: VueOrdonnance, canActivate: [AuthGuard] },
+  //MS3 with no security for now until i connectit with backend and delete the hardcoded info
+  { path: 'dossier-patient', component: GererDossier },
+  { path: 'dicter-ordonnance', component: DicterOrdonnance },
+  { path: 'dicter-compte-rendu', component: DicterCompteRendu  },
+  { path: 'voir-ordonnance', component: VueOrdonnance },
   { path: 'ajouter-rdv', component: AjouterRdv, canActivate: [AuthGuard] },
   { path: 'ajouter-rdv/:id', component: AjouterRdv, canActivate: [AuthGuard] },
-  { path: 'voir-compte-rendu', component: VueCompteRendu, canActivate: [AuthGuard] },
+  { path: 'voir-compte-rendu', component: VueCompteRendu },
 
   // Fallback
   { path: '**', redirectTo: '' },
