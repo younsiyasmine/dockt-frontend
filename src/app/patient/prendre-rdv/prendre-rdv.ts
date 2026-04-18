@@ -63,7 +63,7 @@ export class PrendreRdv implements OnInit {
   ];
   timeSlots: TimeSlot[] = [];
 
-  private readonly PATIENT_ID = 2;
+  private readonly PATIENT_ID = 1;
   private allRdvs: RDV[] = [];
 
   constructor(

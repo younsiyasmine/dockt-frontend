@@ -1,28 +1,66 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import {
+  LoginPatientRequest,
+  LoginMedecinRequest,
+  LoginSecretaireRequest,
+  RegisterPatientRequest,
+  AuthResponse,
+} from '../models/auth.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private tokenKey = 'jwt_token';
+  private apiUrl = 'http://localhost:8082/api/auth';
 
-  // Save token after login
-  setToken(token: string): void {
-    localStorage.setItem(this.tokenKey, token);
+  constructor(private http: HttpClient) {}
+
+  loginPatient(request: LoginPatientRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login/patient`, request);
   }
 
-  // Get token to attach to requests
+  loginMedecin(request: LoginMedecinRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login/medecin`, request);
+  }
+
+  loginSecretaire(request: LoginSecretaireRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login/secretaire`, request);
+  }
+
+  register(request: RegisterPatientRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register/patient`, request);
+  }
+
+  saveToken(token: string): void {
+    localStorage.setItem('accessToken', token);
+  }
+
+  saveRefreshToken(token: string): void {
+    localStorage.setItem('refreshToken', token);
+  }
+
+  saveUser(user: AuthResponse): void {
+    localStorage.setItem('user', JSON.stringify(user));
+  }
+
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    return localStorage.getItem('accessToken');
   }
 
-  // Check if user is logged in
+  getUser(): any {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  }
+
   isLoggedIn(): boolean {
     return !!this.getToken();
   }
 
-  // Logout → clear token
   logout(): void {
-    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
   }
 }
