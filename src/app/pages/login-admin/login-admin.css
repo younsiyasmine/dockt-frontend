@@ -1,0 +1,119 @@
+/* Réduis le margin-bottom du logo */
+.logo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 0; /* ← était 0.1rem, met 0 */
+}
+
+.logo {
+  width: 250px; /* Ajustez cette valeur pour agrandir le logo */
+  height: auto;
+}
+
+.tagline {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Style des titres */
+/* Réduis le margin-top du titre */
+h1 {
+  font-size: 2.2rem;
+  color: #002d4b;
+  font-weight: 800;
+  margin-top: -20px; /* ← était 10px, met 0 */
+}
+
+/* Style des boutons */
+.button-group {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.btn-login {
+  background-color: #002d4b; /* Bleu foncé */
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-register {
+  background-color: #2ecc71; /* Vert émeraude */
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* Le conteneur qui prend tout l'écran */
+.login-container {
+  display: flex;
+  justify-content: center; /* Centre horizontalement */
+  align-items: center;     /* Centre verticalement */
+  min-height: 100vh;       /* Prend toute la hauteur de l'écran */
+  background-color: #f0f2f5; /* Un gris léger pour faire ressortir la carte */
+}
+
+/* La carte blanche au milieu */
+.login-card {
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+
+  /* C'EST CETTE LIGNE QUI CHANGE TOUT */
+  width: 80%;
+  max-width: 500px; /* La carte ne dépassera jamais 400px */
+
+  text-align: center;
+}
+
+/* On s'assure que les boutons ne sont pas collés */
+.btn-login, .btn-register {
+  width: 100%; /* Ils prennent toute la largeur DE LA CARTE (400px max) */
+  margin-top: 15px;
+  padding: 12px;
+}
+.form-group {
+  text-align: left;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd; /* Cette ligne rend l'input visible */
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  font-size: 1rem;
+  box-sizing: border-box; /* Très important pour que l'input ne dépasse pas */
+}
+
+input:focus {
+  outline: none;
+  border-color: #002d4b; /* Change de couleur quand on clique dessus */
+  background-color: #fff;
+}
+
+button:hover {
+  filter: brightness(1.1); /* Petit effet au survol */
+}

@@ -20,7 +20,7 @@ export class Navbar implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private router: Router,
+    private router: Router
   ) {}
 
   ngOnInit() {

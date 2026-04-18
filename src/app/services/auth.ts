@@ -6,13 +6,14 @@ import {
   LoginMedecinRequest,
   LoginSecretaireRequest,
   RegisterPatientRequest,
-  AuthResponse,
-} from '../models/auth.model';
+  AuthResponse
+} from '../core/models/auth.model';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class AuthService {
+
   private apiUrl = 'http://localhost:8082/api/auth';
 
   constructor(private http: HttpClient) {}
@@ -49,7 +50,7 @@ export class AuthService {
     return localStorage.getItem('accessToken');
   }
 
-  getUser(): any {
+  getUser(): AuthResponse | null {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   }
@@ -63,4 +64,5 @@ export class AuthService {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
   }
+
 }
