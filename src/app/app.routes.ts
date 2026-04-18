@@ -41,11 +41,11 @@ export const routes: Routes = [
   //MS3 with no security for now until i connectit with backend and delete the hardcoded info
   { path: 'dossier-patient', component: GererDossier },
   { path: 'dicter-ordonnance', component: DicterOrdonnance },
-  { path: 'dicter-compte-rendu', component: DicterCompteRendu  },
-  { path: 'voir-ordonnance', component: VueOrdonnance },
+  { path: 'dicter-compte-rendu', component: DicterCompteRendu },
   { path: 'ajouter-rdv', component: AjouterRdv, canActivate: [AuthGuard] },
   { path: 'ajouter-rdv/:id', component: AjouterRdv, canActivate: [AuthGuard] },
-  { path: 'voir-compte-rendu', component: VueCompteRendu },
+  { path: 'voir-ordonnance/:id', component: VueOrdonnance },
+  { path: 'voir-compte-rendu/:id', component: VueCompteRendu },
 
   // Fallback
   { path: '**', redirectTo: '' },

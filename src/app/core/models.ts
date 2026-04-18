@@ -84,3 +84,27 @@ export interface RDV {
   medActeRdvs?: MedActeRdv[]; // List<MedActeRdv> devient un tableau
   patient?: PatientDTO;
 }
+
+// ---------------------------------------------------------
+// 8. Ordonnance (MS3)
+// ---------------------------------------------------------
+export interface Ordonnance {
+  idOrdonnance?: number;
+  dateEmmission?: string;
+  contenuTexte: string;
+  type: string;
+  idRdv: number;
+}
+
+// ---------------------------------------------------------
+// 9. CompteRendu (MS3)
+// ---------------------------------------------------------
+export interface CompteRendu {
+  idCr?: number;
+  dateRedaction?: string;
+  contenu: string;
+  statut?: string; // 'DEMANDE' | 'EN_ATTENTE' | 'VALIDE'
+  messagePatient?: string;
+  idRdv: number;
+}
+
