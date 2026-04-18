@@ -22,6 +22,7 @@ import { RegisterComponent } from './pages/register/register';
 import { PatientDashboard } from './pages/patient-dashboard/patient-dashboard';
 import { MedecinDashboard } from './pages/medecin-dashboard/medecin-dashboard';
 import { SecretaireDashboard } from './pages/secretaire-dashboard/secretaire-dashboard';
+import { PatientsComponent } from './pages/patients/patients';
 
 export const routes: Routes = [
   // Auth (public)
@@ -42,6 +43,8 @@ export const routes: Routes = [
 
   // Médecin dashboard (auth)
   { path: 'medecin-dashboard', component: MedecinDashboard, canActivate: [AuthGuard] },
+  { path: 'patients', component: PatientsComponent, canActivate: [AuthGuard] },
+  { path: 'medecin/dossier/:id', component: GererDossier, canActivate: [AuthGuard] },
   {
     path: 'secretaire-dashboard',
     component: SecretaireDashboard,
