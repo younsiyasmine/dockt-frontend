@@ -35,13 +35,16 @@ export class LoginComponent {
     this.authService.loginPatient({ email: this.login, password: this.password })
       .subscribe({
         next: (response) => {
-          // Stockage des informations
           this.authService.saveToken(response.accessToken);
           this.authService.saveRefreshToken(response.refreshToken);
           this.authService.saveUser(response);
 
-          // Navigation vers le dashboard
-          this.router.navigate(['/patient-dashboard']);
+          // Route by role instead of hardcoding
+          if (response.role === 'PATIENT') {
+            this.router.navigate(['../patient/dashboard']);
+          } else {
+            this.router.navigate(['/login']); // fallback
+          }
         },
         error: (err) => {
           console.error('Login error:', err);

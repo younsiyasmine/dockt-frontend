@@ -20,7 +20,7 @@ import { authGuard } from './core/guards/auth-guard';
 import { LoginComponent } from './pages/login/login';
 import { LoginAdminComponent } from './pages/login-admin/login-admin';
 import { RegisterComponent } from './pages/register/register';
-import { PatientDashboard } from './pages/patient-dashboard/patient-dashboard';
+
 import { MedecinDashboard } from './pages/medecin-dashboard/medecin-dashboard';
 import { SecretaireDashboard } from './pages/secretaire-dashboard/secretaire-dashboard';
 import { PatientsComponent } from './pages/patients/patients';
@@ -33,7 +33,7 @@ export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
 
   // Patient (protected 🔒)
-  { path: 'patient-dashboard', component: PatientDashboard, canActivate: [authGuard] },
+  { path: 'patient-dashboard', component: Dashboard, canActivate: [authGuard] },
   { path: 'patient/dashboard', component: Dashboard, canActivate: [authGuard] },
   { path: 'patient/prendre-rdv', component: PrendreRdv, canActivate: [authGuard] },
   { path: 'patient/prendre-rdv/:id', component: PrendreRdv, canActivate: [authGuard] },

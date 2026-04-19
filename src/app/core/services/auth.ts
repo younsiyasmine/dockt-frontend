@@ -55,6 +55,15 @@ export class AuthService {
     return user ? JSON.parse(user) : null;
   }
 
+  getCurrentUserId(): number | null {
+    const user = this.getUser();
+    if (!user) return null;
+    if ('idPatient' in user) return (user as any).idPatient;
+    if ('idMedecin' in user) return (user as any).idMedecin;
+    if ('idSecretaire' in user) return (user as any).idSecretaire;
+    return null;
+  }
+
   isLoggedIn(): boolean {
     return !!this.getToken();
   }

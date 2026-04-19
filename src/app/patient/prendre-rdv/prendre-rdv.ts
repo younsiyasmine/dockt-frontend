@@ -4,6 +4,7 @@ import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
 import { RdvService } from '../../core/services/rdv.service';
 import { RDV, StatutRDV } from '../../core/models/models';
+import { AuthService } from '../../core/services/auth';
 
 interface CalendarDay {
   number: number | string;
@@ -27,7 +28,6 @@ interface TimeSlot {
 export class PrendreRdv implements OnInit {
   isEditMode = false;
   rdvId: string | null = null;
-
 
   isLoading = false;
   isSlotsLoading = false;
@@ -63,13 +63,18 @@ export class PrendreRdv implements OnInit {
   ];
   timeSlots: TimeSlot[] = [];
 
-  private readonly PATIENT_ID = 1;
+  //ID not hardcoded anymore
+  private get PATIENT_ID(): number {
+    return this.authService.getCurrentUserId() ?? 0;
+  }
+
   private allRdvs: RDV[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private rdvService: RdvService,
+    private authService: AuthService,
   ) {}
 
   get currentMonthLabel(): string {
@@ -105,7 +110,7 @@ export class PrendreRdv implements OnInit {
     this.selectedYear = this.currentDate.getFullYear();
 
     // 2. Update the UI objects
-    this.calendarDays.forEach((d) => (d.selected = (d.number === day.number)));
+    this.calendarDays.forEach((d) => (d.selected = d.number === day.number));
 
     this.selectedDate = day;
     this.selectedSlot = null; // Reset slot when date changes
@@ -116,8 +121,7 @@ export class PrendreRdv implements OnInit {
     const dateStr = this.buildDateString();
 
     const takenTimes = this.allRdvs
-      .filter((rdv) => rdv.datePrevue === dateStr
-        && rdv.statutRdv !== StatutRDV.ANNULE) // ← only active RDVs block slots
+      .filter((rdv) => rdv.datePrevue === dateStr && rdv.statutRdv !== StatutRDV.ANNULE) // ← only active RDVs block slots
       .map((rdv) => rdv.heurePrevue?.substring(0, 5) ?? '');
 
     const today = new Date();
@@ -136,8 +140,7 @@ export class PrendreRdv implements OnInit {
   private isDateFull(year: number, month: number, day: number): boolean {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const takenTimes = this.allRdvs
-      .filter((rdv) => rdv.datePrevue === dateStr
-        && rdv.statutRdv !== StatutRDV.ANNULE) // ← same fix here
+      .filter((rdv) => rdv.datePrevue === dateStr && rdv.statutRdv !== StatutRDV.ANNULE) // ← same fix here
       .map((rdv) => rdv.heurePrevue?.substring(0, 5) ?? '');
     return this.ALL_SLOTS.every((slot) => takenTimes.includes(slot));
   }
@@ -168,7 +171,6 @@ export class PrendreRdv implements OnInit {
         next: () => this.onSuccess('Rendez-vous modifié avec succès !'),
         error: (err) => this.onError(err),
       });
-
     } else {
       // CRÉER: create new RDV
       const rdv: RDV = {
@@ -231,23 +233,22 @@ export class PrendreRdv implements OnInit {
       const date = new Date(year, month, d);
 
       // Check if "Today" is already finished (after 18:30)
-      const isToday = d === today.getDate() &&
-        month === today.getMonth() &&
-        year === today.getFullYear();
+      const isToday =
+        d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 
       const now = new Date();
-      const todayFullyPassed = isToday && (now.getHours() > 18 || (now.getHours() === 18 && now.getMinutes() >= 30));
+      const todayFullyPassed =
+        isToday && (now.getHours() > 18 || (now.getHours() === 18 && now.getMinutes() >= 30));
 
       // PERSISTENCE LOGIC:
       // Check if this day matches the one the user previously clicked
-      const isSelected = d === this.selectedDayNumber &&
-        month === this.selectedMonth &&
-        year === this.selectedYear;
+      const isSelected =
+        d === this.selectedDayNumber && month === this.selectedMonth && year === this.selectedYear;
 
       this.calendarDays.push({
         number: d,
         disabled: date < todayMidnight || todayFullyPassed || this.isDateFull(year, month, d),
-        selected: isSelected // This keeps the emerald color visible
+        selected: isSelected, // This keeps the emerald color visible
       });
 
       // If this day was selected, make sure the reference is updated

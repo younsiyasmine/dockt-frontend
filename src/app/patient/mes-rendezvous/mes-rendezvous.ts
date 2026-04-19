@@ -4,6 +4,7 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
 import { RdvService } from '../../core/services/rdv.service';
 import { RDV, StatutRDV } from '../../core/models/models';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-mes-rendezvous',
@@ -18,7 +19,9 @@ export class MesRendezvousComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   rendezVousList: RDV[] = [];
-  private idPatient = 1;
+  private get idPatient(): number {
+    return this.authService.getCurrentUserId() ?? 0;
+  }
   showToast = false;
   toastMessage = '';
 
@@ -27,6 +30,7 @@ export class MesRendezvousComponent implements OnInit {
     private route: ActivatedRoute,
     private rdvService: RdvService,
     private cdr: ChangeDetectorRef,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {

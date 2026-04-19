@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
-import { Navbar } from '../navbar/navbar';
+import { Navbar } from '../../patient/navbar/navbar';
 
 @Component({
   selector: 'app-profil',

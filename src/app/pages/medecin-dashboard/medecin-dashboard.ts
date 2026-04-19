@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
 import { NotificationService } from '../../core/services/notification.service';
-import { Navbar } from '../navbar/navbar'; // ✅ Import de la Navbar pour éviter la redondance
+import { Navbar } from '../../patient/navbar/navbar'; // ✅ Import de la Navbar pour éviter la redondance
 import { Sidebar } from '../sidebar/sidebar';
 @Component({
   selector: 'app-medecin-dashboard',
