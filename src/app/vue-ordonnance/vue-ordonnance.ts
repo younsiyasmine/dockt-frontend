@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { OrdonnanceService } from '../core/services/ordonnance.service';
-import { Ordonnance } from '../core/models';
+import { Ordonnance } from '../core/models/models';
 
 @Component({
   selector: 'app-vue-ordonnance',

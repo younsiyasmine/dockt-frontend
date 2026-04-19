@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { AuthService } from '../../services/auth';
-import { NotificationService } from '../../services/notification.service';
+import { AuthService } from '../../core/services/auth';
+import { NotificationService } from '../../core/services/notification.service';
 import { Navbar } from '../navbar/navbar'; // ✅ Import de la Navbar pour éviter la redondance
 import { Sidebar } from '../sidebar/sidebar';
 @Component({

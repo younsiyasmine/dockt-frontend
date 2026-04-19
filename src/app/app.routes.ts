@@ -14,7 +14,7 @@ import { DicterCompteRendu } from './dicter-compte-rendu/dicter-compte-rendu';
 import { VueOrdonnance } from './vue-ordonnance/vue-ordonnance';
 import { AjouterRdv } from './ajouter-rdv/ajouter-rdv';
 import { VueCompteRendu } from './vue-compte-rendu/vue-compte-rendu';
-import { AuthGuard } from './core/guards/auth-guard';
+import { authGuard } from './core/guards/auth-guard';
 
 // Mehdi's pages
 import { LoginComponent } from './pages/login/login';
@@ -33,24 +33,24 @@ export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
 
   // Patient (protected 🔒)
-  { path: 'patient-dashboard', component: PatientDashboard, canActivate: [AuthGuard] },
-  { path: 'patient/dashboard', component: Dashboard, canActivate: [AuthGuard] },
-  { path: 'patient/prendre-rdv', component: PrendreRdv, canActivate: [AuthGuard] },
-  { path: 'patient/prendre-rdv/:id', component: PrendreRdv, canActivate: [AuthGuard] },
-  { path: 'patient/mes-rendezvous', component: MesRendezvousComponent, canActivate: [AuthGuard] },
-  { path: 'patient/ma-position', component: MaPosition, canActivate: [AuthGuard] },
+  { path: 'patient-dashboard', component: PatientDashboard, canActivate: [authGuard] },
+  { path: 'patient/dashboard', component: Dashboard, canActivate: [authGuard] },
+  { path: 'patient/prendre-rdv', component: PrendreRdv, canActivate: [authGuard] },
+  { path: 'patient/prendre-rdv/:id', component: PrendreRdv, canActivate: [authGuard] },
+  { path: 'patient/mes-rendezvous', component: MesRendezvousComponent, canActivate: [authGuard] },
+  { path: 'patient/ma-position', component: MaPosition, canActivate: [authGuard] },
   //MS3 with no security for now until connected with backend
   { path: 'patient/mes-ordonnances', component: MesOrdonnancesComponent },
   { path: 'patient/mes-compterendu', component: MesCompterenduComponent },
 
   // Médecin (protected 🔒)
-  { path: 'medecin-dashboard', component: MedecinDashboard, canActivate: [AuthGuard] },
-  { path: 'patients', component: PatientsComponent, canActivate: [AuthGuard] },
-  { path: 'medecin/dossier/:id', component: GererDossier, canActivate: [AuthGuard] },
-  { path: 'secretaire-dashboard', component: SecretaireDashboard, canActivate: [AuthGuard] },
-  { path: 'mes-actes', component: ActeMedicaleComponent, canActivate: [AuthGuard] },
-  { path: 'ajouter-rdv', component: AjouterRdv, canActivate: [AuthGuard] },
-  { path: 'ajouter-rdv/:id', component: AjouterRdv, canActivate: [AuthGuard] },
+  { path: 'medecin-dashboard', component: MedecinDashboard, canActivate: [authGuard] },
+  { path: 'patients', component: PatientsComponent, canActivate: [authGuard] },
+  { path: 'medecin/dossier/:id', component: GererDossier, canActivate: [authGuard] },
+  { path: 'secretaire-dashboard', component: SecretaireDashboard, canActivate: [authGuard] },
+  { path: 'mes-actes', component: ActeMedicaleComponent, canActivate: [authGuard] },
+  { path: 'ajouter-rdv', component: AjouterRdv, canActivate: [authGuard] },
+  { path: 'ajouter-rdv/:id', component: AjouterRdv, canActivate: [authGuard] },
   //MS3 with no security for now until connected with backend
   { path: 'dossier-patient', component: GererDossier },
   { path: 'dicter-ordonnance', component: DicterOrdonnance },
@@ -59,8 +59,8 @@ export const routes: Routes = [
   { path: 'voir-compte-rendu/:id', component: VueCompteRendu },
 
   // Shared (protected 🔒)
-  { path: 'shared/file-attente', component: FileAttente, canActivate: [AuthGuard] },
-  { path: 'shared/planning', component: Planning, canActivate: [AuthGuard] },
+  { path: 'shared/file-attente', component: FileAttente, canActivate: [authGuard] },
+  { path: 'shared/planning', component: Planning, canActivate: [authGuard] },
   //MS3 with no security for now until connected with backend
   { path: 'gerer-dossier/:id', component: GererDossier },
 

@@ -2,7 +2,7 @@ import { Component, ChangeDetectorRef } from '@angular/core'; // 1. Ajout de Cha
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-login',

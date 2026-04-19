@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CompteRenduService } from '../core/services/compte-rendu.service';
-import { CompteRendu } from '../core/models';
+import { CompteRendu } from '../core/models/models';
 
 @Component({
   selector: 'app-vue-compte-rendu',

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
 import { RdvService } from '../../core/services/rdv.service';
-import { RDV, StatutRDV } from '../../core/models';
+import { RDV, StatutRDV } from '../../core/models/models';
 
 interface CalendarDay {
   number: number | string;

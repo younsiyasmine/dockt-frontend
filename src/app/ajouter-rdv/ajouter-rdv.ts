@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { RdvService } from '../core/services/rdv.service';
-import { RDV, StatutRDV } from '../core/models';
+import { RDV, StatutRDV } from '../core/models/models';
 
 @Component({
   selector: 'app-ajouter-rdv',

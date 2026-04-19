@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrdonnanceService } from '../core/services/ordonnance.service';
-import { Ordonnance } from '../core/models';
+import { Ordonnance } from '../core/models/models';
 
 @Component({
   selector: 'app-dicter-ordonnance',

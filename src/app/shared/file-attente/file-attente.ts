@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { NgFor, NgClass, NgIf } from '@angular/common';
 import { FileAttenteService } from '../../core/services/file-attente.service';
-import { RDV, StatutConsultation } from '../../core/models';
+import { RDV, StatutConsultation } from '../../core/models/models';
 import { Router } from '@angular/router';
 
 interface PatientAttente {

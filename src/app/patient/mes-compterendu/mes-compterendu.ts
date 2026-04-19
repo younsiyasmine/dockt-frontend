@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Navbar } from '../navbar/navbar';
 import { CompteRenduService } from '../../core/services/compte-rendu.service';
 import { RdvService } from '../../core/services/rdv.service';
-import { CompteRendu, RDV } from '../../core/models';
+import { CompteRendu, RDV } from '../../core/models/models';
 
 @Component({
   selector: 'app-mes-compterendu',

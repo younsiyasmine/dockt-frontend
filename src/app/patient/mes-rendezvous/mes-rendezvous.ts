@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
 import { RdvService } from '../../core/services/rdv.service';
-import { RDV, StatutRDV } from '../../core/models';
+import { RDV, StatutRDV } from '../../core/models/models';
 
 @Component({
   selector: 'app-mes-rendezvous',

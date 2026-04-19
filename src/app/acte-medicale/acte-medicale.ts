@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActeMedicaleService } from '../core/services/acte-medicale.service';
-import { ActeMedicale } from '../core/models';
+import { ActeMedicale } from '../core/models/models';
 
 @Component({
   selector: 'app-acte-medicale',

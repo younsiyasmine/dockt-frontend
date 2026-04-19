@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
 import { OrdonnanceService } from '../../core/services/ordonnance.service';
-import { Ordonnance } from '../../core/models';
+import { Ordonnance } from '../../core/models/models';
 
 @Component({
   selector: 'app-mes-ordonnances',

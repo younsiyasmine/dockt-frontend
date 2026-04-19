@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
 import { FileAttenteService } from '../../core/services/file-attente.service';
 import { RdvService } from '../../core/services/rdv.service';
-import { RDV, StatutConsultation } from '../../core/models';
+import { RDV, StatutConsultation } from '../../core/models/models';
 
 @Component({
   selector: 'app-ma-position',

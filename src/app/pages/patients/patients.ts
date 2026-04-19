@@ -2,9 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';  // ← RouterLink et RouterLinkActive supprimés (jamais utilisés)
-import { AuthService } from '../../services/auth';
-import { NotificationService } from '../../services/notification.service';
-import { PatientService } from '../../services/patient.service';  // ← chemin corrigé (1 niveau)
+import { AuthService } from '../../core/services/auth';
+import { NotificationService } from '../../core/services/notification.service';
+import { PatientService } from '../../core/services/patient.service';  // ← chemin corrigé (1 niveau)
 import { Sidebar } from '../sidebar/sidebar';
 
 // Interface pour typer explicitement et éviter les 'any' implicites

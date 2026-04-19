@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { RdvService } from '../../core/services/rdv.service';
-import { RDV } from '../../core/models';
+import { RDV } from '../../core/models/models';
 import { Router } from '@angular/router';
 
 interface RdvData {
