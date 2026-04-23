@@ -38,7 +38,7 @@ export interface PatientDTO {
   prenom: string;
   cin: string;
   numTelephone: number;
-  sex: string;
+  sexe: boolean;
   dateNaissance: string;
   adresse: string;
 }
@@ -63,7 +63,7 @@ export enum StatutRDV {
 export enum StatutConsultation {
   EN_ATTENTE = 'EN_ATTENTE',
   EN_CONSULTATION = 'EN_CONSULTATION',
-  TERMINEE = 'TERMINEE'
+  TERMINE = 'TERMINE'
 }
 
 // ---------------------------------------------------------
@@ -84,3 +84,27 @@ export interface RDV {
   medActeRdvs?: MedActeRdv[]; // List<MedActeRdv> devient un tableau
   patient?: PatientDTO;
 }
+
+// ---------------------------------------------------------
+// 8. Ordonnance (MS3)
+// ---------------------------------------------------------
+export interface Ordonnance {
+  idOrdonnance?: number;
+  dateEmmission?: string;
+  contenuTexte: string;
+  type: string;
+  idRdv: number;
+}
+
+// ---------------------------------------------------------
+// 9. CompteRendu (MS3)
+// ---------------------------------------------------------
+export interface CompteRendu {
+  idCr?: number;
+  dateRedaction?: string;
+  contenu: string;
+  statut?: string; // 'DEMANDE' | 'EN_ATTENTE' | 'VALIDE'
+  messagePatient?: string;
+  idRdv: number;
+}
+

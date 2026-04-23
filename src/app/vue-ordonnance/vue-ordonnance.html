@@ -1,72 +1,85 @@
 <div class="min-h-screen bg-slate-50 py-6 px-4 flex flex-col items-center print:bg-white print:p-0 print:m-0">
 
-  <!-- Top Bar -->
-  <div class="w-full max-w-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 print:hidden">
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex items-center justify-center h-64">
+    <div class="animate-spin rounded-full h-10 w-10 border-4 border-teal-500 border-t-transparent"></div>
+  </div>
 
-    <button (click)="retour()"
-            class="flex items-center text-teal-500 hover:text-teal-600 hover:underline text-sm font-medium transition cursor-pointer">
-      <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-      </svg>
-      Retour au dossier patient
-    </button>
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="text-red-500 text-center mt-20">
+    <p class="text-lg font-semibold">Impossible de charger l'ordonnance.</p>
+    <button (click)="retour()" class="mt-4 text-teal-500 underline text-sm">Retour</button>
+  </div>
 
-    <div class="flex gap-2 w-full sm:w-auto">
-      <button class="flex-1 sm:flex-none px-4 py-2 border border-teal-500 text-teal-600 rounded-lg text-sm font-medium hover:bg-teal-50 transition cursor-pointer whitespace-nowrap">
-        Télécharger PDF
-      </button>
-      <button (click)="imprimerDoc()"
-              class="flex-1 sm:flex-none px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+  <!-- Content -->
+  <ng-container *ngIf="!loading && !error && ordonnance">
+
+    <!-- Top Bar -->
+    <div class="w-full max-w-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 print:hidden">
+      <button (click)="retour()"
+              class="flex items-center text-teal-500 hover:text-teal-600 hover:underline text-sm font-medium transition cursor-pointer">
+        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
         </svg>
-        Imprimer l'ordonnance
+        Retour
       </button>
-    </div>
-  </div>
-
-  <!-- A4 Document -->
-  <div class="bg-white w-full max-w-3xl shadow-2xl rounded-sm p-8 sm:p-12 print:shadow-none print:w-full print:h-full border border-gray-200 print:border-none">
-
-    <!-- Header -->
-    <div class="flex justify-between items-start border-b-2 border-teal-600 pb-6 mb-8">
-      <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 uppercase tracking-wider">{{ ordonnance.medecin.nom }}</h1>
-        <p class="text-teal-500 font-bold text-base sm:text-lg mt-1">{{ ordonnance.medecin.specialite }}</p>
-        <p class="text-gray-600 text-sm mt-3">{{ ordonnance.medecin.adresse_cabinet }}</p>
-        <p class="text-gray-600 text-sm">Tél : {{ ordonnance.medecin.telephone }}</p>
+      <div class="flex gap-2 w-full sm:w-auto">
+        <button (click)="telechargerPDF()"
+                class="flex-1 sm:flex-none px-4 py-2 border border-teal-500 text-teal-600 rounded-lg text-sm font-medium hover:bg-teal-50 transition cursor-pointer whitespace-nowrap">
+          Télécharger PDF
+        </button>
+        <button (click)="imprimerDoc()"
+                class="flex-1 sm:flex-none px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+          Imprimer l'ordonnance
+        </button>
       </div>
-      <div class="text-right flex-shrink-0 ml-4">
-        <div class="flex items-center justify-end text-teal-600 mb-4">
-          <span class="text-2xl font-black tracking-tighter">DOCKT</span>
+    </div>
+
+    <!-- A4 Document -->
+    <div id="ordonnance-doc"
+         class="bg-white w-full max-w-3xl shadow-2xl rounded-sm p-8 sm:p-12 print:shadow-none print:w-full print:h-full border border-gray-200 print:border-none">
+
+      <!-- Header -->
+      <div class="flex justify-between items-start border-b-2 border-teal-600 pb-6 mb-8">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-gray-900 uppercase tracking-wider">Dr. Bouabdellah Souad</h1>
+          <p class="text-teal-500 font-bold text-base sm:text-lg mt-1">Médecin Généraliste</p>
+          <p class="text-gray-600 text-sm mt-3">15 Avenue Mohammed VI, Oujda</p>
+          <p class="text-gray-600 text-sm">Tél : 05 36 78 43 21</p>
         </div>
-        <p class="text-gray-800 text-sm font-medium">Fait à {{ ordonnance.ville }}, le {{ ordonnance.date_emmission }}</p>
+        <div class="text-right flex-shrink-0 ml-4">
+          <div class="flex items-center justify-end text-teal-600 mb-4">
+            <span class="text-2xl font-black tracking-tighter">DOCKT</span>
+          </div>
+          <p class="text-gray-800 text-sm font-medium">
+            Fait à Oujda, le {{ formatDate(ordonnance.dateEmmission ?? '') }}
+          </p>
+        </div>
       </div>
-    </div>
 
-    <!-- Patient -->
-    <div class="mb-8 text-center">
-      <p class="text-sm text-gray-500 font-medium uppercase tracking-widest">Prescription pour</p>
-      <p class="text-2xl font-bold text-gray-900 mt-1">{{ ordonnance.patient.nom }}</p>
-      <p class="text-gray-600 text-base">{{ ordonnance.patient.age }}</p>
-    </div>
-
-    <!-- Content -->
-    <div class="min-h-[300px]">
-      <p class="text-gray-800 text-base leading-relaxed whitespace-pre-wrap">{{ ordonnance.contenu_texte }}</p>
-    </div>
-
-    <!-- Footer -->
-    <div class="mt-12 pt-6 flex justify-between items-end border-t border-gray-200">
-      <div>
-        <p class="text-xs text-gray-400">Réf : {{ ordonnance.identifiantUnique }}</p>
-        <p class="text-xs text-gray-400 mt-1">Généré électroniquement via DOCKT.</p>
+      <!-- Patient placeholder -->
+      <div class="mb-8 text-center">
+        <p class="text-sm text-gray-500 font-medium uppercase tracking-widest">Prescription pour</p>
+        <p class="text-2xl font-bold text-gray-900 mt-1">— Patient —</p>
+        <p class="text-gray-500 text-sm italic mt-1">RDV réf. {{ ordonnance.idRdv }}</p>
       </div>
-      <div class="text-center">
-        <p class="text-gray-700 text-sm font-bold mb-12">Signature et Cachet :</p>
-        <div class="w-48 sm:w-64 h-1 border-b-2 border-dashed border-gray-300"></div>
-      </div>
-    </div>
 
-  </div>
+      <!-- Contenu -->
+      <div class="min-h-[300px]">
+        <p class="text-gray-800 text-base leading-relaxed whitespace-pre-wrap">{{ ordonnance.contenuTexte }}</p>
+      </div>
+
+      <!-- Footer -->
+      <div class="mt-12 pt-6 flex justify-end border-t border-gray-200">
+        <div class="text-center">
+          <p class="text-gray-700 text-sm font-bold mb-12">Signature et Cachet :</p>
+          <div class="w-48 sm:w-64 h-1 border-b-2 border-dashed border-gray-300"></div>
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
 </div>

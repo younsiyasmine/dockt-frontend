@@ -12,49 +12,67 @@
         Mes Ordonnances
       </h1>
 
-      <div class="space-y-3 sm:space-y-4">
-        @for (ord of ordonnancesList; track ord.id_ordonnance) {
-          <div class="border border-gray-100 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 hover:shadow-sm transition-all duration-300">
+      <!-- Loading state -->
+      @if (isLoading) {
+        <div class="text-center py-6 sm:py-8">
+          <p class="text-gray-400 text-xs sm:text-sm italic">Chargement...</p>
+        </div>
+      }
 
-            <div class="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4 md:mb-5">
-              <div class="bg-teal-50 p-2 sm:p-3 rounded-lg sm:rounded-xl text-emerald-500 flex-shrink-0">
-                <i class="fa-solid fa-file-prescription text-base sm:text-lg"></i>
-              </div>
-              <div class="flex-1 min-w-0">
-                <h3 class="text-sm sm:text-base font-semibold text-[#1a3a5c]">
-                  Ordonnance Médicale
-                </h3>
-                <p class="text-gray-400 text-xs sm:text-sm mt-0.5">
-                  {{ ord.date_emmission }} • {{ ord.medecin }}
-                </p>
-                <div class="bg-gray-50 px-3 py-2 sm:px-4 sm:py-3 rounded-lg mt-2 sm:mt-3">
-                  <p class="text-gray-500 italic text-xs sm:text-sm leading-relaxed">
-                    " {{ ord.contenu_texte }} "
+      <!-- Error state -->
+      @if (errorMessage) {
+        <div class="text-center py-6 sm:py-8">
+          <p class="text-red-400 text-xs sm:text-sm italic">{{ errorMessage }}</p>
+        </div>
+      }
+
+      <!-- List -->
+      @if (!isLoading && !errorMessage) {
+        <div class="space-y-3 sm:space-y-4">
+          @for (ord of ordonnancesList; track ord.idOrdonnance) {
+            <div class="border border-gray-100 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 hover:shadow-sm transition-all duration-300">
+
+              <div class="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4 md:mb-5">
+                <div class="bg-teal-50 p-2 sm:p-3 rounded-lg sm:rounded-xl text-emerald-500 flex-shrink-0">
+                  <i class="fa-solid fa-file-prescription text-base sm:text-lg"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-sm sm:text-base font-semibold text-[#1a3a5c]">
+                    Ordonnance Médicale
+                  </h3>
+                  <p class="text-gray-400 text-xs sm:text-sm mt-0.5">
+                    {{ ord.dateEmmission }}
                   </p>
+                  <div class="bg-gray-50 px-3 py-2 sm:px-4 sm:py-3 rounded-lg mt-2 sm:mt-3">
+                    <p class="text-gray-500 italic text-xs sm:text-sm leading-relaxed">
+                      " {{ ord.contenuTexte }} "
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <button (click)="viewOrdonnance(ord)"
-                      class="flex-1 bg-[#34495e] text-white py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-gray-800 transition cursor-pointer">
-                <i class="fa-regular fa-eye"></i> Voir
-              </button>
-              <button (click)="downloadPDF(ord)"
-                      class="flex-1 bg-emerald-500 text-white py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-emerald-600 transition cursor-pointer">
-                <i class="fa-solid fa-cloud-arrow-down"></i> Télécharger PDF
-              </button>
-            </div>
+              <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <button (click)="telechargerPDF(ord)"
+                        class="flex-1 bg-[#34495e] text-white py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-gray-800 transition cursor-pointer">
+                  <i class="fa-regular fa-eye"></i> Voir
+                </button>
+                <button (click)="telechargerPDF(ord)"
+                        class="flex-1 bg-emerald-500 text-white py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-emerald-600 transition cursor-pointer">
+                  <i class="fa-solid fa-cloud-arrow-down"></i> Télécharger PDF
+                </button>
+              </div>
 
-          </div>
-        } @empty {
-          <div class="text-center py-6 sm:py-8">
-            <p class="text-gray-400 text-xs sm:text-sm italic">
-              Vous n'avez aucune ordonnance enregistrée.
-            </p>
-          </div>
-        }
-      </div>
+            </div>
+          } @empty {
+            <div class="text-center py-6 sm:py-8">
+              <p class="text-gray-400 text-xs sm:text-sm italic">
+                Vous n'avez aucune ordonnance enregistrée.
+              </p>
+            </div>
+          }
+        </div>
+      }
+
     </div>
   </main>
 </div>

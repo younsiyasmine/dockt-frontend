@@ -1,32 +1,106 @@
-<div class="flex items-center justify-between px-4 sm:px-6 md:px-8 py-2 sm:py-3 border-b border-gray-200 bg-white relative z-50">
-  <img src="logo.png" alt="Dockt" class="h-14 sm:h-18 md:h-22 cursor-pointer" routerLink="/patient/dashboard" />
-  <p class="text-[#1a3a5c] text-sm sm:text-base md:text-xl font-medium hidden sm:block">Bienvenue, Patient</p>
-  <div class="flex items-center gap-2 sm:gap-4">
+<div class="flex items-center justify-between px-8 py-3 border-b border-gray-200 bg-white relative z-50">
+  <img src="/logo.png" alt="Dockt" class="h-20 cursor-pointer" routerLink="/patient/dashboard" />
+  <p class="text-[#1a3a5c] text-xl font-medium">
+    Bienvenue, {{ user?.user?.nom }} {{ user?.user?.prenom }}
+  </p>
 
-    <!-- Notification Icon -->
-    <div class="relative cursor-pointer">
-      <i class="fa-regular fa-bell text-lg sm:text-xl md:text-2xl text-[#1a3a5c]"></i>
-      <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">3</span>
+  <div class="flex items-center gap-6">
+
+    <div class="relative pl-6 border-l border-slate-200">
+      <button (click)="toggleNotifications()" class="relative p-2 text-slate-400 hover:text-teal-600 transition-colors focus:outline-none cursor-pointer">
+        <i class="fa-regular fa-bell text-2xl"></i>
+        <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-teal-500 rounded-full border-2 border-white"></span>
+      </button>
+
+      <div *ngIf="notificationsOpen" class="absolute right-0 mt-3 w-96 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-fade-in">
+
+        <div class="p-5 border-b border-slate-50 flex justify-between items-center bg-white sticky top-0 z-10">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Notifications</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Faites défiler pour voir l'historique</p>
+          </div>
+          <button class="text-[10px] text-teal-600 font-bold hover:underline cursor-pointer">Tout marquer comme lu</button>
+        </div>
+
+        <div class="max-h-[450px] overflow-y-auto custom-scrollbar">
+          <div class="p-5 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer bg-teal-50/20">
+            <div class="flex gap-4">
+              <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 shrink-0">
+                <i class="fa-solid fa-file-waveform text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <div class="flex justify-between items-start">
+                  <p class="text-sm font-bold text-slate-800">Résultats d'analyses</p>
+                  <span class="text-[9px] bg-teal-500 text-white px-2 py-0.5 rounded-md font-bold uppercase">Nouveau</span>
+                </div>
+                <p class="text-xs text-slate-600 mt-1 leading-relaxed">Votre bilan sanguin est prêt. Consultez les commentaires du médecin.</p>
+                <p class="text-[10px] text-slate-400 mt-2 italic">Il y a 5 minutes</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-5 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer">
+            <div class="flex gap-4">
+              <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                <i class="fa-solid fa-calendar-check text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-bold text-slate-800">Rappel de rendez-vous</p>
+                <p class="text-xs text-slate-600 mt-1">Demain à 10:30 avec le **Dr. Sophie Laurent**.</p>
+                <p class="text-[10px] text-slate-400 mt-2 italic">Il y a 2 heures</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-5 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer opacity-70">
+            <div class="flex gap-4">
+              <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
+                <i class="fa-solid fa-check-double text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-bold text-slate-800 font-medium">Ordonnance expirée</p>
+                <p class="text-xs text-slate-500 mt-1">Votre ordonnance pour "Paracétamol" est arrivée à expiration.</p>
+                <p class="text-[10px] text-slate-400 mt-2 italic">Hier à 18:45</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-5 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer opacity-70">
+            <div class="flex gap-4">
+              <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
+                <i class="fa-solid fa-circle-info text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-bold text-slate-800 font-medium">Mise à jour système</p>
+                <p class="text-xs text-slate-500 mt-1">Nouvelles fonctionnalités disponibles sur votre dashboard.</p>
+                <p class="text-[10px] text-slate-400 mt-2 italic">Il y a 3 jours</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
 
-    <!-- Profil Button -->
     <div class="relative">
-      <button (click)="toggleMenu()"
-              class="text-[#1a3a5c] border-2 border-[#1a3a5c] px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm flex items-center gap-1 sm:gap-2 font-medium">
+      <button (click)="toggleMenu()" class="text-[#1a3a5c] border-2 border-[#1a3a5c] px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-medium hover:bg-[#1a3a5c]/5 transition-colors focus:outline-none cursor-pointer">
         <i class="fa-regular fa-user text-[#1a3a5c]"></i>
-        <span>Profil ▾</span>
+        <span>Profil</span>
+        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" [class.rotate-180]="menuOpen"></i>
       </button>
-      <div *ngIf="menuOpen"
-           class="absolute right-0 mt-2 w-44 sm:w-56 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-2">
-        <a class="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer">
-          <i class="fa-regular fa-address-card"></i> Mon profil
+
+      <div *ngIf="menuOpen" class="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-2">
+        <a routerLink="/profil" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors">
+          <i class="fa-regular fa-address-card w-4"></i> Mon profil
         </a>
-        <a class="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer border-y border-gray-50">
-          <i class="fa-solid fa-key"></i> Changer mot de passe
+
+        <a routerLink="/profil" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 cursor-pointer border-y border-gray-50 transition-colors">
+          <i class="fa-solid fa-key w-4"></i> Changer mot de passe
         </a>
-        <a class="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-500 hover:bg-red-50 font-medium flex items-center gap-2 cursor-pointer">
-          <i class="fa-solid fa-arrow-right-from-bracket"></i> Déconnexion
-        </a>
+
+        <button (click)="logout()" class="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 font-medium flex items-center gap-3 cursor-pointer transition-colors border-none outline-none">
+          <i class="fa-solid fa-arrow-right-from-bracket w-4"></i> Déconnexion
+        </button>
       </div>
     </div>
   </div>

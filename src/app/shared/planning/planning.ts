@@ -2,8 +2,10 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { RdvService } from '../../core/services/rdv.service';
-import { RDV } from '../../core/models';
+import { RDV } from '../../core/models/models';
 import { Router } from '@angular/router';
+import { Sidebar } from '../../pages/sidebar/sidebar';
+import { Topbar } from '../../pages/topbar/topbar';
 
 interface RdvData {
   id_rdv: number;
@@ -26,7 +28,7 @@ const COLORS = [
 @Component({
   selector: 'app-planning',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, Sidebar, Topbar],
   templateUrl: './planning.html',
   styleUrls: ['./planning.css'],
 })
@@ -60,10 +62,15 @@ export class Planning implements OnInit {
     '19:30',
   ];
 
+  role: 'MEDECIN' | 'SECRETAIRE' | null = null;
+
   selectedRdv: RdvData | null = null;
   menuX = 0;
   menuY = 0;
   showMenu = false;
+  showConfirmDelete = false;
+  showToast = false;
+  toastMessage = '';
 
   rdvList: RdvData[] = [];
 
@@ -74,6 +81,9 @@ export class Planning implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const auth = JSON.parse(localStorage.getItem('user') || 'null');
+    this.role = auth?.role ?? null;
+
     this.generateWeek();
     this.loadRdvs();
   }
@@ -82,20 +92,16 @@ export class Planning implements OnInit {
     this.rdvService.listerTousLesRDV().subscribe({
       next: (rdvs: RDV[]) => {
         this.rdvList = rdvs.map((rdv, index) => {
-          // Patient name: use patient object if available, fallback to ID
           const patientNom = rdv.patient
             ? `${rdv.patient.prenom} ${rdv.patient.nom}`
             : `Patient #${rdv.idPatient}`;
 
-          // Acte: first medActeRdv's libelleActe if available
           const statut_consultation =
             rdv.medActeRdvs?.[0]?.acteMedicale?.libelleActe ?? 'Consultation';
 
-          // Parse date
           const [year, month, day] = (rdv.datePrevue as string).split('-').map(Number);
           const date_prevue = new Date(year, month - 1, day);
 
-          // Parse time: "09:00:00" → "9:00"
           const heure_prevue = rdv.heurePrevue
             ? rdv.heurePrevue.substring(0, 5).replace(/^0/, '')
             : '';
@@ -174,18 +180,26 @@ export class Planning implements OnInit {
 
   modifierRdv(): void {
     if (!this.selectedRdv) return;
-    const id = this.selectedRdv.id_rdv; // ← save it BEFORE closing
+    const id = this.selectedRdv.id_rdv;
     this.closeMenu();
     this.router.navigate(['/ajouter-rdv', id]);
   }
 
-  showToast = false;
-  toastMessage = '';
+  demanderConfirmationSuppression(): void {
+    this.showMenu = false;
+    this.showConfirmDelete = true;
+  }
 
-  supprimerRdv(): void {
+  annulerSuppression(): void {
+    this.showConfirmDelete = false;
+    this.selectedRdv = null;
+  }
+
+  confirmerSuppression(): void {
     if (!this.selectedRdv) return;
     const id = this.selectedRdv.id_rdv;
-    this.closeMenu();
+    this.showConfirmDelete = false;
+    this.selectedRdv = null;
 
     this.rdvService.supprimerRDV(id).subscribe({
       next: () => {

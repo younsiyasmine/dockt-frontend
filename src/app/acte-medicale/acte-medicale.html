@@ -1,12 +1,15 @@
-<div class="ml-0 sm:ml-64 mt-16 p-4 sm:p-5 bg-slate-50 min-h-screen font-sans"
+<app-topbar></app-topbar>
+<app-sidebar></app-sidebar>
+
+<div class= "flex-1 ml-64 pt-24 px-8 pb-8 bg-slate-50 min-h-screen"
      (click)="closeAllMenus()">
 
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
-    <h1 class="text-base sm:text-lg font-bold text-gray-800">Liste des Actes Médicaux</h1>
+    <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Liste des Actes Médicaux</h1>
     <button (click)="openAddModal()"
             class="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer">
       <span class="text-2xl font-light mb-0.5 leading-none">+</span>
-      <span class="text-sm font-bold tracking-wide">Ajouter un nouvel Acte</span>
+      <span class="text-medium font-bold tracking-wide">Nouvel Acte</span>
     </button>
   </div>
 
@@ -21,12 +24,6 @@
       @if (toastAction === 'delete') {
         Acte supprimé avec succès !
       }
-    </div>
-  }
-
-  @if (errorMessage) {
-    <div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 mb-4">
-      {{ errorMessage }}
     </div>
   }
 
@@ -72,6 +69,9 @@
       } @empty {
         <div class="col-span-3 text-center py-10">
           <p class="text-gray-400 text-sm italic">Aucun acte médical enregistré.</p>
+          @if (errorMessage) {
+            <p class="text-gray-300 text-xs">{{ errorMessage }}</p>
+          }
         </div>
       }
     </div>

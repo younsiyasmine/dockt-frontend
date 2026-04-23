@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { RDV } from '../models'; // ← import from models
+import { RDV } from '../models/models'; // ← import from models
 
 @Injectable({ providedIn: 'root' })
 export class FileAttenteService {

@@ -1,0 +1,80 @@
+<header class="fixed top-0 left-64 right-0 h-16 bg-white border-b border-slate-100 shadow-sm z-30 flex items-center justify-end px-8 gap-6">
+
+  <!-- Notifications -->
+  <div class="relative">
+    <button (click)="toggleNotifications()"
+            class="p-2 text-slate-400 hover:text-teal-600 transition focus:outline-none relative">
+      <i class="fa-regular fa-bell text-xl"></i>
+      <span *ngIf="unreadCount > 0"
+            class="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-white font-bold">
+        {{ unreadCount }}
+      </span>
+    </button>
+
+    <div *ngIf="notificationsOpen"
+         class="absolute right-0 mt-3 w-96 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden">
+      <div class="p-4 border-b font-bold text-sm bg-slate-50 flex justify-between items-center">
+        <span>Notifications</span>
+        <button (click)="markAllRead()" class="text-[10px] text-teal-600 hover:underline">
+          Tout marquer comme lu
+        </button>
+      </div>
+      <div class="max-h-80 overflow-y-auto">
+        <div *ngIf="notifications.length === 0"
+             class="p-8 text-center text-slate-400 text-sm">
+          Aucune notification pour le moment.
+        </div>
+        <div *ngFor="let n of notifications"
+             (click)="markAsRead(n.id)"
+             class="p-4 border-b border-slate-50 hover:bg-slate-50 transition cursor-pointer"
+             [ngClass]="{'bg-white': n.statut, 'bg-teal-50/30': !n.statut}">
+          <div class="flex gap-3">
+            <div [ngClass]="!n.statut ? 'text-teal-500' : 'text-slate-300'" class="mt-1 shrink-0">
+              <i class="fa-solid fa-circle text-[8px]"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs font-bold text-slate-800">{{ n.titre }}</p>
+              <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">{{ n.message }}</p>
+              <div class="flex justify-between items-center mt-2">
+                <span class="text-[9px] text-slate-400 font-medium uppercase">{{ n.canal }}</span>
+                <span class="text-[9px] text-slate-400 italic">{{ n.dateEnvoi | date:'shortTime' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User menu -->
+  <div class="relative pl-6 border-l border-slate-200">
+    <button (click)="toggleMenu()" class="flex items-center gap-3 group focus:outline-none cursor-pointer">
+      <div class="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center text-teal-400 ring-2 ring-teal-100 group-hover:ring-teal-200 transition-all">
+        <i class="fa-solid fa-user text-sm"></i>
+      </div>
+      <div class="text-left">
+        <p class="text-sm font-bold text-slate-800 leading-none">{{ getUserLabel() }}</p>
+        <p class="text-[11px] text-slate-400 mt-1">{{ getUserSub() }}</p>
+      </div>
+      <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform"
+         [class.rotate-180]="menuOpen"></i>
+    </button>
+
+    <div *ngIf="menuOpen"
+         class="absolute right-0 mt-3 w-56 bg-white border border-slate-100 rounded-xl shadow-xl z-50 py-2">
+      <a routerLink="/parametres" (click)="menuOpen = false"
+         class="flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors">
+        <i class="fa-regular fa-user w-5"></i> Mon profil
+      </a>
+      <a routerLink="/parametres" (click)="menuOpen = false"
+         class="flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors border-y border-slate-50">
+        <i class="fa-solid fa-key w-5"></i> Changer mdp
+      </a>
+      <button (click)="logout()"
+              class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 font-semibold transition-colors border-none outline-none text-left">
+        <i class="fa-solid fa-arrow-right-from-bracket w-5"></i> Déconnexion
+      </button>
+    </div>
+  </div>
+
+</header>
