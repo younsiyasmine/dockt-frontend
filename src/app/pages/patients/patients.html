@@ -1,85 +1,55 @@
 <div class="flex min-h-screen bg-slate-50 font-sans text-slate-700">
   <app-sidebar></app-sidebar>
+  <app-topbar></app-topbar>
+  <app-ajouter-patient
+    *ngIf="showModal"
+    (close)="showModal = false"
+    (patientAdded)="onPatientAdded($event)">
+  </app-ajouter-patient>
 
-  <main class="flex-1 ml-64 p-8">
+  <main class="flex-1 ml-64 pt-24 px-8 pb-8">
+
+    <!-- suppression toast message -->
+    <div *ngIf="showToast"
+         class="fixed top-5 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg z-[200] text-sm font-semibold text-white transition-all"
+         [ngClass]="toastType === 'error' ? 'bg-red-500' : 'bg-teal-500'">
+      {{ toastMessage }}
+    </div>
 
     <!-- Header -->
-    <header class="flex justify-between items-center mb-8">
+    <div class="mb-4 sm:mb-6 flex justify-between items-start">
       <div>
-        <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Patients</h2>
-        <p class="text-slate-500 text-sm font-medium">Gestion des dossiers patients</p>
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Patients</h1>
+        <p class="text-xs text-slate-400 mt-0.5">Gestion des dossiers patients</p>
       </div>
-
-      <div class="flex items-center gap-6">
-        <!-- Notifications -->
-        <div class="relative">
-          <button (click)="toggleNotifications()"
-                  class="p-2 text-slate-400 hover:text-teal-600 transition relative">
-            <i class="fa-regular fa-bell text-xl"></i>
-            <span *ngIf="unreadCount > 0"
-                  class="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white
-                         text-[9px] flex items-center justify-center rounded-full
-                         border-2 border-white font-bold">
-              {{ unreadCount }}
-            </span>
-          </button>
-        </div>
-
-        <div class="h-8 w-[1px] bg-slate-200"></div>
-
-        <!-- Profil -->
-        <div class="relative">
-          <button (click)="toggleMenu()"
-                  class="flex items-center gap-3 group focus:outline-none">
-            <div class="text-right hidden sm:block">
-              <p class="text-sm font-bold text-slate-800 leading-none">
-                {{ user?.prenom }} {{ user?.nom }}
-              </p>
-              <p class="text-[11px] text-teal-600 font-semibold uppercase mt-1">
-                Médecin Généraliste
-              </p>
-            </div>
-            <div class="w-11 h-11 bg-teal-600 rounded-full flex items-center justify-center
-                        text-white shadow-lg shadow-teal-100 font-bold">
-              {{ user?.prenom?.charAt(0) }}{{ user?.nom?.charAt(0) }}
-            </div>
-            <i class="fa-solid fa-chevron-down text-[10px] text-slate-300"></i>
-          </button>
-        </div>
-      </div>
-    </header>
+      @if (role === 'SECRETAIRE') {
+      <button (click)="showModal = true"
+              class="bg-[#00b5a2] hover:bg-[#00a392] text-white px-6 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer">
+        <span class="text-2xl font-light mb-0.5 leading-none">+</span>
+        <span class="text-medium font-bold tracking-wide">Nouveau patient</span>
+      </button>
+      }
+    </div>
 
     <!-- Action Bar -->
-    <div class="flex justify-between items-center mb-6">
-      <div class="flex gap-4 flex-1 max-w-4xl">
-        <div class="relative flex-1">
-          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input
-            type="text"
-            placeholder="Rechercher un patient..."
-            [(ngModel)]="searchQuery"
-            (input)="onSearch()"
-            class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl
-                   focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500
-                   outline-none transition shadow-sm"
-          />
-        </div>
-        <button class="px-4 py-3 bg-white border border-slate-200 rounded-2xl
-                       text-slate-400 hover:text-teal-600 transition shadow-sm">
-          <i class="fa-solid fa-filter"></i>
-        </button>
-        <select class="px-6 py-3 bg-white border border-slate-200 rounded-2xl
-                       outline-none focus:ring-2 focus:ring-teal-500/20 shadow-sm font-medium">
-          <option>Tous les patients</option>
-          <option>Hommes</option>
-          <option>Femmes</option>
-        </select>
+    <div class="flex items-center flex-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-6">
+      <div class="flex items-center flex-1 px-4 py-3 gap-3">
+        <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+        <input
+          type="text"
+          placeholder="Rechercher un patient..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+          class="flex-1 outline-none text-sm text-slate-700 bg-transparent placeholder-slate-400"/>
       </div>
-      <button class="bg-teal-600 text-white px-6 py-3 rounded-2xl font-bold
-                     flex items-center gap-2 hover:bg-teal-700 transition
-                     shadow-lg shadow-teal-200">
-        <i class="fa-solid fa-plus"></i> Nouveau patient
-      </button>
+      <div class="border-l border-slate-200 px-4 py-3 text-slate-400 hover:text-teal-600 cursor-pointer transition">
+        <i class="fa-solid fa-filter"></i>
+      </div>
+      <select [(ngModel)]="filtreSexe" (change)="onFiltreChange()" class="border-l border-slate-200 px-4 py-3 outline-none text-sm font-medium text-slate-600 bg-transparent cursor-pointer">
+        <option value="">Tous les patients</option>
+        <option value="Homme">Hommes</option>
+        <option value="Femme">Femmes</option>
+      </select>
     </div>
 
     <!-- Stats Cards -->
@@ -100,92 +70,119 @@
 
     <!-- Loading -->
     <div *ngIf="loading" class="flex justify-center items-center py-20">
-      <div class="w-8 h-8 border-4 border-teal-500 border-t-transparent
-                  rounded-full animate-spin"></div>
+      <div class="w-8 h-8 border-4 border-b-teal-300 border-t-transparent rounded-full animate-spin"></div>
     </div>
 
     <!-- Tableau patients -->
-    <div *ngIf="!loading" class="bg-white rounded-3xl border border-slate-100
-                                  shadow-sm overflow-hidden">
+    <div *ngIf="!loading" class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[600px]">
 
-      <!-- Aucun résultat -->
-      <div *ngIf="patients.length === 0"
-           class="flex flex-col items-center justify-center py-20 text-slate-400">
-        <i class="fa-regular fa-user text-4xl mb-3"></i>
-        <p class="font-medium">Aucun patient trouvé</p>
+          <thead>
+          <tr class="border-b border-gray-100 bg-green-50">
+            <th class="text-left text-xs sm:text-sm font-bold text-gray-800 px-3 sm:px-4 md:px-6 py-3 sm:py-4">Patient</th>
+            <th class="text-left text-xs sm:text-sm font-bold text-gray-800 px-3 sm:px-4 md:px-6 py-3 sm:py-4">CIN</th>
+            <th class="text-left text-xs sm:text-sm font-bold text-gray-800 px-3 sm:px-4 md:px-6 py-3 sm:py-4">Date de naissance</th>
+            <th class="text-left text-xs sm:text-sm font-bold text-gray-800 px-3 sm:px-4 md:px-6 py-3 sm:py-4">Contact</th>
+            <th class="text-left text-xs sm:text-sm font-bold text-gray-800 px-3 sm:px-4 md:px-6 py-3 sm:py-4">Sexe</th>
+            <th class="text-left text-xs sm:text-sm font-bold text-gray-800 px-3 sm:px-4 md:px-6 py-3 sm:py-4">Actions</th>
+          </tr>
+          </thead>
+
+          <tbody>
+          <tr *ngFor="let p of patients"
+              class="border-b border-gray-50 hover:bg-green-50 transition cursor-default">
+
+            <!-- Patient -->
+            <td class="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+              <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl bg-teal-400 text-white flex items-center justify-center font-bold text-sm">
+                  {{ p.initiales }}
+                </div>
+                <div>
+                  <p class="font-semibold text-slate-800 text-xs sm:text-sm">{{ p.nom }}</p>
+                  <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">ID: {{ p.id }}</p>
+                </div>
+              </div>
+            </td>
+
+            <!-- CIN -->
+            <td class="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-slate-600 font-medium">
+              {{ p.cin }}
+            </td>
+
+            <!-- Date naissance -->
+            <td class="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-slate-600 font-medium">
+              {{ p.dateNaissance }}
+            </td>
+
+            <!-- Contact -->
+            <td class="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+              <p class="text-xs sm:text-sm text-slate-600 font-medium">{{ p.telephone }}</p>
+              <p class="text-xs text-slate-400">{{ p.email }}</p>
+            </td>
+
+            <!-- Sexe -->
+            <td class="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+              <span *ngIf="p.sex === 'Homme'" class="px-3 py-1 bg-blue-100 text-blue-400 text-[11px] font-bold rounded-full">Homme</span>
+              <span *ngIf="p.sex === 'Femme'" class="px-3 py-1 bg-pink-100 text-pink-400 text-[11px] font-bold rounded-full">Femme</span>
+              <span *ngIf="p.sex !== 'Homme' && p.sex !== 'Femme'" class="text-slate-400 text-sm">—</span>
+            </td>
+
+            <!-- Actions -->
+            <td class="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+              <div class="flex items-center gap-2">
+                <button (click)="voirDossier(p.id)"
+                        class="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-white bg-teal-500 px-3 sm:px-4 py-1.5 rounded-lg hover:bg-teal-600 transition whitespace-nowrap cursor-pointer">
+                  Voir dossier
+                  <i class="fa-solid fa-arrow-right" style="font-size: 12px;"></i>
+                </button>
+                @if (role === 'SECRETAIRE') {
+                <button (click)="supprimerPatient(p.id)"
+                        class="flex items-center justify-center w-8 h-8 text-red-300 border border-red-200 bg-red-50 rounded-lg hover:bg-red-400 hover:text-white transition cursor-pointer">
+                  <i class="fa-solid fa-trash" style="font-size: 13px;"></i>
+                </button>
+                }
+              </div>
+            </td>
+
+          </tr>
+          </tbody>
+
+        </table>
       </div>
 
-      <table *ngIf="patients.length > 0" class="w-full text-left">
-        <thead class="bg-slate-50/50 border-b border-slate-100">
-        <tr>
-          <th class="px-8 py-5 text-sm font-bold text-slate-800">Patient</th>
-          <th class="px-8 py-5 text-sm font-bold text-slate-800">Date de naissance</th>
-          <th class="px-8 py-5 text-sm font-bold text-slate-800">Contact</th>
-          <th class="px-8 py-5 text-sm font-bold text-slate-800">Sexe</th>
-          <th class="px-8 py-5 text-sm font-bold text-slate-800">Actions</th>
-        </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-50">
-        <tr *ngFor="let p of patients"
-            class="hover:bg-slate-50/50 transition cursor-default">
+      <!-- Empty state -->
+      <div *ngIf="patients.length === 0"
+           class="flex flex-col items-center justify-center py-12 sm:py-16 text-gray-300">
+        <i class="fa-regular fa-user text-4xl sm:text-5xl mb-3"></i>
+        <p class="text-xs sm:text-sm">Aucun patient trouvé</p>
+      </div>
 
-          <!-- Patient -->
-          <td class="px-8 py-5">
-            <div class="flex items-center gap-4">
-              <div class="w-10 h-10 rounded-xl bg-teal-600 text-white
-                            flex items-center justify-center font-bold text-sm">
-                {{ p.initiales }}
-              </div>
-              <div>
-                <p class="font-bold text-slate-800">{{ p.nom }}</p>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  ID: {{ p.id }}
-                </p>
-              </div>
-            </div>
-          </td>
+    </div>
 
-          <!-- Date naissance -->
-          <td class="px-8 py-5 text-sm text-slate-600 font-medium">
-            {{ p.dateNaissance }}
-          </td>
-
-          <!-- Contact -->
-          <td class="px-8 py-5 text-sm">
-            <p class="text-slate-600 font-medium">{{ p.telephone }}</p>
-            <p class="text-xs text-slate-400">{{ p.email }}</p>
-          </td>
-
-          <!-- Sexe -->
-          <td class="px-8 py-5">
-              <span *ngIf="p.sex === 'Homme'"
-                    class="px-3 py-1 bg-blue-100 text-blue-700
-                           text-[11px] font-bold rounded-full">
-                Homme
-              </span>
-            <span *ngIf="p.sex === 'Femme'"
-                  class="px-3 py-1 bg-pink-100 text-pink-700
-                           text-[11px] font-bold rounded-full">
-                Femme
-              </span>
-            <span *ngIf="p.sex !== 'Homme' && p.sex !== 'Femme'"
-                  class="text-slate-400 text-sm">—</span>
-          </td>
-
-          <!-- Actions -->
-          <td class="px-8 py-5">
-            <button
-              (click)="voirDossier(p.id)"
-              class="flex items-center gap-2 px-4 py-2 border border-slate-200
-                       rounded-xl text-sm font-bold text-slate-600
-                       hover:bg-slate-50 transition">
-              <i class="fa-regular fa-eye"></i> Voir dossier
-            </button>
-          </td>
-
-        </tr>
-        </tbody>
-      </table>
+    <!-- Confirmation Modal -->
+    <div *ngIf="showConfirmDelete"
+         class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-80 p-6 flex flex-col items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+          <i class="fa-regular fa-trash-can text-red-400 text-xl"></i>
+        </div>
+        <div class="text-center">
+          <h3 class="text-sm font-semibold text-slate-800 mb-1">Supprimer le patient</h3>
+          <p class="text-xs text-slate-500">Êtes-vous sûr de vouloir supprimer ce patient ? Cette action est irréversible.</p>
+        </div>
+        <div class="flex gap-3 w-full">
+          <button (click)="annulerSuppression()"
+                  class="flex-1 px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition cursor-pointer font-medium">
+            Annuler
+          </button>
+          <button (click)="confirmerSuppression()"
+                  class="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition cursor-pointer shadow-sm active:scale-95">
+            Supprimer
+          </button>
+        </div>
+      </div>
     </div>
 
   </main>

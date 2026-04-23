@@ -21,6 +21,7 @@ export class LoginAdminComponent {
   constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit() {
+    console.log('Selected role:', this.selectedRole);
     this.errorMessage = '';
 
     if (this.selectedRole === 'MEDECIN') {
@@ -46,7 +47,7 @@ export class LoginAdminComponent {
     if (response.role === 'MEDECIN') {
       this.router.navigate(['/medecin-dashboard']);
     } else {
-      this.router.navigate(['/secretaire-dashboard']);
+      this.router.navigate(['/medecin-dashboard']);
     }
   }
 }

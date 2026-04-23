@@ -1,98 +1,121 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth';
-import { NotificationService } from '../../core/services/notification.service';
-import { Navbar } from '../../patient/navbar/navbar'; // ✅ Import de la Navbar pour éviter la redondance
 import { Sidebar } from '../sidebar/sidebar';
+import { Topbar } from '../topbar/topbar';
+
 @Component({
   selector: 'app-medecin-dashboard',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    RouterLinkActive,
-    Navbar,
-    Sidebar,
-  ],
+  imports: [CommonModule, RouterLink, Sidebar, Topbar],
   templateUrl: './medecin-dashboard.html',
-  styleUrl: './medecin-dashboard.css'
+  styleUrl: './medecin-dashboard.css',
 })
 export class MedecinDashboard implements OnInit {
-  // --- État de l'interface ---
-  menuOpen = false;
-  notificationsOpen = false;
-
-  // --- Données ---
-  user: any = null;
-  notifications: any[] = [];
-  unreadCount: number = 0;
   today: Date = new Date();
+
+  patientsEnAttente: number = 0;
+  consultationsDuJour: number = 0;
+  patientsActifs: number = 0;
+  rdvDuJour: any[] = [];
+  role: 'MEDECIN' | 'SECRETAIRE' | null = null;
 
   constructor(
     private authService: AuthService,
-    private notifService: NotificationService,
-    private router: Router
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
   ) {}
 
+  joursSemaine = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+  mois = [
+    'janvier',
+    'février',
+    'mars',
+    'avril',
+    'mai',
+    'juin',
+    'juillet',
+    'août',
+    'septembre',
+    'octobre',
+    'novembre',
+    'décembre',
+  ];
+
+  get dateFormatee(): string {
+    const d = new Date();
+    return `${this.joursSemaine[d.getDay()]} ${d.getDate()} ${this.mois[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
   ngOnInit() {
-    this.user = this.authService.getUser();
-    this.loadNotifications();
+    const auth = JSON.parse(localStorage.getItem('user') || 'null');
+    this.role = auth?.role ?? null;
+    this.loadStats();
   }
 
-  // --- Logique des Notifications ---
-  loadNotifications() {
-    // Récupère le nombre de non-lus pour le badge
-    this.notifService.getUnreadCount().subscribe({
-      next: (count) => this.unreadCount = count,
-      error: (err: any) => console.error('Erreur count:', err)
-    });
+  loadStats() {
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-    // Récupère la liste complète pour le menu déroulant
-    this.notifService.getAll().subscribe({
-      next: (data) => this.notifications = data,
-      error: (err: any) => console.error('Erreur list:', err)
-    });
-  }
-
-  // Marquer une notification spécifique comme lue
-  markAsRead(id: number) {
-    this.notifService.markAsRead(id).subscribe({
-      next: () => this.loadNotifications(),
-      error: (err: any) => console.error('Erreur markAsRead:', err)
-    });
-  }
-
-  // Tout marquer comme lu (Appelé par ton bouton dans le HTML)
-  markAllRead() {
-    this.notifService.markAllAsRead().subscribe({
-      next: () => {
-        this.loadNotifications();
-        // Optionnel : fermer le menu après l'action
-        // this.notificationsOpen = false;
+    // Patients en attente + Consultations du jour (single call)
+    this.http.get<any[]>('http://localhost:8081/api/file-attente/today').subscribe({
+      next: (data) => {
+        this.patientsEnAttente = data.filter(rdv =>
+          rdv.checkIn === true && rdv.statutConsultation === 'EN_ATTENTE'
+        ).length;
+        this.consultationsDuJour = data.filter(rdv =>
+          rdv.statutRdv !== 'ANNULE'
+        ).length;
+        this.cdr.detectChanges();
       },
-      error: (err: any) => console.error('Erreur markAllRead:', err)
+      error: () => {},
+    });
+
+    // Patients actifs
+    this.http.get<any[]>('http://localhost:8082/api/patients').subscribe({
+      next: (data) => {
+        this.patientsActifs = data.length;
+        this.cdr.detectChanges();
+      },
+      error: () => {},
+    });
+
+    // RDV du jour
+    this.http.get<any[]>(`http://localhost:8081/api/rdv`).subscribe({
+      next: (data) => {
+        const now = new Date();
+        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        this.rdvDuJour = data
+          .filter(rdv => rdv.datePrevue === dateStr && rdv.statutRdv !== 'ANNULE')
+          .sort((a, b) => a.heurePrevue.localeCompare(b.heurePrevue))
+          .slice(0, 5)
+          .map(rdv => ({
+            ...rdv,
+            statutAffiche: this.getStatutConsultation(rdv, currentTime)
+          }));
+        this.cdr.detectChanges();
+      },
+      error: () => {},
     });
   }
 
-  // --- Gestion de l'affichage (Toggles) ---
-  toggleMenu() {
-    this.menuOpen = !this.menuOpen;
-    if (this.menuOpen) this.notificationsOpen = false; // Ferme l'autre menu
+  getStatutConsultation(rdv: any, currentTime: string): { label: string; class: string } {
+    if (rdv.statutConsultation === 'TERMINE')
+      return { label: 'Terminé', class: 'bg-green-100 text-green-600' };
+    if (rdv.statutConsultation === 'EN_CONSULTATION')
+      return { label: 'En cours', class: 'bg-blue-100 text-blue-600' };
+    if (rdv.statutConsultation === 'EN_ATTENTE')
+      return { label: 'En attente', class: 'bg-yellow-100 text-yellow-600' };
+
+    // statutConsultation is null — use time to guess
+    const heure = rdv.heurePrevue?.substring(0, 5);
+    if (heure && heure < currentTime)
+      return { label: 'Terminé', class: 'bg-green-300 text-gray-500' };
+
+    return { label: 'À venir', class: 'bg-yellow-300 text-slate-500' };
   }
 
-  toggleNotifications() {
-    this.notificationsOpen = !this.notificationsOpen;
-    if (this.notificationsOpen) {
-      this.menuOpen = false; // Ferme l'autre menu
-      this.loadNotifications(); // Rafraîchit les données à l'ouverture
-    }
-  }
-
-  // --- Authentification ---
-  logout() {
-    this.authService.logout();
-    this.menuOpen = false;
-    this.router.navigate(['/login-admin']);
-  }
 }

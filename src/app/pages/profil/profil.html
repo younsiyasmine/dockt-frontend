@@ -1,75 +1,177 @@
-<div class="min-h-screen bg-gray-50">
-
-  <!-- Navbar -->
+<div class="min-h-screen bg-[#f4f7f9]">
   <app-navbar></app-navbar>
 
-  <!-- Contenu -->
-  <div class="max-w-2xl mx-auto px-6 py-10">
-    <h1 class="text-2xl font-bold text-[#1a3a5c] mb-8">Mon Profil</h1>
+  <div class="max-w-3xl mx-auto px-6 py-10">
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+    <!-- Toast succès -->
+    <div *ngIf="successMessage"
+         class="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-emerald-500 text-white text-sm font-medium px-5 py-3 rounded-2xl shadow-lg animate-fade-in">
+      <i class="fa-solid fa-circle-check text-base"></i>
+      {{ successMessage }}
+    </div>
 
-      <!-- Avatar -->
-      <div class="flex items-center gap-6 mb-8 pb-8 border-b border-gray-100">
-        <div class="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center">
-          <i class="fa-regular fa-user text-3xl text-emerald-500"></i>
-        </div>
-        <div>
-          <h2 class="text-xl font-semibold text-[#1a3a5c]">{{ user?.user?.nom }} {{ user?.user?.prenom }}</h2>
-          <p class="text-gray-500 text-sm">{{ user?.user?.patientLogin }}</p>
+    <!-- Toast erreur -->
+    <div *ngIf="errorMessage"
+         class="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-red-500 text-white text-sm font-medium px-5 py-3 rounded-2xl shadow-lg animate-fade-in">
+      <i class="fa-solid fa-circle-xmark text-base"></i>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-2xl font-bold text-[#1a3a5c]">Mon Profil</h1>
+      <button *ngIf="!editMode" (click)="enableEdit()"
+              class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors cursor-pointer">
+        <i class="fa-solid fa-pen-to-square"></i> Modifier
+      </button>
+      <div *ngIf="editMode" class="flex gap-2">
+        <button (click)="cancelEdit()"
+                class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium px-4 py-2 rounded-xl transition-colors cursor-pointer">
+          <i class="fa-solid fa-xmark"></i> Annuler
+        </button>
+        <button (click)="saveChanges()" [disabled]="isLoading"
+                class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors cursor-pointer">
+          <i class="fa-solid fa-check"></i> Enregistrer
+        </button>
+      </div>
+    </div>
+
+    <!-- Card principale -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+      <!-- Bandeau avatar -->
+      <div class="bg-gradient-to-r from-[#1a3a5c] to-emerald-500 h-24 relative">
+        <div class="absolute -bottom-10 left-8">
+          <div class="w-20 h-20 rounded-full bg-white border-4 border-white shadow-md flex items-center justify-center">
+            <i class="fa-regular fa-user text-3xl text-emerald-500"></i>
+          </div>
         </div>
       </div>
 
-      <!-- Informations -->
-      <div class="grid grid-cols-2 gap-6">
+      <!-- Nom fixe sous avatar -->
+      <div class="pt-14 px-8 pb-6 border-b border-gray-100">
+        <h2 class="text-xl font-bold text-[#1a3a5c]">{{ displayName }}</h2>
+        <p class="text-gray-400 text-sm mt-0.5">{{ originalForm.email || '—' }}</p>
+      </div>
 
+      <!-- Formulaire / Infos -->
+      <div class="px-8 py-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+        <!-- Nom -->
         <div>
-          <label class="text-xs text-gray-400 uppercase font-semibold">Nom</label>
-          <p class="text-gray-800 mt-1 font-medium">{{ user?.user?.nom || '—' }}</p>
+          <label class="text-xs text-gray-400 uppercase font-semibold tracking-wide">Nom</label>
+          <p *ngIf="!editMode" class="text-gray-800 mt-1 font-medium">{{ originalForm.nom || '—' }}</p>
+          <input *ngIf="editMode" [(ngModel)]="form.nom" type="text"
+                 class="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition" />
         </div>
 
+        <!-- Prénom -->
         <div>
-          <label class="text-xs text-gray-400 uppercase font-semibold">Prénom</label>
-          <p class="text-gray-800 mt-1 font-medium">{{ user?.user?.prenom || '—' }}</p>
+          <label class="text-xs text-gray-400 uppercase font-semibold tracking-wide">Prénom</label>
+          <p *ngIf="!editMode" class="text-gray-800 mt-1 font-medium">{{ originalForm.prenom || '—' }}</p>
+          <input *ngIf="editMode" [(ngModel)]="form.prenom" type="text"
+                 class="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition" />
         </div>
 
+        <!-- Email -->
         <div>
-          <label class="text-xs text-gray-400 uppercase font-semibold">Email</label>
-          <p class="text-gray-800 mt-1 font-medium">{{ user?.user?.patientLogin || '—' }}</p>
+          <label class="text-xs text-gray-400 uppercase font-semibold tracking-wide">Email</label>
+          <p class="text-gray-800 mt-1 font-medium">{{ originalForm.email || '—' }}</p>
         </div>
 
+        <!-- CIN -->
         <div>
-          <label class="text-xs text-gray-400 uppercase font-semibold">CIN</label>
-          <p class="text-gray-800 mt-1 font-medium">{{ user?.user?.cin || '—' }}</p>
+          <label class="text-xs text-gray-400 uppercase font-semibold tracking-wide">CIN</label>
+          <p *ngIf="!editMode" class="text-gray-800 mt-1 font-medium">{{ originalForm.cin || '—' }}</p>
+          <input *ngIf="editMode" [(ngModel)]="form.cin" type="text"
+                 class="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition" />
         </div>
 
+        <!-- Téléphone -->
         <div>
-          <label class="text-xs text-gray-400 uppercase font-semibold">Téléphone</label>
-          <p class="text-gray-800 mt-1 font-medium">{{ user?.user?.numTelephone || '—' }}</p>
+          <label class="text-xs text-gray-400 uppercase font-semibold tracking-wide">Téléphone</label>
+          <!-- originalForm.numTelephone already has 0 prefix, no need to add it -->
+          <p *ngIf="!editMode" class="text-gray-800 mt-1 font-medium">
+            {{ originalForm.numTelephone || '—' }}
+          </p>
+          <input *ngIf="editMode" [(ngModel)]="form.numTelephone" type="tel"
+                 maxlength="10"
+                 (keypress)="$event.charCode >= 48 && $event.charCode <= 57 || $event.preventDefault()"
+                 class="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition" />
+          <p *ngIf="editMode" class="text-xs text-gray-400 mt-1">10 chiffres requis (ex: 0612345678)</p>
         </div>
 
+        <!-- Date de naissance -->
         <div>
-          <label class="text-xs text-gray-400 uppercase font-semibold">Date de naissance</label>
-          <p class="text-gray-800 mt-1 font-medium">{{ user?.user?.dateNaissance || '—' }}</p>
+          <label class="text-xs text-gray-400 uppercase font-semibold tracking-wide">Date de naissance</label>
+          <p *ngIf="!editMode" class="text-gray-800 mt-1 font-medium">{{ originalForm.dateNaissance || '—' }}</p>
+          <input *ngIf="editMode" [(ngModel)]="form.dateNaissance" type="date"
+                 class="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition" />
         </div>
 
+        <!-- Sexe -->
         <div>
-          <label class="text-xs text-gray-400 uppercase font-semibold">Sexe</label>
-          <p class="text-gray-800 mt-1 font-medium">{{ user?.user?.sexe ? 'Homme' : 'Femme' }}</p>
+          <label class="text-xs text-gray-400 uppercase font-semibold tracking-wide">Sexe</label>
+          <p *ngIf="!editMode" class="text-gray-800 mt-1 font-medium">{{ originalForm.sexe ? 'Homme' : 'Femme' }}</p>
+          <select *ngIf="editMode" [(ngModel)]="form.sexe"
+                  class="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition">
+            <option [ngValue]="true">Homme</option>
+            <option [ngValue]="false">Femme</option>
+          </select>
         </div>
 
+        <!-- Adresse -->
         <div>
-          <label class="text-xs text-gray-400 uppercase font-semibold">Adresse</label>
-          <p class="text-gray-800 mt-1 font-medium">{{ user?.user?.adresse || '—' }}</p>
+          <label class="text-xs text-gray-400 uppercase font-semibold tracking-wide">Adresse</label>
+          <p *ngIf="!editMode" class="text-gray-800 mt-1 font-medium">{{ originalForm.adresse || '—' }}</p>
+          <input *ngIf="editMode" [(ngModel)]="form.adresse" type="text"
+                 class="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition" />
         </div>
 
+      </div>
+
+      <!-- Section changement de mot de passe -->
+      <div class="px-8 py-6 border-t border-gray-100">
+        <button (click)="togglePasswordSection()"
+                class="flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors cursor-pointer">
+          <i class="fa-solid fa-lock"></i>
+          {{ showPasswordSection ? 'Masquer' : 'Changer le mot de passe' }}
+        </button>
+
+        <div *ngIf="showPasswordSection" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2">
+            <label class="text-xs text-gray-400 uppercase font-semibold tracking-wide">Ancien mot de passe</label>
+            <input [(ngModel)]="oldPassword" type="password" placeholder="••••••••"
+                   class="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition" />
+          </div>
+          <div>
+            <label class="text-xs text-gray-400 uppercase font-semibold tracking-wide">Nouveau mot de passe</label>
+            <input [(ngModel)]="newPassword" type="password" placeholder="••••••••"
+                   class="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition" />
+          </div>
+          <div>
+            <label class="text-xs text-gray-400 uppercase font-semibold tracking-wide">Confirmer</label>
+            <input [(ngModel)]="confirmPassword" type="password" placeholder="••••••••"
+                   class="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition" />
+          </div>
+          <div class="sm:col-span-2">
+            <p *ngIf="passwordError" class="text-red-500 text-xs mb-2">
+              <i class="fa-solid fa-circle-exclamation mr-1"></i>{{ passwordError }}
+            </p>
+            <button (click)="savePassword()" [disabled]="isLoading"
+                    class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors cursor-pointer">
+              Mettre à jour le mot de passe
+            </button>
+          </div>
+        </div>
       </div>
 
     </div>
 
-    <!-- Bouton retour -->
-    <div class="mt-6">
-      <a [routerLink]="dashboardLink" class="text-emerald-500 hover:text-emerald-600 flex items-center gap-2 text-sm font-medium transition-colors">
+    <!-- Retour -->
+    <div class="mt-4">
+      <a [routerLink]="dashboardLink"
+         class="text-emerald-600 hover:text-emerald-700 flex items-center gap-2 text-sm font-medium transition-colors">
         <i class="fa-solid fa-arrow-left"></i> Retour au dashboard
       </a>
     </div>

@@ -20,10 +20,11 @@ import { authGuard } from './core/guards/auth-guard';
 import { LoginComponent } from './pages/login/login';
 import { LoginAdminComponent } from './pages/login-admin/login-admin';
 import { RegisterComponent } from './pages/register/register';
+import { ProfilComponent } from './pages/profil/profil';
 
 import { MedecinDashboard } from './pages/medecin-dashboard/medecin-dashboard';
-import { SecretaireDashboard } from './pages/secretaire-dashboard/secretaire-dashboard';
 import { PatientsComponent } from './pages/patients/patients';
+import { Parametres } from './pages/parametres/parametres';
 
 export const routes: Routes = [
   // Auth (public)
@@ -33,8 +34,8 @@ export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
 
   // Patient (protected 🔒)
-  { path: 'patient-dashboard', component: Dashboard, canActivate: [authGuard] },
   { path: 'patient/dashboard', component: Dashboard, canActivate: [authGuard] },
+  { path: 'profil', component: ProfilComponent, canActivate: [authGuard] },
   { path: 'patient/prendre-rdv', component: PrendreRdv, canActivate: [authGuard] },
   { path: 'patient/prendre-rdv/:id', component: PrendreRdv, canActivate: [authGuard] },
   { path: 'patient/mes-rendezvous', component: MesRendezvousComponent, canActivate: [authGuard] },
@@ -47,7 +48,6 @@ export const routes: Routes = [
   { path: 'medecin-dashboard', component: MedecinDashboard, canActivate: [authGuard] },
   { path: 'patients', component: PatientsComponent, canActivate: [authGuard] },
   { path: 'medecin/dossier/:id', component: GererDossier, canActivate: [authGuard] },
-  { path: 'secretaire-dashboard', component: SecretaireDashboard, canActivate: [authGuard] },
   { path: 'mes-actes', component: ActeMedicaleComponent, canActivate: [authGuard] },
   { path: 'ajouter-rdv', component: AjouterRdv, canActivate: [authGuard] },
   { path: 'ajouter-rdv/:id', component: AjouterRdv, canActivate: [authGuard] },
@@ -61,6 +61,8 @@ export const routes: Routes = [
   // Shared (protected 🔒)
   { path: 'shared/file-attente', component: FileAttente, canActivate: [authGuard] },
   { path: 'shared/planning', component: Planning, canActivate: [authGuard] },
+  { path: 'parametres', component: Parametres },
+
   //MS3 with no security for now until connected with backend
   { path: 'gerer-dossier/:id', component: GererDossier },
 

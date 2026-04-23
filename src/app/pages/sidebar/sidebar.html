@@ -1,62 +1,60 @@
-<aside class="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full z-40 shadow-sm">
-  <div class="p-8 mb-4">
+<aside class="w-64 bg-white border-r border-slate-100 flex flex-col fixed h-full z-40 shadow-sm">
+
+  <div class="flex flex-col items-center pt-10 pb-20">
     <img [routerLink]="getDashboardRoute()"
-         src="/images/Dockt-logo.png"
+         src="logo.png"
          alt="Dockt"
-         class="h-16 w-auto object-contain mx-auto cursor-pointer drop-shadow-sm" />
+         class="h-32 w-auto object-contain cursor-pointer" />
   </div>
 
-  <nav class="flex-1 px-4 space-y-2">
+  <nav class="flex-1 px-4 space-y-1">
+
     <a [routerLink]="getDashboardRoute()"
-       routerLinkActive="bg-teal-600 text-white shadow-lg shadow-teal-100"
-       [routerLinkActiveOptions]="{exact: true}"
-       class="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-50 transition-all duration-200 group">
-      <i class="fa-solid fa-table-columns text-lg group-hover:scale-110 transition-transform"></i>
-      <span class="font-semibold">Dashboard</span>
+       [ngClass]="isActive(getDashboardRoute()) ? 'bg-teal-50 text-[#26a69a]' : 'text-slate-700'"
+       class="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-teal-50 transition-all duration-200 group">
+      <i class="fa-solid fa-table-cells-large text-lg"></i>
+      <span class="text-[15px] font-medium">Dashboard</span>
     </a>
 
-    <a routerLink="/file-attente"
-       routerLinkActive="bg-teal-600 text-white shadow-lg shadow-teal-100"
-       class="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-50 transition-all duration-200 group">
-      <i class="fa-solid fa-clock text-lg group-hover:scale-110 transition-transform"></i>
-      <span class="font-semibold">File d'Attente</span>
+    <a routerLink="/shared/file-attente"
+       [ngClass]="isActive('/shared/file-attente') ? 'bg-teal-50 text-[#26a69a]' : 'text-slate-700'"
+       class="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-teal-50 transition-all duration-200 group">
+      <i class="fa-regular fa-clock text-lg"></i>
+      <span class="text-[15px] font-medium">File d'Attente</span>
     </a>
 
-    <a routerLink="/planning"
-       routerLinkActive="bg-teal-600 text-white shadow-lg shadow-teal-100"
-       class="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-50 transition-all duration-200 group">
-      <i class="fa-solid fa-calendar-days text-lg group-hover:scale-110 transition-transform"></i>
-      <span class="font-semibold">Planning</span>
+    <a routerLink="/shared/planning"
+       [ngClass]="isActive('/shared/planning') ? 'bg-teal-50 text-[#26a69a]' : 'text-slate-700'"
+       class="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-teal-50 transition-all duration-200 group">
+      <i class="fa-regular fa-calendar text-lg"></i>
+      <span class="text-[15px] font-medium">Planning</span>
     </a>
 
     <a routerLink="/patients"
-       routerLinkActive="bg-teal-600 text-white shadow-lg shadow-teal-100"
-       class="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-50 transition-all duration-200 group">
-      <i class="fa-solid fa-user-group text-lg group-hover:scale-110 transition-transform"></i>
-      <span class="font-semibold">Patients</span>
+       [ngClass]="isActive('/patients') ? 'bg-teal-50 text-[#26a69a]' : 'text-slate-700'"
+       class="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-teal-50 transition-all duration-200 group">
+      <i class="fa-regular fa-user text-lg"></i>
+      <span class="text-[15px] font-medium">Patients</span>
     </a>
 
-    <a routerLink="/ordonnances"
-       routerLinkActive="bg-teal-600 text-white shadow-lg shadow-teal-100"
-       class="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-50 transition-all duration-200 group">
-      <i class="fa-solid fa-file-medical text-lg group-hover:scale-110 transition-transform"></i>
-      <span class="font-semibold">Ordonnances</span>
+    @if (role === 'MEDECIN') {
+    <a routerLink="/mes-actes"
+       [ngClass]="isActive('/mes-actes') ? 'bg-teal-50 text-[#26a69a]' : 'text-slate-700'"
+       class="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-teal-50 transition-all duration-200 group">
+      <i class="fa-solid fa-notes-medical text-lg"></i>
+      <span class="text-[15px] font-medium">Acte Médicale</span>
     </a>
+    }
 
-    <a routerLink="/comptes-rendus"
-       routerLinkActive="bg-teal-600 text-white shadow-lg shadow-teal-100"
-       class="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-50 transition-all duration-200 group">
-      <i class="fa-solid fa-clipboard-list text-lg group-hover:scale-110 transition-transform"></i>
-      <span class="font-semibold">Comptes Rendus</span>
-    </a>
   </nav>
 
   <div class="p-6 border-t border-slate-50">
     <a routerLink="/parametres"
-       routerLinkActive="text-teal-600"
-       class="flex items-center gap-4 px-5 py-3 text-slate-400 hover:text-teal-600 transition-colors group">
-      <i class="fa-solid fa-gear group-hover:rotate-45 transition-transform"></i>
-      <span class="text-sm font-medium">Paramètres</span>
+       [ngClass]="isActive('/parametres') ? 'text-[#26a69a]' : 'text-slate-700'"
+       class="flex items-center gap-4 px-4 py-2 hover:text-[#26a69a] transition-colors group">
+      <i class="fa-solid fa-gear text-lg group-hover:rotate-45 transition-transform duration-500"></i>
+      <span class="text-[15px] font-medium">Paramètres</span>
     </a>
   </div>
+
 </aside>

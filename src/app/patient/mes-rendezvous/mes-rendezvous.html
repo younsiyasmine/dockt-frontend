@@ -45,7 +45,10 @@
                     {{ formatDate(rdv.datePrevue) }} à {{ formatTime(rdv.heurePrevue) }}
                   </h3>
                   <p class="text-gray-400 text-xs sm:text-sm mt-0.5">
-                    Patient ID: {{ rdv.idPatient }}
+                    {{ patientNames[rdv.idPatient ?? 0] ?? 'Chargement...' }}
+                  </p>
+                  <p class="text-gray-400 text-xs sm:text-sm mt-0.5">
+                    {{ MEDECIN_NAME }}
                   </p>
                 </div>
                 <span [class]="getStatusClass(rdv.statutRdv)"

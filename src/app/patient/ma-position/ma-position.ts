@@ -4,6 +4,7 @@ import { Navbar } from '../navbar/navbar';
 import { FileAttenteService } from '../../core/services/file-attente.service';
 import { RdvService } from '../../core/services/rdv.service';
 import { RDV, StatutConsultation } from '../../core/models/models';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-ma-position',
@@ -14,8 +15,10 @@ import { RDV, StatutConsultation } from '../../core/models/models';
 })
 export class MaPosition implements OnInit {
 
-  // ⚠️ Replace with real auth later
-  private idPatient = 5;
+  //  real auth
+  private get idPatient(): number {
+    return this.authService.getCurrentUserId() ?? 0;
+  }
 
   fileAttente: RDV[] = [];      // full queue today
   monRdv: RDV | null = null;    // patient's RDV today
@@ -28,7 +31,8 @@ export class MaPosition implements OnInit {
   constructor(
     private fileAttenteService: FileAttenteService,
     private rdvService: RdvService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -98,7 +102,7 @@ export class MaPosition implements OnInit {
   getStatutLabel(rdv: RDV): string {
     switch (rdv.statutConsultation) {
       case StatutConsultation.EN_CONSULTATION: return 'En consultation';
-      case StatutConsultation.TERMINEE: return 'Terminé';
+      case StatutConsultation.TERMINE: return 'Terminé';
       default: return 'En attente';
     }
   }
@@ -106,7 +110,7 @@ export class MaPosition implements OnInit {
   getStatutColor(rdv: RDV): string {
     switch (rdv.statutConsultation) {
       case StatutConsultation.EN_CONSULTATION: return 'text-emerald-500';
-      case StatutConsultation.TERMINEE: return 'text-gray-400';
+      case StatutConsultation.TERMINE: return 'text-gray-400';
       default: return 'text-yellow-500';
     }
   }
@@ -114,7 +118,7 @@ export class MaPosition implements OnInit {
   getBadgeColor(rdv: RDV): string {
     switch (rdv.statutConsultation) {
       case StatutConsultation.EN_CONSULTATION: return 'bg-emerald-500';
-      case StatutConsultation.TERMINEE: return 'bg-gray-300';
+      case StatutConsultation.TERMINE: return 'bg-gray-300';
       default: return rdv.idPatient === this.idPatient ? 'bg-emerald-500' : 'bg-yellow-400';
     }
   }

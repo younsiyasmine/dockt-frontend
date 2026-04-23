@@ -3,39 +3,263 @@ import { CommonModule } from '@angular/common';
 import { DicterOrdonnance } from '../dicter-ordonnance/dicter-ordonnance';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectorRef } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 // C'EST CETTE LIGNE QUI RÈGLE TOUT !
 import { VueOrdonnance } from '../vue-ordonnance/vue-ordonnance';
 
 // 👇 1. ON AJOUTE L'IMPORT DU COMPTE RENDU ICI
 import { DicterCompteRendu } from '../dicter-compte-rendu/dicter-compte-rendu';
+// Add to imports at top
+import { FileAttenteService } from '../core/services/file-attente.service'; // adjust path
 
 // 👇 2. NOUVEL IMPORT POUR L'APERÇU A4 DU COMPTE RENDU
 import { VueCompteRendu } from '../vue-compte-rendu/vue-compte-rendu';
+import { Topbar } from '../pages/topbar/topbar';
+import { Sidebar } from '../pages/sidebar/sidebar';
 
 @Component({
   selector: 'app-gerer-dossier',
   // 👇 3. ON L'AJOUTE DANS LA LISTE ICI !
-  imports: [CommonModule, DicterOrdonnance, VueOrdonnance, DicterCompteRendu, VueCompteRendu],
+  imports: [
+    CommonModule,
+    DicterOrdonnance,
+    VueOrdonnance,
+    DicterCompteRendu,
+    VueCompteRendu,
+    Topbar,
+    Sidebar,
+    FormsModule,
+  ],
   templateUrl: './gerer-dossier.html',
   styleUrl: './gerer-dossier.css',
 })
 export class GererDossier implements OnInit {
-
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
+    private fileAttenteService: FileAttenteService,
   ) {}
 
+  role: 'MEDECIN' | 'SECRETAIRE' | null = null;
+
+  patient: any = {
+    nom: '',
+    prenom: '',
+    cin: '',
+    date_naissance: '',
+    num_telephone: '',
+    sex: false,
+    adresse: '',
+    image_biometrique: null,
+  };
+
+  patientId: string | null = null;
+
+  modaleEditionOuverte = false;
+  isUpdating = false;
+  updateError = '';
+  showPassword = false;
+
+  editForm: any = {};
+
+  showSuccessToast = false;
+
+  checkInLoading = false;
+  checkInSuccess = false;
+  checkInError = '';
+
   ngOnInit(): void {
+    const auth = JSON.parse(localStorage.getItem('user') || 'null');
+    this.role = auth?.role ?? null;
+
     const id = this.route.snapshot.paramMap.get('id');
-    console.log('Patient ID:', id);
-    // Load patient data using this ID from your service
+    this.patientId = id;
+
+    if (id) {
+      this.http.get<any>(`http://localhost:8082/api/patients/${id}`).subscribe({
+        next: (p) => {
+          this.patient = {
+            nom: p.nom ?? '—',
+            prenom: p.prenom ?? '—',
+            cin: p.cin ?? '—',
+            date_naissance: p.dateNaissance ?? '—',
+            num_telephone: p.numTelephone ? '0' + p.numTelephone.toString() : '—',
+            sex: p.sexe === true || p.sexe === 'true',
+            adresse: p.adresse ?? '—',
+            image_biometrique: null,
+          };
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Erreur chargement patient:', err),
+      });
+
+      // Fetch RDVs from MS2
+      this.http.get<any[]>(`http://localhost:8081/api/rdv/patient/${id}`).subscribe({
+        next: (rdvs) => {
+          const activeStatuts = ['CONFIRME', 'MODIFIE_CONFIRME'];
+
+          const getDate = (rdv: any) =>
+            new Date(`${rdv.date_prevue}T${rdv.heure_prevue ?? '00:00'}`).getTime();
+
+          this.historiqueRdv = rdvs
+            .map((rdv) => ({
+              titre: 'Consultation',
+              date_prevue: rdv.datePrevue,
+              heure_prevue: rdv.heurePrevue?.substring(0, 5),
+              statut_consultation: rdv.statutRdv,
+            }))
+            .sort((a: any, b: any) => {
+              const aActive = activeStatuts.includes(a.statut_consultation);
+              const bActive = activeStatuts.includes(b.statut_consultation);
+
+              if (aActive !== bActive) return aActive ? -1 : 1;
+
+              if (aActive) {
+                return getDate(a) - getDate(b); // active: soonest first
+              } else {
+                return getDate(b) - getDate(a); // inactive: most recent first
+              }
+            });
+
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Erreur chargement RDVs:', err),
+      });
+    }
   }
 
   // 👇 6. ADD THE retour() FUNCTION
   retour() {
-    this.router.navigate(['shared/file-attente']);
+    window.history.back();
+  }
+
+  ouvrirModaleEdition() {
+    this.editForm = {
+      nom: this.patient.nom === '—' ? '' : this.patient.nom,
+      prenom: this.patient.prenom === '—' ? '' : this.patient.prenom,
+      cin: this.patient.cin === '—' ? '' : this.patient.cin,
+      dateNaissance: this.patient.date_naissance === '—' ? '' : this.patient.date_naissance,
+      numTelephone: this.patient.num_telephone === '—' ? '' : this.patient.num_telephone,
+      sexe: this.patient.sex,
+      adresse: this.patient.adresse === '—' ? '' : this.patient.adresse,
+      email: '',
+      password: '',
+    };
+    this.modaleEditionOuverte = true;
+    this.updateError = '';
+  }
+
+  fermerModaleEdition() {
+    this.modaleEditionOuverte = false;
+    this.updateError = '';
+  }
+
+  sauvegarderPatient() {
+    this.isUpdating = true;
+    this.updateError = '';
+
+    const payload: any = {
+      nom: this.editForm.nom || null,
+      prenom: this.editForm.prenom || null,
+      cin: this.editForm.cin || null,
+      dateNaissance: this.editForm.dateNaissance || null,
+      numTelephone: this.editForm.numTelephone ? parseInt(this.editForm.numTelephone) : null,
+      sexe: this.editForm.sexe,
+      adresse: this.editForm.adresse || null,
+      email: this.editForm.email || null,
+      password: this.editForm.password || null,
+    };
+
+    this.http.put<any>(`http://localhost:8082/api/patients/${this.patientId}`, payload).subscribe({
+      next: (updated) => {
+        this.patient = {
+          nom: updated.nom ?? '—',
+          prenom: updated.prenom ?? '—',
+          cin: updated.cin ?? '—',
+          date_naissance: updated.dateNaissance ?? '—',
+          num_telephone: updated.numTelephone?.toString() ?? '—',
+          sex: updated.sexe === true,
+          adresse: updated.adresse ?? '—',
+          image_biometrique: null,
+        };
+        this.isUpdating = false;
+        this.modaleEditionOuverte = false;
+        this.showSuccessToast = true;           // ← add this
+        setTimeout(() => {
+          this.showSuccessToast = false;
+          this.cdr.detectChanges();
+        }, 3000);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.updateError = err?.error?.message || 'Une erreur est survenue.';
+        this.isUpdating = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  checkIn() {
+    if (!this.patientId) return;
+
+    this.checkInLoading = true;
+    this.checkInError = '';
+
+    // First get today's RDVs to find the idRdv for this patient
+    this.fileAttenteService.getFileDuJourAvecDetails().subscribe({
+      next: (rdvs) => {
+        const rdv = rdvs.find((r: any) =>
+          r.idPatient?.toString() === this.patientId?.toString() ||
+          r.patient?.idPatient?.toString() === this.patientId?.toString()
+        );
+
+        if (!rdv || !rdv.id) {
+          this.checkInLoading = false;
+          this.checkInError = 'Aucun RDV trouvé aujourd\'hui pour ce patient.';
+          this.showCheckInErrorToast();
+          return;
+        }
+
+        const rdvId: number = rdv.id;
+
+        this.fileAttenteService.checkIn(rdvId).subscribe({
+          next: () => {
+            this.checkInLoading = false;
+            this.checkInSuccess = true;
+            this.showSuccessToast = true;
+            this.cdr.detectChanges();
+            setTimeout(() => {
+              this.showSuccessToast = false;
+              this.checkInSuccess = false;
+              this.cdr.detectChanges();
+            }, 3000);
+          },
+          error: (err) => {
+            this.checkInLoading = false;
+            this.checkInError = err?.error?.message || 'Erreur lors du check-in.';
+            this.showCheckInErrorToast();
+          }
+        });
+      },
+      error: (err) => {
+        this.checkInLoading = false;
+        this.checkInError = 'Erreur lors de la récupération des RDVs.';
+        this.showCheckInErrorToast();
+      }
+    });
+  }
+
+  showCheckInErrorToast() {
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.checkInError = '';
+      this.cdr.detectChanges();
+    }, 3000);
   }
 
   // --- GESTION DES ONGLETS ---
@@ -95,32 +319,11 @@ export class GererDossier implements OnInit {
   }
 
   // --- VOS DONNÉES DE TEST ---
-  patient = {
-    nom: 'Dubois',
-    prenom: 'Marie',
-    cin: 'F123456',
-    date_naissance: '12/05/1984',
-    num_telephone: '06 36 00 00 00',
-    sex: false,
-    adresse: '15 Avenue Mohammed VI, Oujda',
-    image_biometrique:
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  };
 
-  historiqueRdv = [
-    {
-      titre: 'Consultation de suivi',
-      date_prevue: '15/03/2026',
-      heure_prevue: '10:30',
-      statut_consultation: 'terminé',
-    },
-    {
-      titre: 'Bilan sanguin',
-      date_prevue: '02/02/2026',
-      heure_prevue: '09:00',
-      statut_consultation: 'terminé',
-    },
-  ];
+  //image_biometrique:
+  //'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+
+  historiqueRdv: any[] = [];
 
   ordonnances = [
     {

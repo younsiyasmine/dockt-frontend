@@ -16,6 +16,22 @@ export class PatientService {
     return this.http.get<any[]>(this.api, { params });
   }
 
+  createPatient(patient: any): Observable<any> {
+    return this.http.post<any>(this.api, patient);
+  }
+
+  deletePatient(id: number): Observable<any> {
+    return this.http.delete(`${this.api}/${id}`);
+  }
+
+  updateProfil(id: number, data: any): Observable<any> {
+    return this.http.put<any>(`${this.api}/${id}`, data);
+  }
+
+  changePassword(id: number, ancienMdp: string, nouveauMdp: string): Observable<any> {
+    return this.http.put<any>(`${this.api}/${id}/change-password`, { ancienMdp, nouveauMdp });
+  }
+
   getStats(): Observable<any> {
     return this.http.get<any>(`${this.api}/stats`);
   }

@@ -1,19 +1,19 @@
 <div class="login-container">
   <div class="login-card">
-    <div class="logo-section">
+    <div class="logo-section" style="margin-bottom: 2rem;">
       <img src="logo.png" alt="Dockt Logo" class="logo">
     </div>
 
     <h1>Espace Professionnel</h1>
-    <p style="text-align:center; color:#666; margin-bottom:1rem">Médecin ou Secrétaire</p>
 
     <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
 
     <!-- Sélection du rôle -->
     <div class="role-selector">
       <button [class.active]="selectedRole === 'MEDECIN'" (click)="selectedRole = 'MEDECIN'">
-        Médecin   /
+        Médecin
       </button>
+      /
       <button [class.active]="selectedRole === 'SECRETAIRE'" (click)="selectedRole = 'SECRETAIRE'">
           Secrétaire
       </button>

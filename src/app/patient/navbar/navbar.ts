@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -10,13 +11,12 @@ import { AuthService } from '../../core/services/auth';
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
-export class Navbar implements OnInit {
-  // États pour l'affichage des menus déroulants
+export class Navbar implements OnInit, OnDestroy {
   menuOpen = false;
   notificationsOpen = false;
-
-  // Données de l'utilisateur connecté
   user: any = null;
+
+  private userSub!: Subscription;
 
   constructor(
     private authService: AuthService,
@@ -24,35 +24,26 @@ export class Navbar implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Récupération des informations de l'utilisateur au chargement du composant
-    this.user = this.authService.getUser();
+    // Subscribe to reactive stream — updates instantly when profile is saved
+    this.userSub = this.authService.user$.subscribe(u => {
+      this.user = u ? { user: u } : null;
+    });
   }
 
-  /**
-   * Alterne l'affichage du menu profil
-   * Ferme le menu notifications s'il est ouvert
-   */
+  ngOnDestroy() {
+    this.userSub?.unsubscribe();
+  }
+
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
-    if (this.menuOpen) {
-      this.notificationsOpen = false;
-    }
+    if (this.menuOpen) this.notificationsOpen = false;
   }
 
-  /**
-   * Alterne l'affichage de la fenêtre de notifications
-   * Ferme le menu profil s'il est ouvert
-   */
   toggleNotifications() {
     this.notificationsOpen = !this.notificationsOpen;
-    if (this.notificationsOpen) {
-      this.menuOpen = false;
-    }
+    if (this.notificationsOpen) this.menuOpen = false;
   }
 
-  /**
-   * Déconnecte l'utilisateur via l'AuthService et redirige vers la page de login
-   */
   logout() {
     this.authService.logout();
     this.menuOpen = false;

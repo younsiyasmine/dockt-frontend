@@ -1,0 +1,337 @@
+<div class="modal-backdrop fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+     (click)="onBackdropClick($event)">
+
+  <!-- Ajout toast message -->
+  <div *ngIf="showToast"
+       class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg z-[200] text-sm font-semibold">
+    {{ toastMessage }}
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col"
+       style="animation: slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-500 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-gray-800">Nouveau Patient</h2>
+          <p class="text-xs text-gray-400">Créer un nouveau dossier patient</p>
+        </div>
+      </div>
+      <button (click)="onClose()"
+              class="w-8 h-8 rounded-full bg-gray-100 hover:bg-red-50 hover:text-red-500 text-gray-400 flex items-center justify-center transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="px-6 pt-4 flex items-center gap-2">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all"
+             [ngClass]="currentStep >= 1 ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-400'">
+          @if (currentStep > 1) {
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          } @else {
+            <span>1</span>
+          }
+        </div>
+        <span class="text-xs font-medium" [ngClass]="currentStep === 1 ? 'text-teal-600' : 'text-gray-400'">Identité</span>
+      </div>
+
+      <div class="flex-1 h-0.5 rounded mx-1 transition-colors"
+           [ngClass]="currentStep > 1 ? 'bg-teal-500' : 'bg-gray-200'"></div>
+
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all"
+             [ngClass]="currentStep === 2 ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-400'">
+          2
+        </div>
+        <span class="text-xs font-medium" [ngClass]="currentStep === 2 ? 'text-teal-600' : 'text-gray-400'">Contact</span>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="px-6 py-4 flex-1 overflow-y-auto">
+      <form [formGroup]="patientForm">
+
+        <!-- STEP 1 -->
+        @if (currentStep === 1) {
+          <div class="space-y-4">
+
+            @if (hasInitials()) {
+              <div class="flex items-center gap-3 bg-teal-50 rounded-xl px-4 py-3">
+                <div class="w-9 h-9 rounded-full bg-teal-500 text-white text-sm font-bold flex items-center justify-center shrink-0">
+                  {{ getInitials() }}
+                </div>
+                <span class="text-xs text-teal-700 font-medium">Aperçu du patient</span>
+              </div>
+            }
+
+            <!-- Prénom + Nom -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-gray-600">Prénom <span class="text-red-400">*</span></label>
+                <input formControlName="prenom" type="text" placeholder="ex: Ahmed"
+                       class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-all"
+                       [ngClass]="patientForm.get('prenom')?.invalid && patientForm.get('prenom')?.touched
+                         ? 'border-red-300 bg-red-50 focus:border-red-400'
+                         : 'border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white'" />
+                @if (patientForm.get('prenom')?.invalid && patientForm.get('prenom')?.touched) {
+                  <span class="text-xs text-red-500">Le prénom est obligatoire</span>
+                }
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-gray-600">Nom <span class="text-red-400">*</span></label>
+                <input formControlName="nom" type="text" placeholder="ex: Bennani"
+                       class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-all"
+                       [ngClass]="patientForm.get('nom')?.invalid && patientForm.get('nom')?.touched
+                         ? 'border-red-300 bg-red-50 focus:border-red-400'
+                         : 'border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white'" />
+                @if (patientForm.get('nom')?.invalid && patientForm.get('nom')?.touched) {
+                  <span class="text-xs text-red-500">Le nom est obligatoire</span>
+                }
+              </div>
+            </div>
+
+            <!-- CIN + Téléphone -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-gray-600">CIN <span class="text-red-400">*</span></label>
+                <input formControlName="cin" type="text" placeholder="ex: F54321"
+                       class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-all"
+                       [ngClass]="patientForm.get('cin')?.invalid && patientForm.get('cin')?.touched
+                         ? 'border-red-300 bg-red-50 focus:border-red-400'
+                         : 'border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white'" />
+                @if (patientForm.get('cin')?.invalid && patientForm.get('cin')?.touched) {
+                  <span class="text-xs text-red-500">Le CIN est obligatoire</span>
+                }
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-gray-600">Téléphone <span class="text-red-400">*</span></label>
+                <input formControlName="num_telephone" type="tel" placeholder="ex: 0675893452"
+                       class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-all"
+                       [ngClass]="patientForm.get('num_telephone')?.invalid && patientForm.get('num_telephone')?.touched
+                         ? 'border-red-300 bg-red-50 focus:border-red-400'
+                         : 'border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white'" />
+                @if (patientForm.get('num_telephone')?.invalid && patientForm.get('num_telephone')?.touched) {
+                  <span class="text-xs text-red-500">Numéro invalide (10 chiffres requis)</span>
+                }
+              </div>
+            </div>
+
+            <!-- Sexe + Date naissance -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-gray-600">Sexe <span class="text-red-400">*</span></label>
+                <div class="flex gap-2">
+                  <label class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-medium cursor-pointer transition-all"
+                         [ngClass]="patientForm.get('sex')?.value === 'Homme'
+                           ? 'border-teal-400 bg-teal-50 text-teal-700'
+                           : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'">
+                    <input type="radio" formControlName="sex" value="Homme" class="hidden" />
+                    ♂ Homme
+                  </label>
+                  <label class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-medium cursor-pointer transition-all"
+                         [ngClass]="patientForm.get('sex')?.value === 'Femme'
+                           ? 'border-pink-400 bg-pink-50 text-pink-700'
+                           : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'">
+                    <input type="radio" formControlName="sex" value="Femme" class="hidden" />
+                    ♀ Femme
+                  </label>
+                </div>
+                @if (patientForm.get('sex')?.invalid && patientForm.get('sex')?.touched) {
+                  <span class="text-xs text-red-500">Le sexe est obligatoire</span>
+                }
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-gray-600">Date de naissance <span class="text-red-400">*</span></label>
+                <input formControlName="date_naissance" type="date"
+                       class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-all"
+                       [ngClass]="patientForm.get('date_naissance')?.invalid && patientForm.get('date_naissance')?.touched
+                         ? 'border-red-300 bg-red-50 focus:border-red-400'
+                         : 'border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white'" />
+                @if (patientForm.get('date_naissance')?.invalid && patientForm.get('date_naissance')?.touched) {
+                  <span class="text-xs text-red-500">La date de naissance est obligatoire</span>
+                }
+              </div>
+            </div>
+
+          </div>
+        }
+
+        <!-- STEP 2 -->
+        @if (currentStep === 2) {
+          <div class="space-y-4">
+
+            <!-- Patient summary -->
+            <div class="flex items-center gap-3 bg-teal-50 rounded-xl px-4 py-3">
+              <div class="w-9 h-9 rounded-full bg-teal-500 text-white text-sm font-bold flex items-center justify-center shrink-0">
+                {{ getInitials() }}
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-800">
+                  {{ patientForm.get('prenom')?.value }} {{ patientForm.get('nom')?.value }}
+                </p>
+                <p class="text-xs text-gray-500">{{ patientForm.get('num_telephone')?.value }}</p>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold text-gray-600">
+                Email <span class="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <input formControlName="patient_login" type="email" autocomplete="off"
+                     placeholder="ex: ahmed@gmail.com"
+                     (blur)="patientForm.get('patient_login')?.markAsTouched()"
+                     class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-all"
+                     [ngClass]="patientForm.get('patient_login')?.invalid && patientForm.get('patient_login')?.touched && patientForm.get('patient_login')?.value
+           ? 'border-red-300 bg-red-50 focus:border-red-400'
+           : 'border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white'" />
+              @if (patientForm.get('patient_login')?.invalid && patientForm.get('patient_login')?.touched && patientForm.get('patient_login')?.value) {
+                <span class="text-xs text-red-500">Adresse email invalide</span>
+              }
+            </div>
+
+            <!-- Mot de passe -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold text-gray-600">
+                Mot de passe
+                <span class="text-gray-400 font-normal">(optionnel — permet au patient de se connecter)</span>
+              </label>
+              <div class="relative">
+                <input formControlName="patient_mdp"
+                       [type]="showPassword ? 'text' : 'password'"
+                       autocomplete="new-password"
+                       placeholder="Minimum 8 caractères..."
+                       class="w-full px-3 py-2.5 pr-10 rounded-xl border text-sm outline-none transition-all"
+                       [ngClass]="patientForm.get('patient_mdp')?.invalid && patientForm.get('patient_mdp')?.touched
+                         ? 'border-red-300 bg-red-50 focus:border-red-400'
+                         : 'border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white'" />
+                <button type="button"
+                        (click)="showPassword = !showPassword"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                  @if (!showPassword) {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.8"/>
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                  }
+                  @if (showPassword) {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  }
+                </button>
+              </div>
+              @if (patientForm.get('patient_mdp')?.invalid && patientForm.get('patient_mdp')?.touched) {
+                <span class="text-xs text-red-500">Le mot de passe doit contenir au moins 8 caractères</span>
+              }
+              @if (patientForm.get('patient_mdp')?.value && patientForm.get('patient_mdp')?.valid) {
+                <p class="text-xs text-teal-600 flex items-center gap-1">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Le patient pourra se connecter avec cet email et ce mot de passe
+                </p>
+              }
+            </div>
+
+            <!-- Adresse -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold text-gray-600">
+                Adresse <span class="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <textarea formControlName="adresse" rows="3" placeholder="Rue, Ville, Code Postal..."
+                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white text-sm outline-none transition-all resize-none"></textarea>
+            </div>
+
+            <div class="flex items-center gap-2 text-xs text-gray-400 bg-gray-50 rounded-xl px-3 py-2.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Ces informations peuvent être complétées ultérieurement.
+            </div>
+
+          </div>
+        }
+
+      </form>
+    </div>
+
+    <!-- Error Message -->
+    @if (errorMessage) {
+      <div class="mx-6 mb-2 flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl px-3 py-2.5">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" class="shrink-0">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        {{ errorMessage }}
+      </div>
+    }
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100">
+      <button (click)="currentStep === 1 ? onClose() : prevStep()"
+              class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer">
+        @if (currentStep > 1) {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        }
+        {{ currentStep === 1 ? 'Annuler' : 'Retour' }}
+      </button>
+
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-gray-400 font-medium">{{ currentStep }} / 2</span>
+
+        @if (currentStep === 1) {
+          <button (click)="nextStep()"
+                  [disabled]="!isStep1Valid"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer"
+                  [ngClass]="isStep1Valid ? 'bg-teal-500 hover:bg-teal-600 shadow-sm shadow-teal-200' : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
+            Suivant
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        }
+
+        @if (currentStep === 2) {
+          <button (click)="onSubmit()"
+                  [disabled]="isSubmitting || !isFormValid"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer"
+                  [ngClass]="isFormValid && !isSubmitting
+                    ? 'bg-teal-500 hover:bg-teal-600 shadow-sm shadow-teal-200'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
+            @if (!isSubmitting) {
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/>
+              </svg>
+            }
+            @if (isSubmitting) {
+              <svg class="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="30 60" stroke-linecap="round"/>
+              </svg>
+            }
+            {{ isSubmitting ? 'Enregistrement...' : 'Créer le patient' }}
+          </button>
+        }
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -49,7 +49,7 @@ export class RegisterComponent {
         this.authService.saveToken(response.accessToken);
         this.authService.saveRefreshToken(response.refreshToken);
         this.authService.saveUser(response);
-        this.router.navigate(['/patient-dashboard']);
+        this.router.navigate(['/patient/dashboard']);
       },
       error: (err) => {
         this.errorMessage = err.error?.message || err.error?.error || 'Erreur lors de l\'inscription';

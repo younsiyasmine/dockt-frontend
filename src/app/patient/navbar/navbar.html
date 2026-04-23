@@ -1,13 +1,13 @@
 <div class="flex items-center justify-between px-8 py-3 border-b border-gray-200 bg-white relative z-50">
   <img src="/logo.png" alt="Dockt" class="h-20 cursor-pointer" routerLink="/patient/dashboard" />
   <p class="text-[#1a3a5c] text-xl font-medium">
-    Bienvenue,{{ user?.user?.nom }}
+    Bienvenue, {{ user?.user?.nom }} {{ user?.user?.prenom }}
   </p>
 
   <div class="flex items-center gap-6">
 
     <div class="relative pl-6 border-l border-slate-200">
-      <button (click)="toggleNotifications()" class="relative p-2 text-slate-400 hover:text-teal-600 transition-colors focus:outline-none">
+      <button (click)="toggleNotifications()" class="relative p-2 text-slate-400 hover:text-teal-600 transition-colors focus:outline-none cursor-pointer">
         <i class="fa-regular fa-bell text-2xl"></i>
         <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-teal-500 rounded-full border-2 border-white"></span>
       </button>
@@ -19,7 +19,7 @@
             <h3 class="font-bold text-slate-800 text-base">Notifications</h3>
             <p class="text-[11px] text-slate-500 font-medium">Faites défiler pour voir l'historique</p>
           </div>
-          <button class="text-[10px] text-teal-600 font-bold hover:underline">Tout marquer comme lu</button>
+          <button class="text-[10px] text-teal-600 font-bold hover:underline cursor-pointer">Tout marquer comme lu</button>
         </div>
 
         <div class="max-h-[450px] overflow-y-auto custom-scrollbar">
@@ -83,7 +83,7 @@
     </div>
 
     <div class="relative">
-      <button (click)="toggleMenu()" class="text-[#1a3a5c] border-2 border-[#1a3a5c] px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-medium hover:bg-[#1a3a5c]/5 transition-colors focus:outline-none">
+      <button (click)="toggleMenu()" class="text-[#1a3a5c] border-2 border-[#1a3a5c] px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-medium hover:bg-[#1a3a5c]/5 transition-colors focus:outline-none cursor-pointer">
         <i class="fa-regular fa-user text-[#1a3a5c]"></i>
         <span>Profil</span>
         <i class="fa-solid fa-chevron-down text-[10px] transition-transform" [class.rotate-180]="menuOpen"></i>
@@ -94,7 +94,7 @@
           <i class="fa-regular fa-address-card w-4"></i> Mon profil
         </a>
 
-        <a routerLink="/change-password" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 cursor-pointer border-y border-gray-50 transition-colors">
+        <a routerLink="/profil" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 cursor-pointer border-y border-gray-50 transition-colors">
           <i class="fa-solid fa-key w-4"></i> Changer mot de passe
         </a>
 

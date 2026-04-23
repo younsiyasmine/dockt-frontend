@@ -4,6 +4,10 @@ import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { RdvService } from '../core/services/rdv.service';
 import { RDV, StatutRDV } from '../core/models/models';
+import { AuthService } from '../core/services/auth';
+import { HttpClient } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-ajouter-rdv',
@@ -13,12 +17,16 @@ import { RDV, StatutRDV } from '../core/models/models';
   styleUrl: './ajouter-rdv.css',
 })
 export class AjouterRdv implements OnInit {
-  // ⚠️ Replace with real auth later
-  private readonly ID_SECRETAIRE = 1;
+  //  real auth
+  private get ID_SECRETAIRE(): number {
+    return this.authService.getCurrentUserId() ?? 0;
+  }
 
   // --- Patient ---
   nomPatient = '';
   idPatient: number | null = null;
+  patientSuggestions: any[] = [];
+  searchSubject = new Subject<string>();
 
   // --- UI State ---
   isLoading = false;
@@ -66,12 +74,31 @@ export class AjouterRdv implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef,
+    private authService: AuthService,
+    private http: HttpClient,
   ) {}
 
   ngOnInit(): void {
     this.genererJoursMois();
 
-    // ← SET EDIT MODE IMMEDIATELY before any API call
+    // Wire patient search
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap(() => this.http.get<any[]>(`http://localhost:8082/api/patients`)),
+      )
+      .subscribe({
+        next: (patients) => {
+          this.patientSuggestions = patients.filter((p) =>
+            `${p.prenom} ${p.nom}`.toLowerCase().includes(this.nomPatient.toLowerCase()),
+          );
+          this.cdr.detectChanges();
+        },
+        error: () => (this.patientSuggestions = []),
+      });
+
+    // SET EDIT MODE IMMEDIATELY before any API call
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.editMode = true;
@@ -105,6 +132,21 @@ export class AjouterRdv implements OnInit {
       },
       error: (err) => console.error('Erreur chargement RDVs:', err),
     });
+  }
+
+  onPatientSearch(): void {
+    if (this.nomPatient.length >= 2) {
+      this.searchSubject.next(this.nomPatient);
+    } else {
+      this.patientSuggestions = [];
+    }
+  }
+
+  selectPatient(patient: any): void {
+    this.idPatient = patient.idPatient;
+    this.nomPatient = `${patient.prenom} ${patient.nom}`;
+    this.patientSuggestions = [];
+    this.cdr.detectChanges();
   }
 
   // --- Calendar ---
@@ -159,36 +201,34 @@ export class AjouterRdv implements OnInit {
 
   genererCreneaux(): void {
     const ALL_SLOTS = [
-      '09:00',
-      '09:30',
-      '10:00',
-      '10:30',
-      '11:00',
-      '11:30',
-      '14:00',
-      '14:30',
-      '15:00',
-      '15:30',
-      '16:00',
-      '16:30',
-      '17:00',
-      '17:30',
-      '18:00',
-      '18:30',
+      '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+      '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+      '17:00', '17:30', '18:00', '18:30',
     ];
 
     const takenTimes = this.allRdvs
-      .filter((r) => r.datePrevue === this.dateISO)
+      .filter((r) => r.datePrevue === this.dateISO && r.statutRdv !== StatutRDV.ANNULE)
       .map((r) => r.heurePrevue?.substring(0, 5) ?? '');
+
+    const today = new Date();
+    const isToday =
+      this.dateISO ===
+      `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const currentTime = `${String(today.getHours()).padStart(2, '0')}:${String(today.getMinutes()).padStart(2, '0')}`;
 
     this.listeCreneaux = ALL_SLOTS.map((heure) => ({
       heure,
-      disponible: !takenTimes.includes(heure),
+      disponible: !takenTimes.includes(heure) && !(isToday && heure <= currentTime),
     }));
   }
 
   // --- Submit ---
   ajouterRdv(): void {
+    if (!this.idPatient) {
+      this.errorMessage = 'Veuillez sélectionner un patient dans la liste.';
+      return;
+    }
+
     if (!this.dateISO || !this.heureSelectionnee) {
       this.errorMessage = 'Veuillez choisir une date et une heure.';
       return;
@@ -264,5 +304,4 @@ export class AjouterRdv implements OnInit {
       });
     }
   }
-
 }

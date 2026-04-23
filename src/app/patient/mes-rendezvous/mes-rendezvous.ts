@@ -5,6 +5,8 @@ import { Navbar } from '../navbar/navbar';
 import { RdvService } from '../../core/services/rdv.service';
 import { RDV, StatutRDV } from '../../core/models/models';
 import { AuthService } from '../../core/services/auth';
+import { HttpClient } from '@angular/common/http';
+import { PatientResponse } from '../../core/models/auth.model';
 
 @Component({
   selector: 'app-mes-rendezvous',
@@ -25,12 +27,16 @@ export class MesRendezvousComponent implements OnInit {
   showToast = false;
   toastMessage = '';
 
+  patientNames: { [id: number]: string } = {};
+  readonly MEDECIN_NAME = 'Dr. Bouabdellah Souad';
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private rdvService: RdvService,
     private cdr: ChangeDetectorRef,
     private authService: AuthService,
+    private http: HttpClient,
   ) {}
 
   ngOnInit(): void {
@@ -75,6 +81,22 @@ export class MesRendezvousComponent implements OnInit {
     });
   }
 
+  private chargerNomPatients(rdvs: RDV[]): void {
+    const ids = [...new Set(rdvs.map(r => r.idPatient).filter(Boolean))] as number[];
+    ids.forEach(id => {
+      this.http.get<PatientResponse>(`http://localhost:8082/api/patients/${id}`).subscribe({
+        next: (p) => {
+          this.patientNames[id] = `${p.prenom} ${p.nom}`;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.patientNames[id] = `Patient #${id}`;
+          this.cdr.detectChanges();
+        }
+      });
+    });
+  }
+
   chargerMesRdv(): void {
     this.isLoading = true;
     this.errorMessage = '';
@@ -82,7 +104,8 @@ export class MesRendezvousComponent implements OnInit {
     this.rdvService.getRDVByPatient(this.idPatient).subscribe({
       next: (data) => {
         this.rendezVousList = data;
-        this.trierParDateAsc(); // FIX 4: replaces .reverse()
+        this.trierParDateAsc();
+        this.chargerNomPatients(data);  // ← add this line
         this.isLoading = false;
         this.cdr.detectChanges();
       },

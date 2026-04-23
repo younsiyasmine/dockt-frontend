@@ -1,20 +1,28 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import {
   LoginPatientRequest,
   LoginMedecinRequest,
   LoginSecretaireRequest,
   RegisterPatientRequest,
-  AuthResponse
+  AuthResponse,
 } from '../models/auth.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
-
   private apiUrl = 'http://localhost:8082/api/auth';
+
+  // reactive user stream — topbar subscribes to this
+  private userSubject = new BehaviorSubject<any>(
+    (() => {
+      const u = JSON.parse(localStorage.getItem('user') || 'null');
+      return u?.user ?? u;
+    })(),
+  );
+  user$ = this.userSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -28,6 +36,11 @@ export class AuthService {
 
   loginSecretaire(request: LoginSecretaireRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login/secretaire`, request);
+  }
+
+  getRole(): string | null {
+    const user = this.getUser();
+    return user?.role ?? null;
   }
 
   register(request: RegisterPatientRequest): Observable<AuthResponse> {
@@ -44,6 +57,17 @@ export class AuthService {
 
   saveUser(user: AuthResponse): void {
     localStorage.setItem('user', JSON.stringify(user));
+    const fresh = (user as any)?.user ?? user;
+    this.userSubject.next(fresh); // push to reactive stream
+  }
+
+  updateCurrentUser(userData: any): void {
+    this.userSubject.next(userData); // push fresh data to all subscribers instantly
+    const stored = this.getUser() as any;
+    if (stored) {
+      stored.user = userData;
+      localStorage.setItem('user', JSON.stringify(stored));
+    }
   }
 
   getToken(): string | null {
@@ -56,8 +80,9 @@ export class AuthService {
   }
 
   getCurrentUserId(): number | null {
-    const user = this.getUser();
-    if (!user) return null;
+    const response = this.getUser();
+    if (!response) return null;
+    const user = (response as any).user ?? response;
     if ('idPatient' in user) return (user as any).idPatient;
     if ('idMedecin' in user) return (user as any).idMedecin;
     if ('idSecretaire' in user) return (user as any).idSecretaire;
@@ -72,6 +97,6 @@ export class AuthService {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    this.userSubject.next(null); // clear the stream on logout
   }
-
 }

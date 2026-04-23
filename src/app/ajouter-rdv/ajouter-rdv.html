@@ -22,16 +22,32 @@
     <div class="space-y-5">
 
       <!-- Patient name -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1.5">Patient</label>
-        <input type="text"
-               [(ngModel)]="nomPatient"
-               placeholder="Nom du patient"
-               class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
-        <p class="text-xs text-gray-400 mt-1">
-          ⚠️ La recherche par nom sera disponible après connexion au service patient.
-        </p>
+      <div class="relative">
+        <input
+          type="text"
+          [(ngModel)]="nomPatient"
+          (ngModelChange)="onPatientSearch()"
+          placeholder="Nom du patient"
+          class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"/>
+
+        <!-- Dropdown suggestions -->
+        <div *ngIf="patientSuggestions.length > 0"
+             class="absolute z-50 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+          <div *ngFor="let p of patientSuggestions"
+               (click)="selectPatient(p)"
+               class="px-4 py-2 text-sm hover:bg-teal-50 cursor-pointer text-slate-700">
+            {{ p.prenom }} {{ p.nom }}
+          </div>
+        </div>
       </div>
+
+      <!-- Show selected patient ID confirmation -->
+      <p *ngIf="idPatient" class="text-xs text-teal-600 mt-1">
+        ✓ Patient sélectionné (ID: {{ idPatient }})
+      </p>
+      <p *ngIf="!idPatient && nomPatient" class="text-xs text-orange-500 mt-1">
+        Sélectionnez un patient dans la liste
+      </p>
 
       <!-- Date + Heure -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

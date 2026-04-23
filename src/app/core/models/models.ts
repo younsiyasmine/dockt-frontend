@@ -38,7 +38,7 @@ export interface PatientDTO {
   prenom: string;
   cin: string;
   numTelephone: number;
-  sex: string;
+  sexe: boolean;
   dateNaissance: string;
   adresse: string;
 }
@@ -63,7 +63,7 @@ export enum StatutRDV {
 export enum StatutConsultation {
   EN_ATTENTE = 'EN_ATTENTE',
   EN_CONSULTATION = 'EN_CONSULTATION',
-  TERMINEE = 'TERMINEE'
+  TERMINE = 'TERMINE'
 }
 
 // ---------------------------------------------------------
