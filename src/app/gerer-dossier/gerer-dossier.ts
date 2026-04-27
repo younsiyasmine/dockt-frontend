@@ -1,37 +1,32 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { DicterOrdonnance } from '../dicter-ordonnance/dicter-ordonnance';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-
-// C'EST CETTE LIGNE QUI RÈGLE TOUT !
 import { VueOrdonnance } from '../vue-ordonnance/vue-ordonnance';
-
-// 👇 1. ON AJOUTE L'IMPORT DU COMPTE RENDU ICI
 import { DicterCompteRendu } from '../dicter-compte-rendu/dicter-compte-rendu';
-// Add to imports at top
-import { FileAttenteService } from '../core/services/file-attente.service'; // adjust path
-
-// 👇 2. NOUVEL IMPORT POUR L'APERÇU A4 DU COMPTE RENDU
-import { VueCompteRendu } from '../vue-compte-rendu/vue-compte-rendu';
+import { FileAttenteService } from '../core/services/file-attente.service';
 import { Topbar } from '../pages/topbar/topbar';
 import { Sidebar } from '../pages/sidebar/sidebar';
+import { OrdonnanceService } from '../core/services/ordonnance.service';
+import { CompteRenduService } from '../core/services/compte-rendu.service';
+import { AuthService } from '../core/services/auth';
+import { Ordonnance, CompteRendu } from '../core/models/models';
 
 @Component({
   selector: 'app-gerer-dossier',
-  // 👇 3. ON L'AJOUTE DANS LA LISTE ICI !
   imports: [
     CommonModule,
     DicterOrdonnance,
     VueOrdonnance,
     DicterCompteRendu,
-    VueCompteRendu,
     Topbar,
     Sidebar,
     FormsModule,
+    DatePipe,
   ],
   templateUrl: './gerer-dossier.html',
   styleUrl: './gerer-dossier.css',
@@ -43,6 +38,9 @@ export class GererDossier implements OnInit {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private fileAttenteService: FileAttenteService,
+    private ordonnanceService: OrdonnanceService,
+    private compteRenduService: CompteRenduService,
+    private authService: AuthService,
   ) {}
 
   role: 'MEDECIN' | 'SECRETAIRE' | null = null;
@@ -59,6 +57,8 @@ export class GererDossier implements OnInit {
   };
 
   patientId: string | null = null;
+  rdvId: number | null = null;
+  crSelectionne: CompteRendu | null = null;
 
   modaleEditionOuverte = false;
   isUpdating = false;
@@ -73,9 +73,22 @@ export class GererDossier implements OnInit {
   checkInSuccess = false;
   checkInError = '';
 
+  historiqueRdv: any[] = [];
+  ordonnances: Ordonnance[] = [];
+  comptesRendus: CompteRendu[] = [];
+
+  afficherApercuA4 = false;
+  modaleOrdonnanceOuverte = false;
+  modaleCompteRenduOuverte = false;
+  ongletActif = 'infos';
+
   ngOnInit(): void {
     const auth = JSON.parse(localStorage.getItem('user') || 'null');
     this.role = auth?.role ?? null;
+
+    this.route.queryParams.subscribe((params) => {
+      this.rdvId = params['rdvId'] ? +params['rdvId'] : null;
+    });
 
     const id = this.route.snapshot.paramMap.get('id');
     this.patientId = id;
@@ -88,7 +101,7 @@ export class GererDossier implements OnInit {
             prenom: p.prenom ?? '—',
             cin: p.cin ?? '—',
             date_naissance: p.dateNaissance ?? '—',
-            num_telephone: p.numTelephone ? '0' + p.numTelephone.toString() : '—',
+            num_telephone: p.numTelephone ? p.numTelephone.toString() : '—',
             sex: p.sexe === true || p.sexe === 'true',
             adresse: p.adresse ?? '—',
             image_biometrique: null,
@@ -98,11 +111,9 @@ export class GererDossier implements OnInit {
         error: (err) => console.error('Erreur chargement patient:', err),
       });
 
-      // Fetch RDVs from MS2
       this.http.get<any[]>(`http://localhost:8081/api/rdv/patient/${id}`).subscribe({
         next: (rdvs) => {
           const activeStatuts = ['CONFIRME', 'MODIFIE_CONFIRME'];
-
           const getDate = (rdv: any) =>
             new Date(`${rdv.date_prevue}T${rdv.heure_prevue ?? '00:00'}`).getTime();
 
@@ -116,28 +127,68 @@ export class GererDossier implements OnInit {
             .sort((a: any, b: any) => {
               const aActive = activeStatuts.includes(a.statut_consultation);
               const bActive = activeStatuts.includes(b.statut_consultation);
-
               if (aActive !== bActive) return aActive ? -1 : 1;
-
-              if (aActive) {
-                return getDate(a) - getDate(b); // active: soonest first
-              } else {
-                return getDate(b) - getDate(a); // inactive: most recent first
-              }
+              if (aActive) return getDate(a) - getDate(b);
+              return getDate(b) - getDate(a);
             });
 
           this.cdr.detectChanges();
         },
         error: (err) => console.error('Erreur chargement RDVs:', err),
       });
+
+      this.ordonnanceService.getOrdonnancesParPatient(+id).subscribe({
+        next: (data) => {
+          this.ordonnances = data.sort(
+            (a, b) =>
+              new Date(b.dateEmmission ?? '').getTime() - new Date(a.dateEmmission ?? '').getTime(),
+          );
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Erreur ordonnances:', err),
+      });
+
+      this.loadComptesRendus(id);
     }
   }
 
-  // 👇 6. ADD THE retour() FUNCTION
+  private loadComptesRendus(patientId: string) {
+    this.compteRenduService.getComptesRendusParPatient(+patientId).subscribe({
+      next: (data) => {
+        this.comptesRendus = this.sortCR(data);
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Erreur comptes rendus:', err),
+    });
+  }
+
+  private sortCR(list: CompteRendu[]): CompteRendu[] {
+    const order: Record<string, number> = { DEMANDE: 0, EN_ATTENTE: 1, VALIDE: 2 };
+    return list.sort((a, b) => {
+      const statusDiff = (order[a.statut || ''] ?? 99) - (order[b.statut || ''] ?? 99);
+      if (statusDiff !== 0) return statusDiff;
+      if (a.statut === 'VALIDE' && b.statut === 'VALIDE') {
+        return (
+          new Date(b.dateRedaction || '').getTime() - new Date(a.dateRedaction || '').getTime()
+        );
+      }
+      return 0;
+    });
+  }
+
+  voirOrdonnance(ord: Ordonnance) {
+    this.router.navigate(['/voir-ordonnance', ord.idOrdonnance]);
+  }
+
+  voirCompteRendu(cr: CompteRendu) {
+    this.router.navigate(['/voir-compte-rendu', cr.idCr]);
+  }
+
   retour() {
     window.history.back();
   }
 
+  // ── Edit patient modal ────────────────────────────────────────────────────
   ouvrirModaleEdition() {
     this.editForm = {
       nom: this.patient.nom === '—' ? '' : this.patient.nom,
@@ -189,7 +240,7 @@ export class GererDossier implements OnInit {
         };
         this.isUpdating = false;
         this.modaleEditionOuverte = false;
-        this.showSuccessToast = true;           // ← add this
+        this.showSuccessToast = true;
         setTimeout(() => {
           this.showSuccessToast = false;
           this.cdr.detectChanges();
@@ -204,30 +255,28 @@ export class GererDossier implements OnInit {
     });
   }
 
+  // ── Check-in ──────────────────────────────────────────────────────────────
   checkIn() {
     if (!this.patientId) return;
-
     this.checkInLoading = true;
     this.checkInError = '';
 
-    // First get today's RDVs to find the idRdv for this patient
     this.fileAttenteService.getFileDuJourAvecDetails().subscribe({
       next: (rdvs) => {
-        const rdv = rdvs.find((r: any) =>
-          r.idPatient?.toString() === this.patientId?.toString() ||
-          r.patient?.idPatient?.toString() === this.patientId?.toString()
+        const rdv = rdvs.find(
+          (r: any) =>
+            r.idPatient?.toString() === this.patientId?.toString() ||
+            r.patient?.idPatient?.toString() === this.patientId?.toString(),
         );
 
         if (!rdv || !rdv.id) {
           this.checkInLoading = false;
-          this.checkInError = 'Aucun RDV trouvé aujourd\'hui pour ce patient.';
+          this.checkInError = "Aucun RDV trouvé aujourd'hui pour ce patient.";
           this.showCheckInErrorToast();
           return;
         }
 
-        const rdvId: number = rdv.id;
-
-        this.fileAttenteService.checkIn(rdvId).subscribe({
+        this.fileAttenteService.checkIn(rdv.id).subscribe({
           next: () => {
             this.checkInLoading = false;
             this.checkInSuccess = true;
@@ -243,14 +292,14 @@ export class GererDossier implements OnInit {
             this.checkInLoading = false;
             this.checkInError = err?.error?.message || 'Erreur lors du check-in.';
             this.showCheckInErrorToast();
-          }
+          },
         });
       },
-      error: (err) => {
+      error: () => {
         this.checkInLoading = false;
         this.checkInError = 'Erreur lors de la récupération des RDVs.';
         this.showCheckInErrorToast();
-      }
+      },
     });
   }
 
@@ -262,16 +311,12 @@ export class GererDossier implements OnInit {
     }, 3000);
   }
 
-  // --- GESTION DES ONGLETS ---
-  ongletActif: string = 'infos';
-
+  // ── Tabs ──────────────────────────────────────────────────────────────────
   changerOnglet(onglet: string) {
     this.ongletActif = onglet;
   }
 
-  // --- GESTION DE LA MODALE ORDONNANCE ---
-  modaleOrdonnanceOuverte: boolean = false;
-
+  // ── Ordonnance modal ──────────────────────────────────────────────────────
   ouvrirModaleOrdonnance() {
     this.modaleOrdonnanceOuverte = true;
   }
@@ -280,71 +325,50 @@ export class GererDossier implements OnInit {
     this.modaleOrdonnanceOuverte = false;
   }
 
-  // --- GESTION DE L'AFFICHAGE A4 (ORDONNANCE) ---
-  afficherApercuA4: boolean = false;
-
   terminerEtAfficherOrdonnance() {
-    this.modaleOrdonnanceOuverte = false; // On cache la modale
-    this.afficherApercuA4 = true; // On affiche le papier A4
+    this.modaleOrdonnanceOuverte = false;
+    this.afficherApercuA4 = true;
   }
 
-  // --- GESTION DE LA MODALE COMPTE RENDU ---
-  modaleCompteRenduOuverte: boolean = false;
-
-  ouvrirModaleCompteRendu() {
+  // ── Compte Rendu modal ────────────────────────────────────────────────────
+  ouvrirModaleCompteRendu(cr?: CompteRendu) {
+    if (cr) {
+      // Clicked from historique list — specific DEMANDE or EN_ATTENTE card
+      this.crSelectionne = cr;
+    } else if (this.rdvId) {
+      // Came from file d'attente — rdvId known, dictate new CR for this RDV
+      this.crSelectionne = null;
+    } else {
+      // Came from liste-patient — pick oldest DEMANDE already in DB
+      const demandes = this.comptesRendus
+        .filter((c) => c.statut === 'DEMANDE')
+        .sort(
+          (a, b) =>
+            new Date(a.dateRedaction || '').getTime() - new Date(b.dateRedaction || '').getTime(),
+        );
+      this.crSelectionne = demandes.length > 0 ? demandes[0] : null;
+    }
     this.modaleCompteRenduOuverte = true;
   }
 
   fermerModaleCompteRendu() {
     this.modaleCompteRenduOuverte = false;
+    this.crSelectionne = null;
   }
 
-  // 👇 LA FONCTION MISE À JOUR POUR OUVRIR LE A4 AUTOMATIQUEMENT
-  terminerCompteRendu(action: 'brouillon' | 'valider') {
+  terminerCompteRendu(event: { action: 'brouillon' | 'valider'; cr: CompteRendu }) {
     this.modaleCompteRenduOuverte = false;
+    const savedCr = event.cr;
+    this.crSelectionne = null;
 
-    if (action === 'valider') {
-      // Au lieu de l'alerte, on ouvre la page A4 directement !
-      this.afficherApercuCompteRenduA4 = true;
-    } else {
-      console.log('Brouillon sauvegardé !');
+    // Always reload CR list to reflect updated statut
+    if (this.patientId) {
+      this.loadComptesRendus(this.patientId);
+    }
+
+    // Navigate to read-only view only on validate
+    if (event.action === 'valider' && savedCr?.idCr) {
+      this.router.navigate(['/voir-compte-rendu', savedCr.idCr]);
     }
   }
-
-  // 👇 4. GESTION DE L'AFFICHAGE A4 (COMPTE RENDU)
-  afficherApercuCompteRenduA4: boolean = false;
-
-  ouvrirApercuCompteRendu() {
-    this.afficherApercuCompteRenduA4 = true;
-  }
-
-  // --- VOS DONNÉES DE TEST ---
-
-  //image_biometrique:
-  //'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-
-  historiqueRdv: any[] = [];
-
-  ordonnances = [
-    {
-      type: 'Standard',
-      date_emmission: '15/03/2026',
-      contenu_texte: 'Paracétamol 1000mg, 1 boite.',
-    },
-  ];
-
-  comptesRendus = [
-    {
-      id: 1,
-      date_redaction: '03/04/2026',
-      statut: 'Brouillon',
-      contenu: 'Patiente vue ce jour pour... (à compléter)',
-    },
-    {
-      id: 2,
-      date_redaction: '15/03/2026',
-      statut: 'Validé',
-      contenu: 'Patiente présentant une légère fatigue. Prescription de bilan sanguin et repos.',
-    },
-  ];
 }

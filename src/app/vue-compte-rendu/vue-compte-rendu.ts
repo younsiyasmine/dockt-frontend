@@ -1,6 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 import { CompteRenduService } from '../core/services/compte-rendu.service';
 import { CompteRendu } from '../core/models/models';
 
@@ -16,11 +18,17 @@ export class VueCompteRendu implements OnInit {
   loading = true;
   error = false;
 
+  patientName = '';
+  medecinName = '';
+  rdvDate = '';
+  patient: any = null;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private compteRenduService: CompteRenduService,
     private cdr: ChangeDetectorRef,
+    private http: HttpClient,
   ) {}
 
   ngOnInit() {
@@ -29,6 +37,7 @@ export class VueCompteRendu implements OnInit {
       this.compteRenduService.getCompteRenduById(+id).subscribe({
         next: (data: any) => {
           this.compteRendu = data;
+          if (data.idRdv) this.chargerInfosCompteRendu(data.idRdv);
           this.loading = false;
           this.cdr.detectChanges();
         },
@@ -39,7 +48,40 @@ export class VueCompteRendu implements OnInit {
           this.cdr.detectChanges();
         },
       });
+    } else {
+      this.error = true;
+      this.loading = false;
     }
+  }
+
+  private chargerInfosCompteRendu(idRdv: number): void {
+    // RDV + nested patient
+    this.http.get<any>(`${environment.apiUrl}/rdv/${idRdv}`).subscribe({
+      next: (rdv) => {
+        this.rdvDate = rdv.datePrevue ?? '';
+        if (rdv.patient) {
+          this.patient = rdv.patient;
+          this.patientName = `${rdv.patient.prenom} ${rdv.patient.nom}`;
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.rdvDate = '';
+        this.cdr.detectChanges();
+      },
+    });
+
+    // Doctor — id=1 for now
+    this.http.get<any>(`${environment.authUrl}/medecins/1`).subscribe({
+      next: (m) => {
+        this.medecinName = `Dr. ${m.nom} ${m.prenom}`;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.medecinName = 'Dr. Bouabdellah Souad';
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   formatDate(dateStr: string): string {
@@ -50,6 +92,13 @@ export class VueCompteRendu implements OnInit {
       month: 'long',
       year: 'numeric',
     });
+  }
+
+  formatNaissance(dateNaissance: string): string {
+    if (!dateNaissance) return '—';
+    const date = new Date(dateNaissance);
+    const age = new Date().getFullYear() - date.getFullYear();
+    return `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} (${age} ans)`;
   }
 
   retour() {
@@ -68,11 +117,10 @@ export class VueCompteRendu implements OnInit {
     const pageWidth = pdf.internal.pageSize.getWidth();
     let y = 20;
 
-    // Header
     pdf.setFontSize(16);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(0, 0, 0);
-    pdf.text('DR. BOUABDELLAH SOUAD', 15, y);
+    pdf.text(this.medecinName.toUpperCase(), 15, y);
     pdf.setFontSize(11);
     pdf.setFont('helvetica', 'normal');
     pdf.text('Compte Rendu Médical', pageWidth - 15, y, { align: 'right' });
@@ -101,7 +149,6 @@ export class VueCompteRendu implements OnInit {
     pdf.setLineWidth(0.5);
     pdf.line(15, y, pageWidth - 15, y);
 
-    // Patient
     y += 12;
     pdf.setFontSize(10);
     pdf.setTextColor(120, 120, 120);
@@ -110,14 +157,13 @@ export class VueCompteRendu implements OnInit {
     y += 7;
     pdf.setFontSize(14);
     pdf.setTextColor(0, 0, 0);
-    pdf.text('— Patient —', 15, y);
+    pdf.text(this.patientName || '—', 15, y);
     y += 6;
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(120, 120, 120);
-    pdf.text(`RDV réf. ${this.compteRendu.idRdv}`, 15, y);
+    pdf.text(`RDV réf. ${this.compteRendu.idRdv} — ${this.formatDate(this.rdvDate)}`, 15, y);
 
-    // Content
     y += 15;
     pdf.setFontSize(11);
     pdf.setFont('helvetica', 'normal');
@@ -125,7 +171,6 @@ export class VueCompteRendu implements OnInit {
     const lines = pdf.splitTextToSize(this.compteRendu.contenu, pageWidth - 30);
     pdf.text(lines, 15, y);
 
-    // Footer
     y = 265;
     pdf.setDrawColor(200, 200, 200);
     pdf.setLineWidth(0.3);
@@ -136,12 +181,10 @@ export class VueCompteRendu implements OnInit {
     pdf.setTextColor(0, 0, 0);
     pdf.text('Signature du médecin :', pageWidth - 15, y, { align: 'right' });
 
-    pdf.save(`compte-rendu-${this.compteRendu.idCr}.pdf`);
-  }
-
-  formatNaissance(dateNaissance: string): string {
-    const date = new Date(dateNaissance);
-    const age = new Date().getFullYear() - date.getFullYear();
-    return `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} (${age} ans)`;
+    const date = this.compteRendu.dateRedaction
+      ? new Date(this.compteRendu.dateRedaction).toLocaleDateString('fr-FR').replace(/\//g, '-')
+      : 'sans-date';
+    const nomPatient = this.patientName.replace(/\s+/g, '-') || 'patient';
+    pdf.save(`compte-rendu-${nomPatient}-${date}.pdf`);
   }
 }

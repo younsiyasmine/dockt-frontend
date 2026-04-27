@@ -18,6 +18,10 @@ export class RdvService {
     return this.http.get<RDV[]>(`${this.apiUrl}/patient/${idPatient}`);
   }
 
+  getRdvById(id: number): Observable<RDV> {
+    return this.http.get<RDV>(`${this.apiUrl}/${id}`);
+  }
+
   ajouterRDV(nouveauRdv: RDV): Observable<RDV> {
     return this.http.post<RDV>(`${this.apiUrl}/ajouter`, nouveauRdv);
   }

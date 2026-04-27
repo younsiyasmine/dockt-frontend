@@ -41,7 +41,7 @@
                     Ordonnance Médicale
                   </h3>
                   <p class="text-gray-400 text-xs sm:text-sm mt-0.5">
-                    {{ ord.dateEmmission }}
+                    {{ ord.dateEmmission | date:'dd/MM/yyyy' }}
                   </p>
                   <div class="bg-gray-50 px-3 py-2 sm:px-4 sm:py-3 rounded-lg mt-2 sm:mt-3">
                     <p class="text-gray-500 italic text-xs sm:text-sm leading-relaxed">

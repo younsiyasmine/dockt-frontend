@@ -114,9 +114,10 @@ export class FileAttente implements OnInit {
   }
 
   voirDossier(patient: PatientAttente) {
-    this.router.navigate(['/gerer-dossier', patient.idPatient]);
+    this.router.navigate(['/gerer-dossier', patient.idPatient], {
+      queryParams: { rdvId: patient.id }  // ✅ pass the RDV id
+    });
   }
-
 
   toggleCheckIn(patient: PatientAttente): void {
     this.fileAttenteService.checkIn(patient.id).subscribe({

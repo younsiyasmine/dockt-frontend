@@ -48,7 +48,7 @@
                     {{ patientNames[rdv.idPatient ?? 0] ?? 'Chargement...' }}
                   </p>
                   <p class="text-gray-400 text-xs sm:text-sm mt-0.5">
-                    {{ MEDECIN_NAME }}
+                    {{ medecinName || 'Chargement...' }}
                   </p>
                 </div>
                 <span [class]="getStatusClass(rdv.statutRdv)"

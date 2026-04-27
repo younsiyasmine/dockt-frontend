@@ -25,6 +25,7 @@ import { ProfilComponent } from './pages/profil/profil';
 import { MedecinDashboard } from './pages/medecin-dashboard/medecin-dashboard';
 import { PatientsComponent } from './pages/patients/patients';
 import { Parametres } from './pages/parametres/parametres';
+import { TraiterDocument } from './pages/traiter-document/traiter-document';
 
 export const routes: Routes = [
   // Auth (public)
@@ -53,6 +54,7 @@ export const routes: Routes = [
   { path: 'ajouter-rdv/:id', component: AjouterRdv, canActivate: [authGuard] },
   //MS3 with no security for now until connected with backend
   { path: 'dossier-patient', component: GererDossier },
+  { path: 'traiter-document', component: TraiterDocument },
   { path: 'dicter-ordonnance', component: DicterOrdonnance },
   { path: 'dicter-compte-rendu', component: DicterCompteRendu },
   { path: 'voir-ordonnance/:id', component: VueOrdonnance },

@@ -45,7 +45,7 @@
       <!-- Header -->
       <div class="flex justify-between items-start border-b-2 border-teal-600 pb-6 mb-8">
         <div>
-          <h1 class="text-xl sm:text-2xl font-bold text-gray-900 uppercase tracking-wider">Dr. Bouabdellah Souad</h1>
+          <h1 class="text-xl sm:text-2xl font-bold text-gray-900 uppercase tracking-wider">{{ medecinName || 'Chargement...' }}</h1>
           <p class="text-teal-500 font-bold text-base sm:text-lg mt-1">Médecin Généraliste</p>
           <p class="text-gray-600 text-sm mt-3">15 Avenue Mohammed VI, Oujda</p>
           <p class="text-gray-600 text-sm">Tél : 05 36 78 43 21</p>
@@ -63,8 +63,8 @@
       <!-- Patient placeholder -->
       <div class="mb-8 text-center">
         <p class="text-sm text-gray-500 font-medium uppercase tracking-widest">Prescription pour</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">— Patient —</p>
-        <p class="text-gray-500 text-sm italic mt-1">RDV réf. {{ ordonnance.idRdv }}</p>
+        <p class="text-2xl font-bold text-gray-900 mt-1">{{ patientName || 'Chargement...' }}</p>
+        <p class="text-gray-500 text-sm italic mt-1">RDV réf. {{ ordonnance.idRdv }} — {{ formatDate(rdvDate) }}</p>
       </div>
 
       <!-- Contenu -->

@@ -18,6 +18,7 @@ export class MedecinDashboard implements OnInit {
 
   patientsEnAttente: number = 0;
   consultationsDuJour: number = 0;
+  demandesCR: number = 0;
   patientsActifs: number = 0;
   rdvDuJour: any[] = [];
   role: 'MEDECIN' | 'SECRETAIRE' | null = null;
@@ -77,6 +78,15 @@ export class MedecinDashboard implements OnInit {
     this.http.get<any[]>('http://localhost:8082/api/patients').subscribe({
       next: (data) => {
         this.patientsActifs = data.length;
+        this.cdr.detectChanges();
+      },
+      error: () => {},
+    });
+
+    //requested CR
+    this.http.get<any[]>('http://localhost:8080/api/comptes-rendus/statut/DEMANDE').subscribe({
+      next: (data) => {
+        this.demandesCR = data.length;
         this.cdr.detectChanges();
       },
       error: () => {},

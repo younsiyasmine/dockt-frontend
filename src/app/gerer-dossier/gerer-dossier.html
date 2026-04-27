@@ -17,13 +17,21 @@
       </span>
     </div>
 
-    <div *ngIf="!afficherApercuA4 && !afficherApercuCompteRenduA4" class="pt-20 px-6 pb-6">
+    <!-- Check-in Error Toast -->
+    <div *ngIf="checkInError"
+         class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 text-white bg-red-500 border border-red-200 shadow-lg rounded-2xl px-5 py-3 transition-all">
+      <span class="text-sm font-medium text-white">{{ checkInError }}</span>
+    </div>
+
+    <!-- Main dossier view -->
+    <div *ngIf="!afficherApercuA4" class="pt-20 px-6 pb-6">
 
       <div class="mb-4 sm:mb-6 md:mb-8">
-        <h1 class="text-2xl font-bold text-slate-800 ">Dossier Patient</h1>
+        <h1 class="text-2xl font-bold text-slate-800">Dossier Patient</h1>
       </div>
 
-      <button (click)="retour()" class="flex items-center text-teal-600 hover:text-teal-700 hover:underline cursor-pointer font-medium mb-4 transition text-sm">
+      <button (click)="retour()"
+              class="flex items-center text-teal-600 hover:text-teal-700 hover:underline cursor-pointer font-medium mb-4 transition text-sm">
         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
         </svg>
@@ -33,26 +41,23 @@
       <!-- Patient Header -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-5 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div class="flex items-center gap-3">
-          <!-- Avatar -->
           <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border-2 border-teal-500 shadow-sm flex items-center justify-center flex-shrink-0">
             <img *ngIf="patient.image_biometrique" [src]="patient.image_biometrique" alt="Photo" class="w-full h-full object-cover">
             <span *ngIf="!patient.image_biometrique" class="text-teal-600 font-bold text-base uppercase">
-      {{ patient.nom[0] }}{{ patient.prenom[0] }}
-    </span>
+              {{ patient.nom[0] }}{{ patient.prenom[0] }}
+            </span>
           </div>
-
-          <!-- Name + edit icon -->
           <div>
             <div class="flex items-center gap-2">
               <h2 class="text-base sm:text-lg font-bold text-gray-800">{{ patient.nom }} {{ patient.prenom }}</h2>
               @if (role === 'SECRETAIRE') {
-              <button (click)="ouvrirModaleEdition()" title="Modifier le patient"
-                      class="text-gray-400 hover:text-teal-500 transition-colors cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                </svg>
-              </button>
+                <button (click)="ouvrirModaleEdition()" title="Modifier le patient"
+                        class="text-gray-400 hover:text-teal-500 transition-colors cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                  </svg>
+                </button>
               }
             </div>
             <p class="text-xs text-gray-400 mt-0.5">ID: {{ patientId }}</p>
@@ -69,18 +74,21 @@
               Dicter ordonnance
             </button>
             <button (click)="ouvrirModaleCompteRendu()"
-                    class="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-800 rounded-lg text-white text-sm font-medium hover:bg-teal-600 transition shadow-sm cursor-pointer">
+                    class="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-800 rounded-lg text-white text-sm font-medium transition shadow-sm cursor-pointer">
               Dicter compte rendu
             </button>
           }
-
           @if (role === 'SECRETAIRE') {
-            <button (click)="checkIn()"
-                    class="flex-1 sm:flex-none px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg text-white text-sm font-medium transition shadow-sm cursor-pointer flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button (click)="checkIn()" [disabled]="checkInLoading"
+                    class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-white text-sm font-medium transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
+                    [ngClass]="checkInLoading ? 'bg-teal-300 cursor-not-allowed' : 'bg-teal-500 hover:bg-teal-600'">
+              <svg *ngIf="checkInLoading" class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="30 60" stroke-linecap="round"/>
+              </svg>
+              <svg *ngIf="!checkInLoading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              Check-in
+              {{ checkInLoading ? 'En cours...' : 'Check-in' }}
             </button>
           }
         </div>
@@ -89,7 +97,6 @@
       <!-- Tabs + Content -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-100">
 
-        <!-- Tabs -->
         <div class="flex border-b border-gray-200 px-4 sm:px-6 pt-3 overflow-x-auto gap-4 sm:gap-6">
           <button (click)="changerOnglet('infos')"
                   [ngClass]="ongletActif === 'infos' ? 'border-b-2 border-teal-500 text-teal-600 font-semibold' : 'text-gray-500 hover:text-gray-700 font-medium'"
@@ -128,7 +135,6 @@
           </button>
         </div>
 
-        <!-- Tab Content -->
         <div class="p-4 sm:p-6">
 
           <!-- Infos -->
@@ -163,9 +169,13 @@
             </div>
           </div>
 
-          <!-- Historique -->
+          <!-- Historique RDV -->
           <div *ngIf="ongletActif === 'historique'">
             <h3 class="text-sm font-bold text-gray-800 mb-3">Rendez-vous</h3>
+            <div *ngIf="historiqueRdv.length === 0"
+                 class="text-center py-8 text-gray-400 text-sm italic">
+              Aucun rendez-vous enregistré.
+            </div>
             <div class="space-y-2">
               <div *ngFor="let rdv of historiqueRdv"
                    class="border border-gray-200 rounded-lg p-3 flex justify-between items-center bg-white shadow-sm hover:shadow transition">
@@ -182,11 +192,11 @@
                 </div>
                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0"
                       [ngClass]="{
-                          'bg-green-100 text-green-700': rdv.statut_consultation === 'CONFIRME' || rdv.statut_consultation === 'MODIFIE_CONFIRME',
-                          'bg-red-100 text-red-700': rdv.statut_consultation === 'ANNULE',
-                          'bg-gray-100 text-yellow-600': rdv.statut_consultation === 'PASSE'
+                        'bg-green-100 text-green-700': rdv.statut_consultation === 'CONFIRME' || rdv.statut_consultation === 'MODIFIE_CONFIRME',
+                        'bg-red-100 text-red-700': rdv.statut_consultation === 'ANNULE',
+                        'bg-gray-100 text-yellow-600': rdv.statut_consultation === 'PASSE'
                       }">
-                      {{ rdv.statut_consultation }}
+                  {{ rdv.statut_consultation }}
                 </span>
               </div>
             </div>
@@ -194,42 +204,82 @@
 
           <!-- Ordonnances -->
           <div *ngIf="ongletActif === 'ordonnances'">
-            <div *ngFor="let ord of ordonnances" class="p-4 bg-teal-50 border border-teal-100 rounded-lg mb-3">
-              <p class="font-bold text-teal-800 text-sm mb-1">Ordonnance ({{ ord.type }}) du {{ ord.date_emmission }}</p>
-              <p class="text-gray-700 text-sm">{{ ord.contenu_texte }}</p>
+            <div *ngIf="ordonnances.length === 0"
+                 class="text-center py-8 text-gray-400 text-sm italic">
+              Aucune ordonnance enregistrée.
+            </div>
+            <div *ngFor="let ord of ordonnances"
+                 (click)="voirOrdonnance(ord)"
+                 class="p-4 bg-teal-50 border border-teal-100 rounded-lg mb-3 cursor-pointer hover:shadow-md transition">
+              <p class="font-bold text-teal-800 text-sm mb-1">
+                Ordonnance ({{ ord.type }}) du {{ ord.dateEmmission | date:'dd/MM/yyyy' }}
+              </p>
+              <p class="text-gray-700 text-sm">{{ ord.contenuTexte }}</p>
             </div>
           </div>
 
           <!-- Comptes Rendus -->
           <div *ngIf="ongletActif === 'comptesRendus'" class="space-y-3">
+            <div *ngIf="comptesRendus.length === 0"
+                 class="text-center py-8 text-gray-400 text-sm italic">
+              Aucun compte-rendu enregistré.
+            </div>
             <div *ngFor="let cr of comptesRendus"
                  class="p-4 bg-white border rounded-xl shadow-sm hover:shadow-md transition"
-                 [ngClass]="cr.statut === 'Brouillon' ? 'border-yellow-200' : 'border-gray-200'">
+                 [ngClass]="{
+                   'border-blue-200':   cr.statut === 'DEMANDE',
+                   'border-yellow-200': cr.statut === 'EN_ATTENTE',
+                   'border-gray-200':   cr.statut === 'VALIDE'
+                 }">
 
               <div class="flex justify-between items-start mb-2 gap-3">
                 <div class="flex-1 min-w-0">
-                  <p class="font-bold text-gray-800 text-sm">Compte Rendu du {{ cr.date_redaction }}</p>
+                  <p class="font-bold text-gray-800 text-sm">
+                    Compte Rendu du {{ cr.dateRedaction | date:'dd/MM/yyyy' }}
+                  </p>
                   <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ cr.contenu }}</p>
                 </div>
                 <span class="px-2.5 py-1 text-xs rounded-full font-bold uppercase tracking-wider flex-shrink-0"
-                      [ngClass]="cr.statut === 'Brouillon' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-700'">
-                  {{ cr.statut }}
+                      [ngClass]="{
+                        'bg-blue-100 text-blue-700':     cr.statut === 'DEMANDE',
+                        'bg-yellow-100 text-yellow-800': cr.statut === 'EN_ATTENTE',
+                        'bg-green-100 text-green-700':   cr.statut === 'VALIDE'
+                      }">
+                  {{ cr.statut === 'EN_ATTENTE' ? 'BROUILLON' : cr.statut }}
                 </span>
               </div>
 
               <div class="mt-3 pt-3 border-t flex justify-end"
-                   [ngClass]="cr.statut === 'Brouillon' ? 'border-yellow-100' : 'border-gray-100'">
-                <button *ngIf="cr.statut === 'Brouillon'" (click)="ouvrirModaleCompteRendu()"
-                        class="text-yellow-700 hover:text-yellow-900 font-medium text-xs flex items-center transition cursor-pointer bg-yellow-50 px-3 py-1.5 rounded-lg hover:bg-yellow-100">
-                  <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                  </svg>
-                  Reprendre la dictée
-                </button>
-                <button *ngIf="cr.statut === 'Validé'" (click)="ouvrirApercuCompteRendu()"
+                   [ngClass]="{
+                     'border-blue-100':   cr.statut === 'DEMANDE',
+                     'border-yellow-100': cr.statut === 'EN_ATTENTE',
+                     'border-gray-100':   cr.statut === 'VALIDE'
+                   }">
+
+                @if (role === 'MEDECIN') {
+                  <!-- DEMANDE: clickable, opens modal with this specific cr -->
+                  <button *ngIf="cr.statut === 'DEMANDE'" (click)="ouvrirModaleCompteRendu(cr)"
+                          class="text-blue-600 hover:text-blue-900 font-medium text-xs flex items-center bg-blue-50 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-blue-100">
+                    En attente de traitement
+                  </button>
+
+                  <!-- EN_ATTENTE: resume draft with this specific cr -->
+                  <button *ngIf="cr.statut === 'EN_ATTENTE'" (click)="ouvrirModaleCompteRendu(cr)"
+                          class="text-yellow-700 hover:text-yellow-900 font-medium text-xs flex items-center transition cursor-pointer bg-yellow-50 px-3 py-1.5 rounded-lg hover:bg-yellow-100">
+                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                    </svg>
+                    Reprendre la dictée
+                  </button>
+                }
+
+                <!-- VALIDE: navigate to read-only view -->
+                <button *ngIf="cr.statut === 'VALIDE'" (click)="voirCompteRendu(cr)"
                         class="text-teal-600 hover:text-teal-800 font-medium text-xs flex items-center transition cursor-pointer hover:bg-teal-50 px-3 py-1.5 rounded-lg">
                   <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                   </svg>
                   Aperçu & Impression A4
                 </button>
@@ -241,8 +291,6 @@
           <div *ngIf="modaleEditionOuverte"
                class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-
-              <!-- Header -->
               <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-500 flex items-center justify-center">
@@ -264,10 +312,7 @@
                 </button>
               </div>
 
-              <!-- Body -->
               <div class="px-6 py-4 space-y-4">
-
-                <!-- Nom + Prénom -->
                 <div class="grid grid-cols-2 gap-3">
                   <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-semibold text-gray-600">Nom</label>
@@ -280,8 +325,6 @@
                            class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white text-sm outline-none transition-all"/>
                   </div>
                 </div>
-
-                <!-- CIN + Téléphone -->
                 <div class="grid grid-cols-2 gap-3">
                   <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-semibold text-gray-600">CIN</label>
@@ -294,8 +337,6 @@
                            class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white text-sm outline-none transition-all"/>
                   </div>
                 </div>
-
-                <!-- Sexe + Date naissance -->
                 <div class="grid grid-cols-2 gap-3">
                   <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-semibold text-gray-600">Sexe</label>
@@ -316,15 +357,11 @@
                            class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white text-sm outline-none transition-all"/>
                   </div>
                 </div>
-
-                <!-- Adresse -->
                 <div class="flex flex-col gap-1.5">
                   <label class="text-xs font-semibold text-gray-600">Adresse</label>
                   <textarea [(ngModel)]="editForm.adresse" rows="2"
                             class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white text-sm outline-none transition-all resize-none"></textarea>
                 </div>
-
-                <!-- Email -->
                 <div class="flex flex-col gap-1.5">
                   <label class="text-xs font-semibold text-gray-600">
                     Email <span class="text-gray-400 font-normal">(laisser vide pour ne pas modifier)</span>
@@ -333,8 +370,6 @@
                          placeholder="nouveau@email.com"
                          class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white text-sm outline-none transition-all"/>
                 </div>
-
-                <!-- Password -->
                 <div class="flex flex-col gap-1.5">
                   <label class="text-xs font-semibold text-gray-600">
                     Mot de passe <span class="text-gray-400 font-normal">(laisser vide pour ne pas modifier)</span>
@@ -352,16 +387,12 @@
                     </button>
                   </div>
                 </div>
-
-                <!-- Error -->
                 <div *ngIf="updateError"
                      class="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl px-3 py-2.5">
                   {{ updateError }}
                 </div>
-
               </div>
 
-              <!-- Footer -->
               <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100">
                 <button (click)="fermerModaleEdition()"
                         class="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer">
@@ -376,7 +407,6 @@
                   {{ isUpdating ? 'Enregistrement...' : 'Sauvegarder' }}
                 </button>
               </div>
-
             </div>
           </div>
 
@@ -384,27 +414,30 @@
       </div>
     </div>
 
+    <!-- Ordonnance A4 preview — replaces full page -->
     <app-vue-ordonnance
       *ngIf="afficherApercuA4"
       (retourDossier)="afficherApercuA4 = false">
     </app-vue-ordonnance>
 
+    <!-- Dicter ordonnance modal -->
     <app-dicter-ordonnance
       *ngIf="modaleOrdonnanceOuverte"
+      [idRdv]="rdvId ?? 0"
+      [patientNom]="patient.prenom + ' ' + patient.nom"
       (fermerModale)="fermerModaleOrdonnance()"
       (ordonnanceValidee)="terminerEtAfficherOrdonnance()">
     </app-dicter-ordonnance>
 
+    <!-- Dicter compte rendu modal -->
     <app-dicter-compte-rendu
       *ngIf="modaleCompteRenduOuverte"
+      [idRdv]="rdvId ?? 0"
+      [crExistant]="crSelectionne"
+      [patientNom]="patient.prenom + ' ' + patient.nom"
       (fermerModale)="fermerModaleCompteRendu()"
       (compteRenduValide)="terminerCompteRendu($event)">
     </app-dicter-compte-rendu>
-
-    <app-vue-compte-rendu
-      *ngIf="afficherApercuCompteRenduA4"
-      (retourDossier)="afficherApercuCompteRenduA4 = false">
-    </app-vue-compte-rendu>
 
   </div>
 </div>

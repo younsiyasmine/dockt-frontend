@@ -10,6 +10,11 @@ export class OrdonnanceService {
 
   constructor(private http: HttpClient) {}
 
+  // ✅ NEW — for patient history view
+  getOrdonnancesParPatient(patientId: number): Observable<Ordonnance[]> {
+    return this.http.get<Ordonnance[]>(`${this.url}/patient/${patientId}`);
+  }
+
   getOrdonnancesParRdv(idRdv: number): Observable<Ordonnance[]> {
     return this.http.get<Ordonnance[]>(`${this.url}/rdv/${idRdv}`);
   }

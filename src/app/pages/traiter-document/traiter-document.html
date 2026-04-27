@@ -1,0 +1,96 @@
+<div class="flex min-h-screen bg-gray-50">
+  <app-sidebar></app-sidebar>
+  <app-topbar></app-topbar>
+
+  <div class="flex-1 ml-64 pt-20 px-6 pb-6 bg-slate-50 min-h-screen">
+
+    <!-- Page Header -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-slate-800">Documents à traiter</h1>
+      <p class="text-sm text-gray-500 mt-1">Comptes rendus demandés par les patients en attente de traitement</p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="flex items-center justify-center py-20">
+      <div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!isLoading && demandes.length === 0"
+         class="flex flex-col items-center justify-center py-20 text-center">
+      <div class="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-4">
+        <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <p class="text-gray-700 font-semibold text-base">Tout est à jour !</p>
+      <p class="text-gray-400 text-sm mt-1">Aucun document en attente de traitement.</p>
+    </div>
+
+    <!-- CR Cards -->
+    <div *ngIf="!isLoading && demandes.length > 0" class="space-y-3">
+
+      <!-- Count badge -->
+      <div class="flex items-center gap-2 mb-4">
+        <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+          {{ demandes.length }} document{{ demandes.length > 1 ? 's' : '' }} en attente
+        </span>
+      </div>
+
+      <div *ngFor="let cr of demandes"
+           class="bg-white border border-blue-200 rounded-xl shadow-sm hover:shadow-md transition p-4">
+
+        <div class="flex justify-between items-start gap-3">
+
+          <!-- Left: patient + date -->
+          <div class="flex items-center gap-3">
+            <!-- Avatar -->
+            <div class="w-10 h-10 rounded-full bg-blue-100 border-2 border-blue-300 flex items-center justify-center flex-shrink-0">
+              <span class="text-blue-700 font-bold text-sm uppercase">
+                {{ (patientNames[cr.idRdv] ?? '?')[0] }}
+              </span>
+            </div>
+            <div>
+              <p class="font-semibold text-gray-800 text-sm">
+                {{ patientNames[cr.idRdv] ?? 'Chargement...' }}
+              </p>
+              <p class="text-xs text-gray-400 mt-0.5">
+                RDV #{{ cr.idRdv }} &nbsp;·&nbsp; Demandé le {{ cr.dateRedaction | date:'dd/MM/yyyy' }}
+              </p>
+              <p *ngIf="cr.messagePatient"
+                 class="text-xs text-blue-600 mt-1 italic">"{{ cr.messagePatient }}"</p>
+            </div>
+          </div>
+
+          <!-- Right: badge + button -->
+          <div class="flex flex-col items-end gap-2 flex-shrink-0">
+            <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+              DEMANDE
+            </span>
+            <button (click)="ouvrirModale(cr)"
+                    class="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-blue-800 text-white text-xs font-semibold rounded-lg hover:opacity-90 transition shadow-sm cursor-pointer flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+              Traiter
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Dicter Compte Rendu Modal -->
+  <app-dicter-compte-rendu
+    *ngIf="modaleOuverte"
+    [idRdv]="crSelectionne?.idRdv ?? 0"
+    [patientNom]="patientNomSelectionne"
+    [crExistant]="crSelectionne"
+    (fermerModale)="fermerModale()"
+    (compteRenduValide)="terminer($event)">
+  </app-dicter-compte-rendu>
+
+</div>

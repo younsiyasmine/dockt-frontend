@@ -16,12 +16,14 @@ export class DicterOrdonnance {
   @Output() fermerModale = new EventEmitter<void>();
   @Output() ordonnanceValidee = new EventEmitter<void>();
   @Input() idRdv: number = 1; // hardcoded for now, real value from MS2 later
+  @Input() patientNom: string = '';
 
   isRecording = false;
   texteOrdonnance = '';
   typeOrdonnance = 'Médicament';
   isSaving = false;
   simulationTimeout: any;
+
 
   constructor(
     private ordonnanceService: OrdonnanceService,
