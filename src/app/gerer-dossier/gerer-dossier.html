@@ -4,7 +4,7 @@
 
   <div class="flex-1 ml-64 pt-4 px-2 pb-4 bg-slate-50 min-h-screen">
 
-    <!-- Success Toast -->
+    <!-- Success Toast - MESSAGE CORRIGÉ -->
     <div *ngIf="showSuccessToast"
          class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 text-white bg-teal-500 border border-teal-200 shadow-lg rounded-2xl px-5 py-3 transition-all">
       <div class="w-7 h-7 rounded-full bg-teal-50 flex items-center justify-center flex-shrink-0">
@@ -13,7 +13,7 @@
         </svg>
       </div>
       <span class="text-sm font-medium text-white">
-        {{ checkInSuccess ? 'Le patient a été checked-in avec succès !' : 'Patient modifié avec succès !' }}
+        {{ checkInSuccess ? '✅ Patient check-in : Veuillez vous placer devant la caméra' : 'Patient modifié avec succès !' }}
       </span>
     </div>
 
@@ -46,13 +46,13 @@
             <div class="flex items-center gap-2">
               <h2 class="text-base sm:text-lg font-bold text-gray-800">{{ patient.nom }} {{ patient.prenom }}</h2>
               @if (role === 'SECRETAIRE') {
-              <button (click)="ouvrirModaleEdition()" title="Modifier le patient"
-                      class="text-gray-400 hover:text-teal-500 transition-colors cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                </svg>
-              </button>
+                <button (click)="ouvrirModaleEdition()" title="Modifier le patient"
+                        class="text-gray-400 hover:text-teal-500 transition-colors cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                  </svg>
+                </button>
               }
             </div>
             <p class="text-xs text-gray-400 mt-0.5">ID: {{ patientId }}</p>

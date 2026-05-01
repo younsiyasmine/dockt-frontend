@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrdonnanceService } from '../core/services/ordonnance.service';
 import { Ordonnance } from '../core/models/models';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-dicter-ordonnance',
@@ -15,17 +16,22 @@ import { Ordonnance } from '../core/models/models';
 export class DicterOrdonnance {
   @Output() fermerModale = new EventEmitter<void>();
   @Output() ordonnanceValidee = new EventEmitter<void>();
-  @Input() idRdv: number = 1; // hardcoded for now, real value from MS2 later
+  @Input() idRdv: number = 1;
 
   isRecording = false;
   texteOrdonnance = '';
   typeOrdonnance = 'Médicament';
   isSaving = false;
-  simulationTimeout: any;
+  isTranscribing = false;
+
+  private mediaRecorder: MediaRecorder | null = null;
+  private audioChunks: Blob[] = [];
+  private readonly API_PYTHON = 'http://localhost:8000/api/transcribe';
 
   constructor(
     private ordonnanceService: OrdonnanceService,
     private router: Router,
+    private http: HttpClient,
   ) {}
 
   annuler() {
@@ -47,7 +53,6 @@ export class DicterOrdonnance {
         console.log('Ordonnance sauvegardée:', data);
         this.isSaving = false;
         this.ordonnanceValidee.emit();
-        // navigate to the new ordonnance
         this.router.navigate(['/voir-ordonnance', data.idOrdonnance]);
       },
       error: (err) => {
@@ -57,18 +62,66 @@ export class DicterOrdonnance {
     });
   }
 
-  toggleMicrophone() {
-    this.isRecording = !this.isRecording;
+  async toggleMicrophone() {
     if (this.isRecording) {
-      this.simulationTimeout = setTimeout(() => {
-        this.texteOrdonnance +=
-          (this.texteOrdonnance ? '\n' : '') +
-          'Paracétamol 1000mg, 1 comprimé matin, midi et soir pendant 5 jours.';
-        setTimeout(() => (this.isRecording = false), 1000);
-      }, 2000);
+      // Arrêter l'enregistrement
+      this.stopRecording();
     } else {
-      clearTimeout(this.simulationTimeout);
+      // Démarrer l'enregistrement
+      await this.startRecording();
     }
+  }
+
+  async startRecording() {
+    this.isRecording = true;
+    this.audioChunks = [];
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.mediaRecorder = new MediaRecorder(stream);
+
+      this.mediaRecorder.ondataavailable = (event) => {
+        this.audioChunks.push(event.data);
+      };
+
+      this.mediaRecorder.onstop = () => {
+        // Envoyer l'audio à Python
+        this.transcribeAudio();
+      };
+
+      this.mediaRecorder.start();
+    } catch (error) {
+      console.error('Erreur accès microphone:', error);
+      this.isRecording = false;
+    }
+  }
+
+  stopRecording() {
+    if (this.mediaRecorder && this.isRecording) {
+      this.mediaRecorder.stop();
+      this.mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+      this.isRecording = false;
+      this.isTranscribing = true;
+    }
+  }
+
+  transcribeAudio() {
+    const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.webm');
+
+    this.http.post<{ texte_transcrit: string }>(this.API_PYTHON, formData).subscribe({
+      next: (response) => {
+        this.isTranscribing = false;
+        const nouveauTexte = response.texte_transcrit;
+        this.texteOrdonnance += (this.texteOrdonnance ? '\n' : '') + nouveauTexte;
+        console.log('✅ Transcription reçue:', nouveauTexte);
+      },
+      error: (error) => {
+        this.isTranscribing = false;
+        console.error('❌ Erreur transcription:', error);
+      },
+    });
   }
 
   effacerTexte() {

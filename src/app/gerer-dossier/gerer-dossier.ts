@@ -189,7 +189,7 @@ export class GererDossier implements OnInit {
         };
         this.isUpdating = false;
         this.modaleEditionOuverte = false;
-        this.showSuccessToast = true;           // ← add this
+        this.showSuccessToast = true;
         setTimeout(() => {
           this.showSuccessToast = false;
           this.cdr.detectChanges();
@@ -213,14 +213,15 @@ export class GererDossier implements OnInit {
     // First get today's RDVs to find the idRdv for this patient
     this.fileAttenteService.getFileDuJourAvecDetails().subscribe({
       next: (rdvs) => {
-        const rdv = rdvs.find((r: any) =>
-          r.idPatient?.toString() === this.patientId?.toString() ||
-          r.patient?.idPatient?.toString() === this.patientId?.toString()
+        const rdv = rdvs.find(
+          (r: any) =>
+            r.idPatient?.toString() === this.patientId?.toString() ||
+            r.patient?.idPatient?.toString() === this.patientId?.toString(),
         );
 
         if (!rdv || !rdv.id) {
           this.checkInLoading = false;
-          this.checkInError = 'Aucun RDV trouvé aujourd\'hui pour ce patient.';
+          this.checkInError = "Aucun RDV trouvé aujourd'hui pour ce patient.";
           this.showCheckInErrorToast();
           return;
         }
@@ -229,29 +230,55 @@ export class GererDossier implements OnInit {
 
         this.fileAttenteService.checkIn(rdvId).subscribe({
           next: () => {
+            // Déclencher la capture sur Tablette 1 APRÈS le check-in
+            this.declencherCaptureSurTablette(this.patientId!);
+
             this.checkInLoading = false;
             this.checkInSuccess = true;
             this.showSuccessToast = true;
             this.cdr.detectChanges();
+
+            // Le toast reste affiché 5 secondes (temps pour que le patient se place)
             setTimeout(() => {
               this.showSuccessToast = false;
               this.checkInSuccess = false;
               this.cdr.detectChanges();
-            }, 3000);
+            }, 5000);
           },
           error: (err) => {
             this.checkInLoading = false;
             this.checkInError = err?.error?.message || 'Erreur lors du check-in.';
             this.showCheckInErrorToast();
-          }
+          },
         });
       },
       error: (err) => {
         this.checkInLoading = false;
         this.checkInError = 'Erreur lors de la récupération des RDVs.';
         this.showCheckInErrorToast();
-      }
+      },
     });
+  }
+
+  // MÉTHODE : Déclencher la capture sur la Tablette 1
+  declencherCaptureSurTablette(patientId: string) {
+    // Appeler le serveur Python (port 8000)
+    this.http
+      .post('http://localhost:8000/api/visage/demarrer_capture', {
+        patient_id: parseInt(patientId),
+      })
+      .subscribe({
+        next: (response: any) => {
+          console.log('✅ Capture déclenchée sur la Tablette 1', response);
+        },
+        error: (err) => {
+          console.error('❌ Erreur déclenchement capture:', err);
+          this.checkInSuccess = false;
+          this.showSuccessToast = false;
+          this.checkInError = 'Erreur de communication avec la tablette';
+          this.showCheckInErrorToast();
+        },
+      });
   }
 
   showCheckInErrorToast() {
@@ -284,8 +311,8 @@ export class GererDossier implements OnInit {
   afficherApercuA4: boolean = false;
 
   terminerEtAfficherOrdonnance() {
-    this.modaleOrdonnanceOuverte = false; // On cache la modale
-    this.afficherApercuA4 = true; // On affiche le papier A4
+    this.modaleOrdonnanceOuverte = false;
+    this.afficherApercuA4 = true;
   }
 
   // --- GESTION DE LA MODALE COMPTE RENDU ---
@@ -304,7 +331,6 @@ export class GererDossier implements OnInit {
     this.modaleCompteRenduOuverte = false;
 
     if (action === 'valider') {
-      // Au lieu de l'alerte, on ouvre la page A4 directement !
       this.afficherApercuCompteRenduA4 = true;
     } else {
       console.log('Brouillon sauvegardé !');
@@ -319,9 +345,6 @@ export class GererDossier implements OnInit {
   }
 
   // --- VOS DONNÉES DE TEST ---
-
-  //image_biometrique:
-  //'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
 
   historiqueRdv: any[] = [];
 
