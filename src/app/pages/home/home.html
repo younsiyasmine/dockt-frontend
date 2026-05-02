@@ -1,1 +1,219 @@
-<p>home works!</p>
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-container">
+
+    <a (click)="scrollTo('hero')" class="nav-logo">
+      <img src="logo.png" alt="Dockt" class="logo-img" />
+      <div class="logo-text">
+        <span class="logo-name">D<span class="logo-o">o</span>ckt</span>
+      </div>
+    </a>
+
+    <div class="nav-links">
+      <a (click)="scrollTo('services')" [class.active]="activeSection === 'services'">Nos Services</a>
+      <a (click)="scrollTo('how')" [class.active]="activeSection === 'how'">Comment ça marche?</a>
+      <a (click)="scrollTo('horaires')" [class.active]="activeSection === 'horaires'">Horaires</a>
+      <a (click)="scrollTo('avis')" [class.active]="activeSection === 'avis'">Avis</a>
+      <a (click)="scrollTo('contact')" [class.active]="activeSection === 'contact'">Consulter</a>
+    </div>
+
+    <div class="nav-right">
+      <div class="lang-switcher">
+        <span class="globe">🌐</span>
+        <button class="lang" [class.active]="activeLang === 'FR'" (click)="setLang('FR')">FR</button>
+        <button class="lang" [class.active]="activeLang === 'AR'" (click)="setLang('AR')">AR</button>
+        <button class="lang" [class.active]="activeLang === 'EN'" (click)="setLang('EN')">EN</button>
+      </div>
+      <button class="btn-connect" routerLink="/login">Se Connecter</button>
+    </div>
+
+    <button class="hamburger" (click)="toggleMenu()" [class.open]="menuOpen">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+  </div>
+
+  <div class="mobile-menu" [class.open]="menuOpen">
+    <a (click)="scrollTo('services')">Nos Services</a>
+    <a (click)="scrollTo('horaires')">Horaires du travail</a>
+    <a (click)="scrollTo('how')">comment ça marche</a>
+    <a (click)="scrollTo('avis')">Avis</a>
+    <a (click)="scrollTo('contact')">Consulter</a>
+    <div class="mobile-bottom">
+      <div class="lang-switcher">
+        <button class="lang" [class.active]="activeLang === 'FR'" (click)="setLang('FR')">FR</button>
+        <button class="lang" [class.active]="activeLang === 'AR'" (click)="setLang('AR')">AR</button>
+        <button class="lang" [class.active]="activeLang === 'EN'" (click)="setLang('EN')">EN</button>
+      </div>
+      <button class="btn-connect">Se Connecter</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-overlay"></div>
+  <img
+    src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1600&q=80"
+    alt="Ophtalmologie"
+    class="hero-bg"
+  />
+  <div class="hero-content">
+    <h1>Gangez du temps retrouvez la clarté</h1>
+    <p class="hero-sub">Gestion intelligente de vos rendez-vous.</p>
+    <div class="hero-actions">
+      <button class="btn-dark" routerLink="/login">Prendre un Rendez-vous →</button>
+      <button class="btn-pill">
+        <span class="check-icon">✓</span>
+        Suivi en temps réel
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services-section" id="services">
+  <div class="container">
+    <h2 class="sec-title">Nos Services</h2>
+    <div class="services-grid">
+      <div class="svc-card">
+        <div class="svc-icon ic-blue">👨‍⚕️</div>
+        <h3>Consultation générale</h3>
+        <p>Diagnostic et traitement des maladies courantes avec suivi médical personnalisé</p>
+      </div>
+      <div class="svc-card">
+        <div class="svc-icon ic-teal">📋</div>
+        <h3>Bilan de santé</h3>
+        <p>Examen complet pour évaluer votre état de santé et prévenir les maladies.</p>
+      </div>
+      <div class="svc-card">
+        <div class="svc-icon ic-blue">🩺</div>
+        <h3>Suivi des maladies chroniques</h3>
+        <p>Accompagnement et contrôle régulier pour diabète, hypertension et autres maladies chroniques.</p>
+      </div>
+      <div class="svc-card highlight">
+        <div class="svc-icon ic-orange">💉</div>
+        <h3>Vaccination et prévention</h3>
+        <p>Vaccins et conseils médicaux pour prévenir les maladies et protéger votre santé.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="how-section" id="how">
+  <div class="container">
+    <h2 class="sec-title">Comment ça marche ?</h2>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num sn-blue">1</div>
+        <h3>Connectez-vous</h3>
+        <p>Créez votre compte en quelques secondes</p>
+      </div>
+      <div class="step">
+        <div class="step-num sn-teal">2</div>
+        <h3>Choisissez le temps qui vous convient</h3>
+        <p>Sélectionnez l'horaire qui vous convient</p>
+      </div>
+      <div class="step">
+        <div class="step-num sn-orange">3</div>
+        <h3>Suivez votre position en temps réel</h3>
+        <p>Recevez des notifications de confirmation et de rappel</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- HORAIRES -->
+<section class="horaires-section" id="horaires">
+  <div class="container">
+    <h2 class="sec-title">Horaires de Travail</h2>
+    <div class="horaires-box">
+      <div class="hor-item">
+        <div class="hor-icon">📅</div>
+        <h3>Lundi — Vendredi</h3>
+        <p class="hor-time">09h00 — 15h00</p>
+      </div>
+      <div class="hor-divider"></div>
+      <div class="hor-item">
+        <div class="hor-icon">📅</div>
+        <h3>Samedi</h3>
+        <p class="hor-time">09h00 — 12h30</p>
+      </div>
+      <div class="hor-divider"></div>
+      <div class="hor-item">
+        <div class="hor-icon">🔒</div>
+        <h3>Dimanche</h3>
+        <p class="hor-time closed">Fermé</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="reviews-section" id="avis">
+  <div class="container">
+    <h2 class="sec-title">Avis Clients</h2>
+    <div class="reviews-grid">
+      <div class="rev-card">
+        <div class="stars">★★★★★</div>
+        <p>"Un service vraiment bien réussi avec une équipe très professionnelle et efficiente. Très satisfaite !"</p>
+        <strong>Abderrahmane Kherraji</strong>
+      </div>
+      <div class="rev-card">
+        <div class="stars">★★★★★</div>
+        <p>"Excellente prise en main, délais très respectés et prix très juste. Une vraie réussite !"</p>
+        <strong>Ahmed Benzil</strong>
+      </div>
+      <div class="rev-card">
+        <div class="stars">★★★★★</div>
+        <p>"L'expérience est agréable. L'équipe sait vous mettre en confiance et reste à votre écoute."</p>
+        <strong>Leyla Meftah</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="cta-inner">
+    <h2>Prêt à consulter ?</h2>
+    <p>Connectez-vous pour accéder à votre agenda de santé réel</p>
+    <div class="cta-btns">
+      <button class="btn-yellow" routerLink="/register">Créer un Compte</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="ft-brand">
+      <div class="ft-logo">
+        <img src="logo.png" alt="Dockt" class="footer-logo-img" />
+        <span>Dockt</span> <br>
+        <span>Tous Droits réservés. Dockt 2026</span>
+      </div>
+      <p>Votre plateforme de santé</p>
+    </div>
+
+    <div class="ft-col">
+      <h4>Liens</h4>
+      <a href="#">Conditions Générales</a>
+      <a href="#">Vie privée et Sécurité</a>
+      <a href="#">Politique de confidentialité</a>
+    </div>
+
+    <div class="ft-col">
+      <h4>Contact</h4>
+      <span>Lazaret, Oujda</span>
+      <span>Phone: +212 536-47-76-53</span>
+      <span>Email: dockt.support&#64;gmail.com</span>
+    </div>
+
+    <div class="ft-col">
+    </div>
+  </div>
+</footer>

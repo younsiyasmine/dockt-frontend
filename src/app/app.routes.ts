@@ -17,6 +17,7 @@ import { VueCompteRendu } from './vue-compte-rendu/vue-compte-rendu';
 import { authGuard } from './core/guards/auth-guard';
 
 // Mehdi's pages
+import {HomeComponent} from './pages/home/home';
 import { LoginComponent } from './pages/login/login';
 import { LoginAdminComponent } from './pages/login-admin/login-admin';
 import { RegisterComponent } from './pages/register/register';
@@ -29,7 +30,8 @@ import { TraiterDocument } from './pages/traiter-document/traiter-document';
 
 export const routes: Routes = [
   // Auth (public)
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: 'home', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   { path: 'login-admin', component: LoginAdminComponent },
   { path: 'register', component: RegisterComponent },
