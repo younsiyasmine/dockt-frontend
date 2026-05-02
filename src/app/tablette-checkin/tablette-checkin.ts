@@ -37,7 +37,7 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.demarrerCamera();
     this.verifierNouveauPatientPeriodiquement();
-    this.scannerPatientConnuPeriodiquement();
+    //this.scannerPatientConnuPeriodiquement();
   }
 
   // ─────────────────────────────────────────────
