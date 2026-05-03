@@ -97,16 +97,25 @@ export class MesCompterenduComponent implements OnInit {
     });
   }
 
+  rdvDejaDemande(rdvId: number | undefined): boolean {
+    if (!rdvId) return false;
+    return this.compteRendusList.some((cr) => cr.idRdv === rdvId);
+  }
+
   envoyerDemande(): void {
     if (!this.demandeRdvId) return;
+
+    const rdvIdNum = Number(this.demandeRdvId);
+
     const demande: CompteRendu = {
-      idRdv: Number(this.demandeRdvId),
+      idRdv: rdvIdNum,
       contenu: '',
       messagePatient: this.demandeMessage,
     };
+
     this.compteRenduService.demanderCompteRendu(demande).subscribe({
       next: (data) => {
-        this.compteRendusList.push(data);
+        this.compteRendusList = this.sortCompteRendus([...this.compteRendusList, data]);
         this.showDemandeModal = false;
         this.demandeRdvId = '';
         this.demandeMessage = '';

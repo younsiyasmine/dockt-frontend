@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -18,23 +18,32 @@ export class LoginAdminComponent {
   selectedRole = 'MEDECIN';
   errorMessage = '';
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   onSubmit() {
-    console.log('Selected role:', this.selectedRole);
     this.errorMessage = '';
 
     if (this.selectedRole === 'MEDECIN') {
       this.authService.loginMedecin({ login: this.login, password: this.password })
         .subscribe({
           next: (response) => this.handleSuccess(response),
-          error: () => this.errorMessage = 'Login ou mot de passe incorrect'
+          error: () => {
+            this.errorMessage = 'Login ou mot de passe incorrect';
+            this.cdr.detectChanges();
+          }
         });
     } else {
       this.authService.loginSecretaire({ login: this.login, password: this.password })
         .subscribe({
           next: (response) => this.handleSuccess(response),
-          error: () => this.errorMessage = 'Login ou mot de passe incorrect'
+          error: () => {
+            this.errorMessage = 'Login ou mot de passe incorrect';
+            this.cdr.detectChanges();
+          }
         });
     }
   }

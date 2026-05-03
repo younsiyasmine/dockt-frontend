@@ -46,6 +46,7 @@ export class GererDossier implements OnInit {
   ) {}
 
   role: 'MEDECIN' | 'SECRETAIRE' | null = null;
+  source: 'fileAttente' | 'listPatient' | null = null;
 
   patient: any = {
     nom: '',
@@ -91,6 +92,7 @@ export class GererDossier implements OnInit {
 
     this.route.queryParams.subscribe((params) => {
       this.rdvId = params['rdvId'] ? +params['rdvId'] : null;
+      this.source = params['source'] ?? null;
     });
 
     const id = this.route.snapshot.paramMap.get('id');
@@ -122,6 +124,7 @@ export class GererDossier implements OnInit {
 
           this.historiqueRdv = rdvs
             .map((rdv) => ({
+              id: rdv.id,
               titre: 'Consultation',
               date_prevue: rdv.datePrevue,
               heure_prevue: rdv.heurePrevue?.substring(0, 5),
@@ -153,6 +156,19 @@ export class GererDossier implements OnInit {
 
       this.loadComptesRendus(id);
     }
+  }
+
+  selectionnerRdv(rdv: any) {
+    if (this.role !== 'MEDECIN') return;
+    if (this.comptesRendus.some((cr) => cr.idRdv === rdv.id)) return;
+    if (rdv.statut_consultation === 'ANNULE') return;
+
+    this.rdvId = rdv.id;
+  }
+
+  rdvDejaACr(rdvId: number | undefined): boolean {
+    if (!rdvId) return false;
+    return this.comptesRendus.some((cr) => cr.idRdv === rdvId);
   }
 
   private loadComptesRendus(patientId: string) {

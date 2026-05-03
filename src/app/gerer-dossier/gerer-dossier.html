@@ -4,7 +4,7 @@
 
   <div class="flex-1 ml-64 pt-4 px-2 pb-4 bg-slate-50 min-h-screen">
 
-    <!-- Success Toast - MESSAGE CORRIGÉ -->
+    <!-- Success Toast -->
     <div *ngIf="showSuccessToast"
          class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 text-white bg-teal-500 border border-teal-200 shadow-lg rounded-2xl px-5 py-3 transition-all">
       <div class="w-7 h-7 rounded-full bg-teal-50 flex items-center justify-center flex-shrink-0">
@@ -50,7 +50,7 @@
           <div>
             <div class="flex items-center gap-2">
               <h2 class="text-base sm:text-lg font-bold text-gray-800">{{ patient.nom }} {{ patient.prenom }}</h2>
-              @if (role === 'SECRETAIRE') {
+              @if (role === 'SECRETAIRE' && source === 'listPatient') {
                 <button (click)="ouvrirModaleEdition()" title="Modifier le patient"
                         class="text-gray-400 hover:text-teal-500 transition-colors cursor-pointer">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,7 +65,9 @@
         </div>
 
         <div class="flex gap-2 w-full sm:w-auto">
-          @if (role === 'MEDECIN') {
+
+          <!-- fileAttente + MEDECIN: Ordonnance + CR (always enabled, rdvId is guaranteed) -->
+          @if (source === 'fileAttente' && role === 'MEDECIN') {
             <button (click)="ouvrirModaleOrdonnance()"
                     class="flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-50 transition cursor-pointer flex items-center justify-center gap-2">
               <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +80,21 @@
               Dicter compte rendu
             </button>
           }
-          @if (role === 'SECRETAIRE') {
+
+          <!-- listPatient + MEDECIN: Ordonnance always enabled, CR greyed if no rdvId -->
+          @if (source === 'listPatient' && role === 'MEDECIN') {
+
+            <button [disabled]="!rdvId"
+                    (click)="rdvId ? ouvrirModaleCompteRendu() : null"
+                    [title]="!rdvId ? 'Vous ne pouvez pas dicter un CR sans RDV' : ''"
+                    class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center justify-center gap-2"
+                    [ngClass]="rdvId ? 'bg-gradient-to-r from-blue-400 to-blue-800 text-white cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
+              Dicter compte rendu
+            </button>
+          }
+
+          <!-- fileAttente + SECRETAIRE: Check-in only -->
+          @if (source === 'fileAttente' && role === 'SECRETAIRE') {
             <button (click)="checkIn()" [disabled]="checkInLoading"
                     class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-white text-sm font-medium transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
                     [ngClass]="checkInLoading ? 'bg-teal-300 cursor-not-allowed' : 'bg-teal-500 hover:bg-teal-600'">
@@ -91,6 +107,9 @@
               {{ checkInLoading ? 'En cours...' : 'Check-in' }}
             </button>
           }
+
+          <!-- listPatient + SECRETAIRE: no action buttons, edit pencil is inline above -->
+
         </div>
       </div>
 
@@ -178,6 +197,12 @@
             </div>
             <div class="space-y-2">
               <div *ngFor="let rdv of historiqueRdv"
+                   (click)="selectionnerRdv(rdv)"
+                   [ngClass]="{
+  'cursor-pointer hover:border-teal-300': role === 'MEDECIN' && !rdvDejaACr(rdv.id) && rdv.statut_consultation !== 'ANNULE',
+  'cursor-default': role === 'MEDECIN' && (rdvDejaACr(rdv.id) || rdv.statut_consultation === 'ANNULE'),
+  'border-teal-400 bg-teal-50': rdvId === rdv.id
+}"
                    class="border border-gray-200 rounded-lg p-3 flex justify-between items-center bg-white shadow-sm hover:shadow transition">
                 <div class="flex items-center gap-3">
                   <div class="text-teal-500 flex-shrink-0">
@@ -214,7 +239,7 @@
               <p class="font-bold text-teal-800 text-sm mb-1">
                 Ordonnance ({{ ord.type }}) du {{ ord.dateEmmission | date:'dd/MM/yyyy' }}
               </p>
-              <p class="text-gray-700 text-sm">{{ ord.contenuTexte }}</p>
+              <p class="text-gray-700 text-sm line-clamp-2">{{ ord.contenuTexte }}</p>
             </div>
           </div>
 
@@ -235,9 +260,9 @@
               <div class="flex justify-between items-start mb-2 gap-3">
                 <div class="flex-1 min-w-0">
                   <p class="font-bold text-gray-800 text-sm">
-                    Compte Rendu du {{ cr.dateRedaction | date:'dd/MM/yyyy' }}
+                    Compte Rendu le {{ cr.dateRedaction | date:'dd/MM/yyyy' }}
                   </p>
-                  <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ cr.contenu }}</p>
+                  <p class="text-gray-500 text-xs mt-1">RDV : {{ cr.idRdv ?? '—' }}</p>
                 </div>
                 <span class="px-2.5 py-1 text-xs rounded-full font-bold uppercase tracking-wider flex-shrink-0"
                       [ngClass]="{
@@ -257,13 +282,10 @@
                    }">
 
                 @if (role === 'MEDECIN') {
-                  <!-- DEMANDE: clickable, opens modal with this specific cr -->
                   <button *ngIf="cr.statut === 'DEMANDE'" (click)="ouvrirModaleCompteRendu(cr)"
                           class="text-blue-600 hover:text-blue-900 font-medium text-xs flex items-center bg-blue-50 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-blue-100">
                     En attente de traitement
                   </button>
-
-                  <!-- EN_ATTENTE: resume draft with this specific cr -->
                   <button *ngIf="cr.statut === 'EN_ATTENTE'" (click)="ouvrirModaleCompteRendu(cr)"
                           class="text-yellow-700 hover:text-yellow-900 font-medium text-xs flex items-center transition cursor-pointer bg-yellow-50 px-3 py-1.5 rounded-lg hover:bg-yellow-100">
                     <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,7 +296,6 @@
                   </button>
                 }
 
-                <!-- VALIDE: navigate to read-only view -->
                 <button *ngIf="cr.statut === 'VALIDE'" (click)="voirCompteRendu(cr)"
                         class="text-teal-600 hover:text-teal-800 font-medium text-xs flex items-center transition cursor-pointer hover:bg-teal-50 px-3 py-1.5 rounded-lg">
                   <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -414,7 +435,7 @@
       </div>
     </div>
 
-    <!-- Ordonnance A4 preview — replaces full page -->
+    <!-- Ordonnance A4 preview -->
     <app-vue-ordonnance
       *ngIf="afficherApercuA4"
       (retourDossier)="afficherApercuA4 = false">
