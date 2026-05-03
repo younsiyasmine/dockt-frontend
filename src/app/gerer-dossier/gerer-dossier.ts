@@ -8,6 +8,7 @@ import { ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { VueOrdonnance } from '../vue-ordonnance/vue-ordonnance';
 import { DicterCompteRendu } from '../dicter-compte-rendu/dicter-compte-rendu';
+import { VueCompteRendu } from '../vue-compte-rendu/vue-compte-rendu';
 import { FileAttenteService } from '../core/services/file-attente.service';
 import { Topbar } from '../pages/topbar/topbar';
 import { Sidebar } from '../pages/sidebar/sidebar';
@@ -23,6 +24,7 @@ import { Ordonnance, CompteRendu } from '../core/models/models';
     DicterOrdonnance,
     VueOrdonnance,
     DicterCompteRendu,
+    VueCompteRendu,
     Topbar,
     Sidebar,
     FormsModule,
@@ -78,6 +80,7 @@ export class GererDossier implements OnInit {
   comptesRendus: CompteRendu[] = [];
 
   afficherApercuA4 = false;
+  afficherApercuCompteRenduA4 = false;
   modaleOrdonnanceOuverte = false;
   modaleCompteRenduOuverte = false;
   ongletActif = 'infos';
@@ -101,7 +104,7 @@ export class GererDossier implements OnInit {
             prenom: p.prenom ?? '—',
             cin: p.cin ?? '—',
             date_naissance: p.dateNaissance ?? '—',
-            num_telephone: p.numTelephone ? p.numTelephone.toString() : '—',
+            num_telephone: p.numTelephone ? '0' + p.numTelephone.toString() : '—',
             sex: p.sexe === true || p.sexe === 'true',
             adresse: p.adresse ?? '—',
             image_biometrique: null,
@@ -188,7 +191,6 @@ export class GererDossier implements OnInit {
     window.history.back();
   }
 
-  // ── Edit patient modal ────────────────────────────────────────────────────
   ouvrirModaleEdition() {
     this.editForm = {
       nom: this.patient.nom === '—' ? '' : this.patient.nom,
@@ -255,7 +257,6 @@ export class GererDossier implements OnInit {
     });
   }
 
-  // ── Check-in ──────────────────────────────────────────────────────────────
   checkIn() {
     if (!this.patientId) return;
     this.checkInLoading = true;
@@ -278,6 +279,7 @@ export class GererDossier implements OnInit {
 
         this.fileAttenteService.checkIn(rdv.id).subscribe({
           next: () => {
+            this.declencherCaptureSurTablette(this.patientId!);
             this.checkInLoading = false;
             this.checkInSuccess = true;
             this.showSuccessToast = true;
@@ -286,7 +288,7 @@ export class GererDossier implements OnInit {
               this.showSuccessToast = false;
               this.checkInSuccess = false;
               this.cdr.detectChanges();
-            }, 3000);
+            }, 5000);
           },
           error: (err) => {
             this.checkInLoading = false;
@@ -303,6 +305,25 @@ export class GererDossier implements OnInit {
     });
   }
 
+  declencherCaptureSurTablette(patientId: string) {
+    this.http
+      .post('http://localhost:8000/api/visage/demarrer_capture', {
+        patient_id: parseInt(patientId),
+      })
+      .subscribe({
+        next: (response: any) => {
+          console.log('Capture déclenchée sur la Tablette 1', response);
+        },
+        error: (err) => {
+          console.error('Erreur déclenchement capture:', err);
+          this.checkInSuccess = false;
+          this.showSuccessToast = false;
+          this.checkInError = 'Erreur de communication avec la tablette';
+          this.showCheckInErrorToast();
+        },
+      });
+  }
+
   showCheckInErrorToast() {
     this.cdr.detectChanges();
     setTimeout(() => {
@@ -311,12 +332,10 @@ export class GererDossier implements OnInit {
     }, 3000);
   }
 
-  // ── Tabs ──────────────────────────────────────────────────────────────────
   changerOnglet(onglet: string) {
     this.ongletActif = onglet;
   }
 
-  // ── Ordonnance modal ──────────────────────────────────────────────────────
   ouvrirModaleOrdonnance() {
     this.modaleOrdonnanceOuverte = true;
   }
@@ -330,16 +349,12 @@ export class GererDossier implements OnInit {
     this.afficherApercuA4 = true;
   }
 
-  // ── Compte Rendu modal ────────────────────────────────────────────────────
   ouvrirModaleCompteRendu(cr?: CompteRendu) {
     if (cr) {
-      // Clicked from historique list — specific DEMANDE or EN_ATTENTE card
       this.crSelectionne = cr;
     } else if (this.rdvId) {
-      // Came from file d'attente — rdvId known, dictate new CR for this RDV
       this.crSelectionne = null;
     } else {
-      // Came from liste-patient — pick oldest DEMANDE already in DB
       const demandes = this.comptesRendus
         .filter((c) => c.statut === 'DEMANDE')
         .sort(
@@ -361,14 +376,15 @@ export class GererDossier implements OnInit {
     const savedCr = event.cr;
     this.crSelectionne = null;
 
-    // Always reload CR list to reflect updated statut
     if (this.patientId) {
       this.loadComptesRendus(this.patientId);
     }
 
-    // Navigate to read-only view only on validate
-    if (event.action === 'valider' && savedCr?.idCr) {
-      this.router.navigate(['/voir-compte-rendu', savedCr.idCr]);
+    if (event.action === 'valider') {
+      this.afficherApercuCompteRenduA4 = true;
+      if (savedCr?.idCr) {
+        this.router.navigate(['/voir-compte-rendu', savedCr.idCr]);
+      }
     }
   }
 }

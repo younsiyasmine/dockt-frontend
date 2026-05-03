@@ -28,6 +28,10 @@ import { PatientsComponent } from './pages/patients/patients';
 import { Parametres } from './pages/parametres/parametres';
 import { TraiterDocument } from './pages/traiter-document/traiter-document';
 
+// Marwa tab1 & tab 2
+import { TabletteCheckinComponent } from './tablette-checkin/tablette-checkin';
+import { TabletteConsultationComponent } from './tablette-consultation/tablette-consultation';
+
 export const routes: Routes = [
   // Auth (public)
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -43,7 +47,6 @@ export const routes: Routes = [
   { path: 'patient/prendre-rdv/:id', component: PrendreRdv, canActivate: [authGuard] },
   { path: 'patient/mes-rendezvous', component: MesRendezvousComponent, canActivate: [authGuard] },
   { path: 'patient/ma-position', component: MaPosition, canActivate: [authGuard] },
-  //MS3 with no security for now until connected with backend
   { path: 'patient/mes-ordonnances', component: MesOrdonnancesComponent },
   { path: 'patient/mes-compterendu', component: MesCompterenduComponent },
 
@@ -54,7 +57,6 @@ export const routes: Routes = [
   { path: 'mes-actes', component: ActeMedicaleComponent, canActivate: [authGuard] },
   { path: 'ajouter-rdv', component: AjouterRdv, canActivate: [authGuard] },
   { path: 'ajouter-rdv/:id', component: AjouterRdv, canActivate: [authGuard] },
-  //MS3 with no security for now until connected with backend
   { path: 'dossier-patient', component: GererDossier },
   { path: 'traiter-document', component: TraiterDocument },
   { path: 'dicter-ordonnance', component: DicterOrdonnance },
@@ -66,10 +68,12 @@ export const routes: Routes = [
   { path: 'shared/file-attente', component: FileAttente, canActivate: [authGuard] },
   { path: 'shared/planning', component: Planning, canActivate: [authGuard] },
   { path: 'parametres', component: Parametres },
-
-  //MS3 with no security for now until connected with backend
   { path: 'gerer-dossier/:id', component: GererDossier },
 
-  // Fallback
+  // 👇 TABLETTES (AJOUTÉES ICI - AVANT LE FALLBACK)
+  { path: 'tablette-checkin', component: TabletteCheckinComponent },
+  { path: 'tablette-consultation', component: TabletteConsultationComponent },
+
+  // Fallback (DOIT RESTER À LA FIN)
   { path: '**', redirectTo: 'login' },
 ];
