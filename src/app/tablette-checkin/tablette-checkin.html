@@ -1,74 +1,146 @@
 <div class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-teal-500 to-blue-600 p-5">
 
   <!-- Titre -->
-  <h1 class="text-white text-3xl font-bold mb-6 tracking-wide">
+  <h1 class="text-white text-3xl font-bold mb-8 tracking-wide">
     🏥 Check-in Patient
   </h1>
 
-  <!-- Caméra (cachée par défaut, visible quand scan actif) -->
-  <div class="relative w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl"
-       [class.hidden]="!cameraActive">
+  <!-- ═══════════════════════════════════════ -->
+  <!-- BLOC CAMÉRA (visible uniquement quand la caméra est active) -->
+  <!-- ═══════════════════════════════════════ -->
+  <div *ngIf="cameraActive"
+       class="relative w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl mb-6">
     <video #videoElement autoplay playsinline
            class="w-full h-auto bg-black -scale-x-100 rounded-2xl">
     </video>
 
-    <!-- Cadre jaune centré -->
-    <div class="absolute inset-0 flex items-center justify-center">
+    <!-- Cadre JAUNE (scan en cours) -->
+    <div *ngIf="messageClass !== 'success'"
+         class="absolute inset-0 flex items-center justify-center pointer-events-none">
       <div class="w-72 h-80 border-4 border-yellow-400 rounded-3xl
                   shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]
                   flex items-end justify-center pb-3">
         <span class="text-yellow-300 text-xs font-semibold tracking-widest">
-          CADRE VISAGE
+          PLACEZ VOTRE VISAGE ICI
         </span>
       </div>
     </div>
-  </div>
 
-  <!-- Bouton Scanner (visible quand caméra éteinte et pas en traitement) -->
-  <div *ngIf="!cameraActive && !isProcessing"
-       class="flex flex-col items-center gap-4 mt-8 animate-fade-in">
-
-    <div class="text-white text-center mb-4">
-      <p class="text-lg font-medium">Bienvenue au cabinet médical</p>
-      <p class="text-sm opacity-80 mt-1">Cliquez ci-dessous pour vérifier votre présence</p>
+    <!-- Cadre VERT (succès) -->
+    <div *ngIf="messageClass === 'success'"
+         class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div class="w-72 h-80 border-4 border-green-400 rounded-3xl
+                  shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]
+                  flex items-end justify-center pb-3 bg-green-500/20">
+        <span class="text-green-300 text-xs font-semibold tracking-widest">
+          ✓ CHECK-IN EFFECTUÉ
+        </span>
+      </div>
     </div>
 
-    <button (click)="demarrerScan()"
-            class="px-8 py-4 bg-white text-teal-600 rounded-2xl font-bold text-xl
-                   shadow-lg hover:bg-teal-50 hover:scale-105 hover:shadow-xl
-                   transition-all duration-300 flex items-center gap-3
-                   active:scale-95 cursor-pointer">
-      <span class="text-2xl">📷</span>
-      Scanner ma présence
-    </button>
+    <!-- Badge scan en cours -->
+    <div *ngIf="isProcessing"
+         class="absolute top-4 right-4 bg-blue-500/90 px-4 py-2 rounded-full
+                text-white text-sm font-bold flex items-center gap-2">
+      <span class="w-2 h-2 bg-white rounded-full animate-ping"></span>
+      Scan en cours...
+    </div>
 
-    <!-- Indicateur patient en attente -->
+    <!-- Badge nouveau patient -->
     <div *ngIf="patientEnAttente"
-         class="mt-4 px-4 py-2 bg-yellow-400/20 border border-yellow-400/40
-                rounded-xl text-yellow-100 text-sm animate-pulse">
-      ⚠️ Un patient est en attente de scan
+         class="absolute top-4 left-4 bg-yellow-400 text-gray-900 px-4 py-2
+                rounded-full text-sm font-bold animate-pulse">
+      📸 Nouveau patient
     </div>
   </div>
 
-  <!-- Message principal -->
-  <div class="mt-8 px-10 py-5 rounded-2xl flex items-center gap-4
-              text-xl font-bold shadow-xl transition-all duration-300 max-w-xl w-full"
+  <!-- ═══════════════════════════════════════ -->
+  <!-- ÉCRAN RÉSULTAT (caméra éteinte = message à afficher) -->
+  <!-- ═══════════════════════════════════════ -->
+  <div *ngIf="!cameraActive"
+       class="w-full max-w-2xl bg-white rounded-2xl p-12
+              flex flex-col items-center justify-center gap-4 shadow-2xl mb-6">
+
+    <!-- Icône selon le statut -->
+    <div class="text-8xl">
+      @if (messageClass === 'success') {
+        <span class="animate-bounce inline-block">✅</span>
+      }
+      @if (messageClass === 'error') {
+        <span>❌</span>
+      }
+      @if (messageClass === 'warning') {
+        <span>⚠️</span>
+      }
+      @if (messageClass === 'info') {
+        <span>📷</span>
+      }
+    </div>
+
+    <!-- Message principal -->
+    <p class="text-gray-800 text-2xl font-bold text-center">{{ message }}</p>
+
+    <!-- Sous-message -->
+    <p class="text-gray-500 text-base text-center">{{ sousMessage }}</p>
+
+    <!-- Barre colorée selon le statut -->
+    <div class="w-full mt-2 px-6 py-3 rounded-xl text-center font-semibold text-sm"
+         [ngClass]="{
+           'bg-green-100 text-green-700': messageClass === 'success',
+           'bg-red-100 text-red-700':     messageClass === 'error',
+           'bg-yellow-100 text-yellow-700': messageClass === 'warning',
+           'bg-blue-100 text-blue-700':   messageClass === 'info'
+         }">
+      @if (messageClass === 'success') { Présence enregistrée avec succès }
+      @if (messageClass === 'error')   { Une erreur est survenue }
+      @if (messageClass === 'warning') { Attention }
+      @if (messageClass === 'info')    { Prêt à scanner }
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- MESSAGE SOUS LA CAMÉRA (quand caméra active) -->
+  <!-- ═══════════════════════════════════════ -->
+  <div *ngIf="cameraActive && message !== 'Veuillez vous placer devant la caméra' && message !== '🔍 Scan en cours...'"
+       class="mt-2 px-8 py-4 rounded-2xl flex items-center gap-3
+              text-lg font-bold shadow-xl max-w-2xl w-full"
        [ngClass]="{
-         'bg-blue-500 text-white':   messageClass === 'info',
-         'bg-green-500 text-white':  messageClass === 'success',
-         'bg-red-500 text-white':    messageClass === 'error',
-         'bg-yellow-500 text-white': messageClass === 'warning'
+         'bg-blue-500 text-white':    messageClass === 'info',
+         'bg-green-500 text-white':   messageClass === 'success',
+         'bg-red-500 text-white':     messageClass === 'error',
+         'bg-yellow-500 text-white':  messageClass === 'warning'
        }">
-    <div class="text-3xl flex-shrink-0">
+    <div class="text-2xl flex-shrink-0">
       @if (messageClass === 'info')    { <span>📷</span> }
       @if (messageClass === 'success') { <span>✅</span> }
       @if (messageClass === 'error')   { <span>❌</span> }
       @if (messageClass === 'warning') { <span>⚠️</span> }
     </div>
-    <div class="flex flex-col">
-      <span>{{ message }}</span>
-      <span class="text-sm font-normal opacity-90 mt-1">{{ sousMessage }}</span>
+    <div>
+      <div>{{ message }}</div>
+      <div class="text-sm opacity-90 mt-1">{{ sousMessage }}</div>
     </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- BOUTON SCANNER (visible uniquement à l'état initial) -->
+  <!-- ═══════════════════════════════════════ -->
+  <button *ngIf="!cameraActive && !isProcessing && !patientEnAttente && messageClass !== 'success'"
+          (click)="demarrerScan()"
+          class="mt-4 px-12 py-5 bg-white text-teal-600 rounded-2xl font-bold text-2xl
+                 shadow-2xl hover:bg-teal-50 hover:scale-105
+                 transition-all duration-300 flex items-center gap-3
+                 active:scale-95 cursor-pointer">
+    <span class="text-3xl">📷</span>
+    Scanner ma présence
+  </button>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- PIED DE PAGE -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="mt-8 text-white text-sm opacity-70 text-center">
+    <p>👤 Patient existant : cliquez sur "Scanner ma présence"</p>
+    <p>📸 Nouveau patient : la capture démarre automatiquement</p>
   </div>
 
 </div>
