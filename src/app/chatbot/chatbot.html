@@ -2,10 +2,10 @@
 
   <!-- Bouton flottant -->
   <button (click)="toggleChat()"
-          class="fixed bottom-6 right-6 w-12 h-12 rounded-full shadow-lg
+          class="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg
                  flex items-center justify-center z-[60] transition-all duration-200 cursor-pointer"
-          style="background: linear-gradient(135deg, #0d6e4f, #1D9E75)">
-    <svg *ngIf="!isOpen" width="22" height="22" viewBox="0 0 24 24" fill="white">
+          style="background: linear-gradient(135deg, #0f766e, #14b8a6)">
+    <svg *ngIf="!isOpen" width="24" height="24" viewBox="0 0 24 24" fill="white">
       <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
     </svg>
     <svg *ngIf="isOpen" width="18" height="18" viewBox="0 0 24 24" fill="white">
@@ -15,21 +15,21 @@
 
   <!-- Fenêtre chat -->
   <div *ngIf="isOpen"
-       class="fixed bottom-20 right-6 z-[60] rounded-2xl overflow-hidden flex flex-col"
-       style="width:360px; height:520px; box-shadow:0 8px 32px rgba(0,0,0,0.15); background:#fff;">
+       class="fixed bottom-24 right-6 z-[60] rounded-2xl overflow-hidden flex flex-col"
+       style="width:400px; height:580px; box-shadow:0 8px 32px rgba(0,0,0,0.15); background:#fff;">
 
     <!-- Header -->
-    <div style="background: linear-gradient(135deg, #0d6e4f, #1D9E75); padding:12px 16px;"
+    <div style="background: linear-gradient(135deg, #0f766e, #14b8a6); padding:16px 20px; flex-shrink:0;"
          class="flex items-center gap-3">
-      <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:10px;"
+      <div style="width:44px;height:44px;background:rgba(255,255,255,0.2);border-radius:12px;"
            class="flex items-center justify-center">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
           <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
         </svg>
       </div>
       <div>
-        <p style="color:#fff;font-weight:600;font-size:14px;">Assistant Médical — Oujda</p>
-        <p style="color:rgba(255,255,255,0.75);font-size:11px;">
+        <p style="color:#fff;font-weight:600;font-size:15px;">Assistant Médical — Oujda</p>
+        <p style="color:rgba(255,255,255,0.75);font-size:12px;">
           <span class="dot"></span> En ligne · Français / عربي
         </p>
       </div>
@@ -37,55 +37,73 @@
 
     <!-- Messages -->
     <div id="chat-messages"
-         class="flex-1 overflow-y-auto flex flex-col gap-3 p-3"
+         class="flex-1 overflow-y-auto flex flex-col gap-3 p-4"
          style="background:#f7f9fb;">
 
       <ng-container *ngFor="let msg of messages">
 
-        <!-- Message texte normal -->
-        <div *ngIf="!msg.pharmacies"
-             class="flex gap-2"
+        <!-- Message texte -->
+        <div *ngIf="msg.text && !msg.pharmacies && !msg.faq"
+             class="flex gap-2 msg-anim"
              [class.justify-end]="msg.role === 'user'"
              [class.justify-start]="msg.role === 'bot'">
 
           <div *ngIf="msg.role === 'bot'"
-               class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-               style="background:#0d6e4f;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+               class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+               style="background:#0f766e;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
               <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
             </svg>
           </div>
 
           <div class="px-3 py-2 rounded-2xl text-sm"
-               style="max-width:80%;white-space:pre-wrap;line-height:1.6;"
+               style="max-width:82%;line-height:1.6;"
                [ngStyle]="{
-                 'background': msg.blocked ? '#fff5f5' : msg.role === 'user' ? '#0d6e4f' : '#fff',
+                 'background': msg.blocked ? '#fff5f5' : msg.role === 'user' ? '#0f766e' : '#fff',
                  'color': msg.blocked ? '#c53030' : msg.role === 'user' ? '#fff' : '#1a202c',
                  'border': msg.blocked ? '1px solid #fed7d7' : msg.role === 'bot' ? '1px solid #e2e8f0' : 'none',
-                 'border-radius': msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px'
-               }">
-            {{ msg.text }}
+                 'border-radius': msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                 'white-space': 'pre-wrap'
+               }"
+               [innerHTML]="msg.role === 'bot' ? renderMarkdown(msg.text!) : msg.text">
           </div>
 
           <div *ngIf="msg.role === 'user'"
-               class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-               style="background:#e2e8f0;font-size:13px;">👤</div>
+               class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+               style="background:#e2e8f0;">👤</div>
         </div>
 
-        <!-- Cartes pharmacies -->
-        <div *ngIf="msg.pharmacies" class="flex gap-2">
-          <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-               style="background:#0d6e4f;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+        <!-- Boutons FAQ inline -->
+        <div *ngIf="msg.faq" class="flex gap-2 msg-anim">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+               style="background:#0f766e;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
               <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
             </svg>
           </div>
-          <div class="flex flex-col gap-2" style="max-width:85%;">
+          <div class="flex flex-col gap-1" style="max-width:85%;">
+            <button *ngFor="let f of faqItems"
+                    (click)="sendPreset(f.q)"
+                    class="faq-btn text-left">
+              {{ f.icon }} {{ f.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Cartes pharmacies -->
+        <div *ngIf="msg.pharmacies" class="flex gap-2 msg-anim">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+               style="background:#0f766e;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+            </svg>
+          </div>
+          <div class="flex flex-col gap-2" style="max-width:88%;">
 
             <span class="text-xs px-2 py-1 rounded-full w-fit"
                   [ngStyle]="{
-                    'background': msg.source === 'live' ? '#dcfce7' : '#fef9c3',
-                    'color': msg.source === 'live' ? '#166534' : '#854d0e'
+                    'background': msg.source === 'live' ? '#ccfbf1' : '#fef9c3',
+                    'color': msg.source === 'live' ? '#0f766e' : '#854d0e'
                   }">
               {{ msg.source === 'live' ? '🟢 Données en temps réel' : '🟡 Données de secours' }}
             </span>
@@ -97,10 +115,10 @@
 
             <div *ngFor="let p of msg.pharmacies"
                  class="rounded-xl p-3 text-sm"
-                 style="background:#f0fdf4;border:1px solid #86efac;color:#166534;">
-              <strong style="display:block;margin-bottom:4px;">🏥 {{ p.name }}</strong>
-              <span style="display:block;color:#4b7a5e;font-size:12px;">📍 {{ p.address }}</span>
-              <span style="display:block;color:#4b7a5e;font-size:12px;">
+                 style="background:#f0fdfa;border:1px solid #99f6e4;color:#0f766e;">
+              <strong style="display:block;margin-bottom:4px;">💊 {{ p.name }}</strong>
+              <span style="display:block;color:#0d9488;font-size:12px;">📍 {{ p.address }}</span>
+              <span style="display:block;color:#0d9488;font-size:12px;">
                 📞 {{ p.phone !== 'N/A' ? p.phone : 'Appeler pour confirmer' }} — {{ p.garde || '24h/24' }}
               </span>
               <div class="flex gap-2 mt-2">
@@ -113,7 +131,7 @@
               </div>
             </div>
 
-            <p style="font-size:10px;color:#6b7280;">Appelez avant de vous déplacer. Urgence : 150</p>
+            <p style="font-size:11px;color:#6b7280;">Appelez avant de vous déplacer. Urgence : 150</p>
           </div>
         </div>
 
@@ -121,9 +139,9 @@
 
       <!-- Typing indicator -->
       <div *ngIf="loading" class="flex gap-2">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center"
-             style="background:#0d6e4f;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center"
+             style="background:#0f766e;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
           </svg>
         </div>
@@ -139,16 +157,17 @@
     </div>
 
     <!-- Boutons rapides -->
-    <div class="flex flex-wrap gap-1.5 px-3 py-2"
-         style="background:#fff;border-top:1px solid #e2e8f0;">
-      <button (click)="sendPreset('pharmacie de garde')" class="qbtn">💊 Pharmacie de garde</button>
-      <button (click)="sendPreset('j ai de la fievre')" class="qbtn">🌡️ Fièvre</button>
-      <button (click)="sendPreset('j ai mal a la tete')" class="qbtn">🤕 Maux de tête</button>
-      <button (click)="sendPreset('premiers secours coupure')" class="qbtn">🩹 Premiers secours</button>
+    <div class="flex flex-wrap gap-2 px-3 py-2"
+         style="background:#fff;border-top:1px solid #e2e8f0;flex-shrink:0;">
+      <button (click)="sendPreset('Comment prendre un rendez-vous ?')"            class="qbtn">📅 Prendre un RDV</button>
+      <button (click)="sendPreset('Comment créer un compte ?')"                   class="qbtn">📝 Créer un compte</button>
+      <button (click)="sendPreset('Comment annuler ou modifier un rendez-vous ?')" class="qbtn">❌ Annuler un RDV</button>
+      <button (click)="sendPreset('Comment faire mon check-in ?')"                class="qbtn">✅ Check-in</button>
+      <button (click)="sendPreset('Pharmacie de garde à Oujda')"                  class="qbtn">💊 Pharmacie de garde</button>
     </div>
 
     <!-- Input -->
-    <div class="flex gap-2 p-3" style="background:#fff;border-top:1px solid #e2e8f0;">
+    <div class="flex gap-2 p-3" style="background:#fff;border-top:1px solid #e2e8f0;flex-shrink:0;">
       <textarea
         [(ngModel)]="userInput"
         (keydown)="onKeyDown($event)"
@@ -156,13 +175,13 @@
         rows="1"
         class="flex-1 px-3 py-2 rounded-xl text-sm outline-none resize-none"
         style="background:#f7f9fb;border:1px solid #e2e8f0;font-family:inherit;
-               max-height:60px;transition:border-color 0.2s;"
+               max-height:80px;transition:border-color 0.2s;height:42px;"
       ></textarea>
       <button (click)="send()"
               [disabled]="loading || !userInput.trim()"
-              class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style="background:#0d6e4f;border:none;cursor:pointer;transition:background 0.15s;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+              class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style="background:#0f766e;border:none;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
           <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
         </svg>
       </button>

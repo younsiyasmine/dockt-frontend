@@ -6,11 +6,20 @@ import { Router, NavigationEnd } from '@angular/router';
 
 interface Message {
   role: 'user' | 'bot';
-  text: string;
+  text?: string;
   blocked?: boolean;
   pharmacies?: any[];
   source?: string;
+  faq?: boolean;
 }
+
+const FAQ_ITEMS = [
+  { icon: '📅', label: 'Comment prendre un rendez-vous ?',             q: 'Comment prendre un rendez-vous ?' },
+  { icon: '📝', label: 'Comment créer un compte ?',                    q: 'Comment créer un compte ?' },
+  { icon: '❌', label: 'Comment annuler ou modifier un rendez-vous ?',  q: 'Comment annuler ou modifier un rendez-vous ?' },
+  { icon: '✅', label: 'Comment faire mon check-in ?',                  q: 'Comment faire mon check-in ?' },
+  { icon: '💊', label: 'Pharmacie de garde à Oujda',                   q: 'Pharmacie de garde à Oujda' },
+];
 
 @Component({
   selector: 'app-chatbot',
@@ -25,6 +34,7 @@ export class ChatbotComponent {
   userInput = '';
   loading = false;
   isPatient = false;
+  faqItems = FAQ_ITEMS;
 
   private api = 'http://127.0.0.1:8000';
 
@@ -39,10 +49,13 @@ export class ChatbotComponent {
         this.checkVisibility();
       }
     });
+
     this.messages.push({
       role: 'bot',
-      text: 'Bonjour ! Je suis votre assistant médical pour Oujda.\n\nJe peux vous aider à :\n- 🏥 Trouver la pharmacie de garde\n- ❓ Répondre à vos questions de santé\n\n⚠️ Je ne donne pas de conseils sur les médicaments.',
+      text: '👋 Bonjour ! Je suis votre assistant DOCKT.\n\nVoici ce que je peux faire pour vous :',
     });
+    this.messages.push({ role: 'bot', faq: true });
+    this.messages.push({ role: 'bot', text: '⚠️ Urgence médicale ? Appelez le 150 immédiatement.' });
   }
 
   checkVisibility(): void {
@@ -51,7 +64,7 @@ export class ChatbotComponent {
     const path = window.location.pathname;
 
     const isPublicPage = path === '/' || path.includes('/home');
-    const isLoginPage = path.includes('/login');
+    const isLoginPage  = path.includes('/login');
 
     if (isLoginPage) {
       this.isPatient = false;
@@ -62,20 +75,26 @@ export class ChatbotComponent {
     } else {
       this.isPatient = false;
     }
+
     this.cdr.detectChanges();
   }
 
   toggleChat(): void {
     this.checkVisibility();
     this.isOpen = !this.isOpen;
-    if (this.isOpen) {
-      setTimeout(() => this.scrollToBottom(), 150);
-    }
+    if (this.isOpen) setTimeout(() => this.scrollToBottom(), 150);
   }
 
-  sendPreset(text: string): void {
-    this.userInput = text;
+  sendPreset(q: string): void {
+    this.userInput = q;
     this.send();
+  }
+
+  renderMarkdown(text: string): string {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br>');
   }
 
   send(): void {
@@ -88,22 +107,19 @@ export class ChatbotComponent {
     this.scrollToBottom();
 
     const isPharma =
-      text.toLowerCase().includes('pharmacie') || text.toLowerCase().includes('garde');
+      text.toLowerCase().includes('pharmacie') ||
+      text.toLowerCase().includes('garde');
 
     if (isPharma) {
       this.http.get<any>(`${this.api}/api/pharmacies`).subscribe({
         next: (data) => {
           this.ngZone.run(() => {
-            const liste = Array.isArray(data) ? data : data.data || [];
+            const liste  = Array.isArray(data) ? data : (data.data || []);
             const source = data.source || 'fallback';
             if (liste.length > 0) {
-              this.messages.push({ role: 'bot', text: '', pharmacies: liste, source });
+              this.messages.push({ role: 'bot', pharmacies: liste, source });
             } else {
-              this.messages.push({
-                role: 'bot',
-                text: 'Aucune pharmacie trouvée. Appelez le 150.',
-                blocked: true,
-              });
+              this.messages.push({ role: 'bot', text: 'Aucune pharmacie trouvée. Appelez le 150.', blocked: true });
             }
             this.loading = false;
             this.scrollToBottom();
@@ -111,11 +127,7 @@ export class ChatbotComponent {
         },
         error: () => {
           this.ngZone.run(() => {
-            this.messages.push({
-              role: 'bot',
-              text: 'Erreur de connexion. Vérifiez que Flask tourne.',
-              blocked: true,
-            });
+            this.messages.push({ role: 'bot', text: '⚠️ Impossible de joindre le serveur.', blocked: true });
             this.loading = false;
             this.scrollToBottom();
           });
@@ -126,19 +138,16 @@ export class ChatbotComponent {
         next: (data) => {
           this.ngZone.run(() => {
             if (data.pharmacies) {
-              this.messages.push({
-                role: 'bot',
-                text: '',
-                pharmacies: data.pharmacies,
-                source: 'live',
-              });
-            } else {
-              const isBlocked = data.reply?.includes('autorisé');
-              this.messages.push({
-                role: 'bot',
-                text: data.reply || data.error || 'Erreur.',
-                blocked: isBlocked,
-              });
+              this.messages.push({ role: 'bot', pharmacies: data.pharmacies, source: data.source || 'live' });
+            }
+            if (data.reply) {
+              this.messages.push({ role: 'bot', text: data.reply, blocked: data.reply.includes('autorisé') });
+            }
+            if (data.faq) {
+              this.messages.push({ role: 'bot', faq: true });
+            }
+            if (!data.reply && !data.pharmacies && !data.faq) {
+              this.messages.push({ role: 'bot', text: 'Une erreur inattendue est survenue.' });
             }
             this.loading = false;
             this.scrollToBottom();
@@ -148,7 +157,7 @@ export class ChatbotComponent {
           this.ngZone.run(() => {
             this.messages.push({
               role: 'bot',
-              text: 'Erreur de connexion au serveur.',
+              text: '⚠️ Impossible de joindre le serveur.\nVérifiez votre connexion ou réessayez.',
               blocked: true,
             });
             this.loading = false;
