@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TabletteConsultationComponent } from './tablette-consultation';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
-import { TabletteConsultation } from './tablette-consultation';
-
-describe('TabletteConsultation', () => {
-  let component: TabletteConsultation;
-  let fixture: ComponentFixture<TabletteConsultation>;
+describe('TabletteConsultationComponent', () => {
+  let component: TabletteConsultationComponent;
+  let fixture: ComponentFixture<TabletteConsultationComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TabletteConsultation],
+      imports: [TabletteConsultationComponent, HttpClientTestingModule],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(TabletteConsultation);
+    fixture = TestBed.createComponent(TabletteConsultationComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
