@@ -166,7 +166,6 @@ export class GererDossier implements OnInit {
     if (this.role !== 'MEDECIN') return;
     if (this.comptesRendus.some((cr) => cr.idRdv === rdv.id)) return;
     if (rdv.statut_consultation === 'ANNULE') return;
-
     this.rdvId = rdv.id;
   }
 
@@ -287,6 +286,7 @@ export class GererDossier implements OnInit {
     });
   }
 
+  // ✅ MERGE : logique de main (vérif rdv.checkIn + capture seulement, BDD gérée par tablette)
   checkIn() {
     if (!this.patientId) return;
     this.checkInLoading = true;
@@ -307,25 +307,27 @@ export class GererDossier implements OnInit {
           return;
         }
 
-        this.fileAttenteService.checkIn(rdv.id).subscribe({
-          next: () => {
-            this.declencherCaptureSurTablette(this.patientId!);
-            this.checkInLoading = false;
-            this.checkInSuccess = true;
-            this.showSuccessToast = true;
-            this.cdr.detectChanges();
-            setTimeout(() => {
-              this.showSuccessToast = false;
-              this.checkInSuccess = false;
-              this.cdr.detectChanges();
-            }, 5000);
-          },
-          error: (err) => {
-            this.checkInLoading = false;
-            this.checkInError = err?.error?.message || 'Erreur lors du check-in.';
-            this.showCheckInErrorToast();
-          },
-        });
+        // ⚠️ Vérifier si déjà check-in (ajout depuis main)
+        if (rdv.checkIn) {
+          this.checkInLoading = false;
+          this.checkInError = "Ce patient a déjà fait son check-in aujourd'hui.";
+          this.showCheckInErrorToast();
+          return;
+        }
+
+        // Le check-in en BDD sera fait par la tablette APRÈS vérification du visage
+        this.declencherCaptureSurTablette(this.patientId!);
+
+        this.checkInLoading = false;
+        this.checkInSuccess = true;
+        this.showSuccessToast = true;
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
+          this.showSuccessToast = false;
+          this.checkInSuccess = false;
+          this.cdr.detectChanges();
+        }, 5000);
       },
       error: () => {
         this.checkInLoading = false;
