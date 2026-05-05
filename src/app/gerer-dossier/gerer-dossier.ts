@@ -210,7 +210,7 @@ export class GererDossier implements OnInit {
     this.checkInLoading = true;
     this.checkInError = '';
 
-    // First get today's RDVs to find the idRdv for this patient
+    // 1. Vérifier qu'il y a un RDV pour aujourd'hui (sans faire le check-in)
     this.fileAttenteService.getFileDuJourAvecDetails().subscribe({
       next: (rdvs) => {
         const rdv = rdvs.find(
@@ -226,33 +226,30 @@ export class GererDossier implements OnInit {
           return;
         }
 
-        const rdvId: number = rdv.id;
+        // ⚠️ Vérifier si déjà check-in
+        if (rdv.checkIn) {
+          this.checkInLoading = false;
+          this.checkInError = 'Ce patient a déjà fait son check-in aujourd\'hui.';
+          this.showCheckInErrorToast();
+          return;
+        }
 
-        this.fileAttenteService.checkIn(rdvId).subscribe({
-          next: () => {
-            // Déclencher la capture sur Tablette 1 APRÈS le check-in
-            this.declencherCaptureSurTablette(this.patientId!);
+        // ✅ 2. Déclencher SEULEMENT la capture sur la tablette
+        // Le check-in en BDD sera fait par la tablette APRÈS vérification du visage
+        this.declencherCaptureSurTablette(this.patientId!);
 
-            this.checkInLoading = false;
-            this.checkInSuccess = true;
-            this.showSuccessToast = true;
-            this.cdr.detectChanges();
+        this.checkInLoading = false;
+        this.checkInSuccess = true;
+        this.showSuccessToast = true;
+        this.cdr.detectChanges();
 
-            // Le toast reste affiché 5 secondes (temps pour que le patient se place)
-            setTimeout(() => {
-              this.showSuccessToast = false;
-              this.checkInSuccess = false;
-              this.cdr.detectChanges();
-            }, 5000);
-          },
-          error: (err) => {
-            this.checkInLoading = false;
-            this.checkInError = err?.error?.message || 'Erreur lors du check-in.';
-            this.showCheckInErrorToast();
-          },
-        });
+        setTimeout(() => {
+          this.showSuccessToast = false;
+          this.checkInSuccess = false;
+          this.cdr.detectChanges();
+        }, 5000);
       },
-      error: (err) => {
+      error: () => {
         this.checkInLoading = false;
         this.checkInError = 'Erreur lors de la récupération des RDVs.';
         this.showCheckInErrorToast();

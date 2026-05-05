@@ -41,18 +41,32 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
       .getUserMedia({ video: { width: 1280, height: 720 } })
       .then((stream) => {
         this.stream = stream;
-        this.cameraActive = true;
+        this.cameraActive = true; // Angular va re-render le <video>
 
-        if (this.videoElement) {
-          this.videoElement.nativeElement.srcObject = stream;
-        }
+        return new Promise<void>((resolve, reject) => {
+          let tentatives = 0;
 
-        return new Promise<void>((resolve) => {
           const checkInterval = setInterval(() => {
+            tentatives++;
             const video = this.videoElement?.nativeElement;
-            if (video && video.videoWidth > 0 && video.videoHeight > 0) {
+
+            // Attendre qu'Angular rende le <video> dans le DOM
+            if (video) {
+              // Assigner le stream si pas encore fait
+              if (!video.srcObject) {
+                video.srcObject = stream;
+              }
+              // Attendre que la vidéo ait des dimensions réelles
+              if (video.videoWidth > 0 && video.videoHeight > 0) {
+                clearInterval(checkInterval);
+                resolve();
+              }
+            }
+
+            // Timeout après 10 secondes
+            if (tentatives > 100) {
               clearInterval(checkInterval);
-              resolve();
+              reject(new Error('Caméra timeout — vérifiez les permissions'));
             }
           }, 100);
         });
@@ -68,6 +82,10 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
     if (this.stream) {
       this.stream.getTracks().forEach((track) => track.stop());
       this.stream = null;
+    }
+    // ✅ Vider l'élément vidéo pour qu'il ne montre plus rien
+    if (this.videoElement?.nativeElement) {
+      this.videoElement.nativeElement.srcObject = null;
     }
     this.cameraActive = false;
   }
