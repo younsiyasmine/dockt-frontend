@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { NgFor, NgClass, NgIf } from '@angular/common';
 import { FileAttenteService } from '../../core/services/file-attente.service';
 import { RDV, StatutConsultation } from '../../core/models/models';
@@ -7,6 +7,7 @@ import { HttpClient } from '@angular/common/http';
 import { PatientResponse } from '../../core/models/auth.model';
 import { Sidebar } from '../../pages/sidebar/sidebar';
 import { Topbar } from '../../pages/topbar/topbar';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 interface PatientAttente {
   id: number;
@@ -25,9 +26,22 @@ interface PatientAttente {
   imports: [NgFor, NgClass, NgIf, Sidebar, Topbar],
   templateUrl: './file-attente.html',
   styleUrl: './file-attente.css',
+  animations: [
+    trigger('slideOut', [
+      transition(':leave', [
+        animate('400ms ease-in', style({
+          opacity: 0,
+          transform: 'translateY(-20px)',
+          height: '0px',
+          padding: '0px'
+        }))
+      ])
+    ])
+  ]
 })
-export class FileAttente implements OnInit {
+export class FileAttente implements OnInit, OnDestroy {
   patients: PatientAttente[] = [];
+  private pollInterval: any;
 
   constructor(
     private fileAttenteService: FileAttenteService,
@@ -38,6 +52,11 @@ export class FileAttente implements OnInit {
 
   ngOnInit(): void {
     this.loadFile();
+    this.pollInterval = setInterval(() => this.loadFile(), 30000);
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.pollInterval);
   }
 
   formatTemps(minutes: number): string {
@@ -51,8 +70,8 @@ export class FileAttente implements OnInit {
   loadFile(): void {
     this.fileAttenteService.getFileDuJourAvecDetails().subscribe({
       next: (rdvs: RDV[]) => {
-        console.log('RDVs:', rdvs.map((r) => ({ id: r.id, statutConsultation: r.statutConsultation })),);
-        console.log('RDVs:', rdvs); // ← add this
+        console.log('RDVs:', rdvs.map((r) => ({ id: r.id, statutConsultation: r.statutConsultation })));
+
         this.patients = rdvs.map((rdv) => ({
           id: rdv.id!,
           idPatient: rdv.idPatient!,
@@ -78,7 +97,7 @@ export class FileAttente implements OnInit {
                   this.patients[i].nom = `${p.prenom} ${p.nom}`;
                   this.cdr.detectChanges();
                 },
-                error: () => {}, // keep "Patient #X" as fallback
+                error: () => {},
               });
           }
 
@@ -100,22 +119,17 @@ export class FileAttente implements OnInit {
   }
 
   formatStatut(statut: string | undefined): string {
-    console.log('formatStatut called with:', statut, '| type:', typeof statut);
     switch (statut) {
-      case StatutConsultation.EN_ATTENTE:
-        return 'En attente';
-      case StatutConsultation.EN_CONSULTATION:
-        return 'En consultation';
-      case StatutConsultation.TERMINE:
-        return 'Terminée';
-      default:
-        return 'En attente';
+      case StatutConsultation.EN_ATTENTE: return 'En attente';
+      case StatutConsultation.EN_CONSULTATION: return 'En consultation';
+      case StatutConsultation.TERMINE: return 'Terminée';
+      default: return 'En attente';
     }
   }
 
   voirDossier(patient: PatientAttente) {
     this.router.navigate(['/gerer-dossier', patient.idPatient], {
-      queryParams: { rdvId: patient.id, source: 'fileAttente' }, // ✅ pass the RDV id
+      queryParams: { rdvId: patient.id, source: 'fileAttente' },
     });
   }
 

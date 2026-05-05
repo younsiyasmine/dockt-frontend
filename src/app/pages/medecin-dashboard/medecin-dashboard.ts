@@ -95,8 +95,6 @@ export class MedecinDashboard implements OnInit {
     // RDV du jour
     this.http.get<any[]>(`http://localhost:8081/api/rdv`).subscribe({
       next: (data) => {
-        const now = new Date();
-        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
         this.rdvDuJour = data
           .filter(rdv => rdv.datePrevue === dateStr && rdv.statutRdv !== 'ANNULE')
@@ -104,7 +102,7 @@ export class MedecinDashboard implements OnInit {
           .slice(0, 5)
           .map(rdv => ({
             ...rdv,
-            statutAffiche: this.getStatutConsultation(rdv, currentTime)
+            statutAffiche: this.getStatutConsultation(rdv)
           }));
         this.cdr.detectChanges();
       },
@@ -112,18 +110,13 @@ export class MedecinDashboard implements OnInit {
     });
   }
 
-  getStatutConsultation(rdv: any, currentTime: string): { label: string; class: string } {
+  getStatutConsultation(rdv: any): { label: string; class: string } {
     if (rdv.statutConsultation === 'TERMINE')
       return { label: 'Terminé', class: 'bg-green-100 text-green-600' };
     if (rdv.statutConsultation === 'EN_CONSULTATION')
       return { label: 'En cours', class: 'bg-blue-100 text-blue-600' };
     if (rdv.statutConsultation === 'EN_ATTENTE')
       return { label: 'En attente', class: 'bg-yellow-100 text-yellow-600' };
-
-    // statutConsultation is null — use time to guess
-    const heure = rdv.heurePrevue?.substring(0, 5);
-    if (heure && heure < currentTime)
-      return { label: 'Terminé', class: 'bg-green-300 text-gray-500' };
 
     return { label: 'À venir', class: 'bg-yellow-300 text-slate-500' };
   }

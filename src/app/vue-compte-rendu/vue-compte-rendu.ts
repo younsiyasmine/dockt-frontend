@@ -168,8 +168,22 @@ export class VueCompteRendu implements OnInit {
     pdf.setFontSize(11);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(0, 0, 0);
-    const lines = pdf.splitTextToSize(this.compteRendu.contenu, pageWidth - 30);
-    pdf.text(lines, 15, y);
+    const contenu = this.compteRendu.contenu ?? '';
+    const lines = pdf.splitTextToSize(contenu, pageWidth - 30);
+
+    // Handle page overflow
+    const lineHeight = 7;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const marginBottom = 30;
+
+    for (const line of lines) {
+      if (y + lineHeight > pageHeight - marginBottom) {
+        pdf.addPage();
+        y = 20;
+      }
+      pdf.text(line, 15, y);
+      y += lineHeight;
+    }
 
     y = 265;
     pdf.setDrawColor(200, 200, 200);

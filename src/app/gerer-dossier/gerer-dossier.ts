@@ -106,7 +106,11 @@ export class GererDossier implements OnInit {
             prenom: p.prenom ?? '—',
             cin: p.cin ?? '—',
             date_naissance: p.dateNaissance ?? '—',
-            num_telephone: p.numTelephone ? '0' + p.numTelephone.toString() : '—',
+            num_telephone: p.numTelephone
+              ? p.numTelephone.toString().startsWith('+')
+                ? p.numTelephone.toString()
+                : '0' + p.numTelephone.toString()
+              : '—',
             sex: p.sexe === true || p.sexe === 'true',
             adresse: p.adresse ?? '—',
             image_biometrique: null,
@@ -237,7 +241,13 @@ export class GererDossier implements OnInit {
       prenom: this.editForm.prenom || null,
       cin: this.editForm.cin || null,
       dateNaissance: this.editForm.dateNaissance || null,
-      numTelephone: this.editForm.numTelephone ? parseInt(this.editForm.numTelephone) : null,
+      numTelephone: (() => {
+        const tel = this.editForm.numTelephone?.toString().trim();
+        if (!tel) return null;
+        if (tel.startsWith('+212')) return parseInt(tel.slice(1));
+        if (tel.startsWith('0')) return parseInt(tel.slice(1));
+        return parseInt(tel);
+      })(),
       sexe: this.editForm.sexe,
       adresse: this.editForm.adresse || null,
       email: this.editForm.email || null,
@@ -251,7 +261,11 @@ export class GererDossier implements OnInit {
           prenom: updated.prenom ?? '—',
           cin: updated.cin ?? '—',
           date_naissance: updated.dateNaissance ?? '—',
-          num_telephone: updated.numTelephone?.toString() ?? '—',
+          num_telephone: updated.numTelephone
+            ? updated.numTelephone.toString().startsWith('+')
+              ? updated.numTelephone.toString()
+              : '0' + updated.numTelephone.toString()
+            : '—',
           sex: updated.sexe === true,
           adresse: updated.adresse ?? '—',
           image_biometrique: null,

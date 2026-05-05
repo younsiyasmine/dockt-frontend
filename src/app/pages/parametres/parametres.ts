@@ -19,6 +19,7 @@ import {
 export class Parametres implements OnInit {
   showPasswordSection = false;
   isLoading = true;
+  profilSubmitted = false;
 
   showCreateMedecin = false;
   showCreateSecretaire = false;
@@ -74,7 +75,6 @@ export class Parametres implements OnInit {
     private cdr: ChangeDetectorRef,
   ) {}
 
-  // ───────────────── INIT ─────────────────
   ngOnInit(): void {
     const auth = this.authService.getUser();
     if (!auth) {
@@ -93,8 +93,6 @@ export class Parametres implements OnInit {
     if (this.role === 'MEDECIN') this.loadMedecin();
     else if (this.role === 'SECRETAIRE') this.loadSecretaire();
   }
-
-  // ───────────────── LOADERS ─────────────────
 
   private loadMedecin() {
     this.http.get<MedecinResponse>(`${this.apiBase}/medecins/${this.userId}`).subscribe({
@@ -130,26 +128,11 @@ export class Parametres implements OnInit {
     });
   }
 
-  private loadPatient() {
-    this.http.get<any>(`${this.apiBase}/patients/my_account`).subscribe({
-      next: (p) => {
-        this.profil = {
-          prenom: p.prenom ?? '',
-          nom: p.nom ?? '',
-          specialite: '',
-          telephone: this.formatPhone(p.numTelephone ?? ''),
-          cin: p.cin ?? '',
-          login: p.email ?? '',
-        };
-        this.finishLoading();
-      },
-      error: () => this.finishLoading(),
-    });
-  }
-
-  // ───────────────── SAVE PROFILE ─────────────────
 
   sauvegarder(): void {
+    this.profilSubmitted = true;  // ADD THIS
+
+    if (!this.isValidPhone(this.profil.telephone)) return;  // ADD THIS
     if (!this.userId || !this.role) return;
 
     if (this.showPasswordSection && this.passwords.nouveau) {
@@ -198,8 +181,6 @@ export class Parametres implements OnInit {
     });
   }
 
-  // ───────────────── PASSWORD ─────────────────
-
   private handlePasswordThenSuccess(endpoint: string) {
     if (this.showPasswordSection && this.passwords.nouveau) {
       this.http
@@ -215,8 +196,6 @@ export class Parametres implements OnInit {
       this.showSuccess('Modifications enregistrées avec succès !');
     }
   }
-
-  // ───────────────── CREATE ACCOUNTS ─────────────────
 
   toggleCreateMedecin(): void {
     this.showCreateMedecin = !this.showCreateMedecin;
@@ -235,9 +214,9 @@ export class Parametres implements OnInit {
     const { medLogin, medMdp, nom, prenom, cin, telephone, specialite } = this.newMedecin;
 
     if (!nom || !prenom || !cin || !specialite) return;
-    if (!medLogin || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(medLogin)) return;
+    if (!medLogin || !this.isValidEmail(medLogin)) return;
     if (!medMdp || medMdp.length < 8) return;
-    if (!/^\d{10}$/.test(telephone)) return;
+    if (!this.isValidPhone(telephone)) return;
 
     this.isCreating = true;
     this.http.post(`${this.apiBase}/medecins`, this.newMedecin).subscribe({
@@ -245,15 +224,7 @@ export class Parametres implements OnInit {
         this.isCreating = false;
         this.showCreateMedecin = false;
         this.medecinSubmitted = false;
-        this.newMedecin = {
-          medLogin: '',
-          medMdp: '',
-          nom: '',
-          prenom: '',
-          cin: '',
-          telephone: '',
-          specialite: '',
-        };
+        this.newMedecin = { medLogin: '', medMdp: '', nom: '', prenom: '', cin: '', telephone: '', specialite: '' };
         this.showToast('Compte médecin créé avec succès !');
       },
       error: (e) => {
@@ -268,9 +239,9 @@ export class Parametres implements OnInit {
     const { secLogin, secPassword, nom, prenom, cin, telephone } = this.newSecretaire;
 
     if (!nom || !prenom || !cin) return;
-    if (!secLogin || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(secLogin)) return;
+    if (!secLogin || !this.isValidEmail(secLogin)) return;
     if (!secPassword || secPassword.length < 8) return;
-    if (!/^\d{10}$/.test(telephone)) return;
+    if (!this.isValidPhone(telephone)) return;
 
     this.isCreating = true;
     this.http.post(`${this.apiBase}/secretaires`, this.newSecretaire).subscribe({
@@ -278,14 +249,7 @@ export class Parametres implements OnInit {
         this.isCreating = false;
         this.showCreateSecretaire = false;
         this.secretaireSubmitted = false;
-        this.newSecretaire = {
-          secLogin: '',
-          secPassword: '',
-          nom: '',
-          prenom: '',
-          cin: '',
-          telephone: '',
-        };
+        this.newSecretaire = { secLogin: '', secPassword: '', nom: '', prenom: '', cin: '', telephone: '' };
         this.showToast('Compte secrétaire créé avec succès !');
       },
       error: (e) => {
@@ -294,8 +258,6 @@ export class Parametres implements OnInit {
       },
     });
   }
-
-  // ───────────────── TOAST HELPERS ─────────────────
 
   private showToast(message: string, type: 'success' | 'error' = 'success'): void {
     this.toast = { show: true, message, type };
@@ -316,11 +278,11 @@ export class Parametres implements OnInit {
     this.showToast(msg || 'Une erreur est survenue.', 'error');
   }
 
-  // ───────────────── HELPERS ─────────────────
-
   private formatPhone(phone: string): string {
     if (!phone) return '';
-    const digits = phone.replace(/\D/g, '');
+    const str = phone.toString().trim();
+    if (str.startsWith('+')) return str;
+    const digits = str.replace(/\D/g, '');
     return digits.startsWith('0') ? digits : '0' + digits;
   }
 
@@ -329,13 +291,11 @@ export class Parametres implements OnInit {
     this.cdr.markForCheck();
   }
 
-  // ───────────────── VALIDATION HELPERS ─────────────────
-
   isValidEmail(email: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
   isValidPhone(phone: string): boolean {
-    return /^\d{10}$/.test(phone);
+    return /^(0\d{9}|\+212\d{9})$/.test(phone);
   }
 }

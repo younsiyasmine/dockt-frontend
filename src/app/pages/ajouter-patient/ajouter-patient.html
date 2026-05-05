@@ -125,7 +125,7 @@
                          ? 'border-red-300 bg-red-50 focus:border-red-400'
                          : 'border-gray-200 bg-gray-50 focus:border-teal-400 focus:bg-white'" />
                 @if (patientForm.get('num_telephone')?.invalid && patientForm.get('num_telephone')?.touched) {
-                  <span class="text-xs text-red-500">Numéro invalide (10 chiffres requis)</span>
+                  <span class="text-xs text-red-500">Numéro invalide (ex: 0612345678 ou +212612345678)</span>
                 }
               </div>
             </div>

@@ -44,22 +44,14 @@ export class PrendreRdv implements OnInit {
   selectedYear: number | null = null;
 
   readonly ALL_SLOTS = [
-    '09:00',
-    '09:30',
-    '10:00',
-    '10:30',
-    '11:00',
-    '11:30',
-    '14:00',
-    '14:30',
-    '15:00',
-    '15:30',
-    '16:00',
-    '16:30',
-    '17:00',
-    '17:30',
-    '18:00',
-    '18:30',
+    '09:00', '09:30',
+    '10:00', '10:30',
+    '11:00', '11:30',
+    '14:00', '14:30',
+    '15:00', '15:30',
+    '16:00', '16:30',
+    '17:00', '17:30',
+    '18:00', '18:30',
   ];
   timeSlots: TimeSlot[] = [];
 
@@ -130,7 +122,10 @@ export class PrendreRdv implements OnInit {
       `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const currentTime = `${String(today.getHours()).padStart(2, '0')}:${String(today.getMinutes()).padStart(2, '0')}`;
 
-    this.timeSlots = this.ALL_SLOTS.map((time) => ({
+    const isSaturday =
+      new Date(this.selectedYear!, this.selectedMonth!, this.selectedDayNumber!).getDay() === 6;
+
+    this.timeSlots = this.ALL_SLOTS.filter((time) => !isSaturday || time < '13:00').map((time) => ({
       time,
       available: !takenTimes.includes(time) && !(isToday && time <= currentTime),
       selected: false,
@@ -240,15 +235,18 @@ export class PrendreRdv implements OnInit {
       const todayFullyPassed =
         isToday && (now.getHours() > 18 || (now.getHours() === 18 && now.getMinutes() >= 30));
 
+
       // PERSISTENCE LOGIC:
       // Check if this day matches the one the user previously clicked
       const isSelected =
         d === this.selectedDayNumber && month === this.selectedMonth && year === this.selectedYear;
 
+      const isSunday = date.getDay() === 0;
       this.calendarDays.push({
         number: d,
-        disabled: date < todayMidnight || todayFullyPassed || this.isDateFull(year, month, d),
-        selected: isSelected, // This keeps the emerald color visible
+        disabled:
+          isSunday || date < todayMidnight || todayFullyPassed || this.isDateFull(year, month, d),
+        selected: isSelected,
       });
 
       // If this day was selected, make sure the reference is updated

@@ -168,9 +168,10 @@ export class AjouterRdv implements OnInit {
     this.joursPassesOuAujourdhui = new Set(
       this.joursCalendrier.filter((jour) => {
         const date = new Date(this.anneeActuelle, this.moisActuel, jour);
-        return date < todayMidnight;
+        return date < todayMidnight || date.getDay() === 0;
       }),
     );
+
 
     let premierJour = new Date(this.anneeActuelle, this.moisActuel, 1).getDay();
     let decalage = premierJour === 0 ? 6 : premierJour - 1;
@@ -200,11 +201,15 @@ export class AjouterRdv implements OnInit {
   }
 
   genererCreneaux(): void {
-    const ALL_SLOTS = [
+    const isSaturday = new Date(this.dateISO).getDay() === 6;
+
+    const ALL_SLOTS = (isSaturday ? [
+      '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+    ] : [
       '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
       '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
       '17:00', '17:30', '18:00', '18:30',
-    ];
+    ]);
 
     const takenTimes = this.allRdvs
       .filter((r) => r.datePrevue === this.dateISO && r.statutRdv !== StatutRDV.ANNULE)
@@ -251,7 +256,7 @@ export class AjouterRdv implements OnInit {
           setTimeout(() => {
             this.showToast = false;
             this.router.navigate(['/shared/planning']);
-          }, 2500);
+          }, 1500);
         },
         error: (err) => {
           this.isLoading = false;
@@ -294,7 +299,7 @@ export class AjouterRdv implements OnInit {
           setTimeout(() => {
             this.showToast = false;
             this.router.navigate(['/shared/planning']);
-          }, 2500);
+          }, 1500);
         },
         error: (err) => {
           this.isLoading = false;

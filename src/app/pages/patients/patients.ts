@@ -76,7 +76,12 @@ export class PatientsComponent implements OnInit {
           // Fix phone: add leading 0 if numTelephone exists
           let telephone = '—';
           if (p.numTelephone !== null && p.numTelephone !== undefined && p.numTelephone !== '') {
-            telephone = '0' + p.numTelephone.toString();
+            const raw = p.numTelephone.toString().trim();
+            if (raw.startsWith('+212')) {
+              telephone = raw; // keep as-is
+            } else {
+              telephone = '0' + raw; // stored without leading 0
+            }
           }
 
           // Fix email: only show patientLogin if it looks like an email (contains @)

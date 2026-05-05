@@ -9,12 +9,11 @@ import { AuthService } from '../../core/services/auth';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './register.html',
-  styleUrl: './register.css'
+  styleUrl: './register.css',
 })
 export class RegisterComponent {
-
-  email = '';        // ← était patientLogin
-  password = '';     // ← était patientMdp
+  email = '';
+  password = '';
   nom = '';
   prenom = '';
   cin = '';
@@ -24,38 +23,53 @@ export class RegisterComponent {
   adresse = '';
   errorMessage = '';
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+  ) {}
 
   onSubmit() {
     this.errorMessage = '';
 
     if (!this.email || !this.password || !this.nom || !this.prenom || !this.cin) {
-      this.errorMessage = 'Veuillez remplir tous les champs';
+      this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
       return;
     }
 
-    this.authService.register({
-      email: this.email,
-      password: this.password,
-      nom: this.nom,
-      prenom: this.prenom,
-      cin: this.cin,
-      sex: this.sex,
-      numTelephone: this.numTelephone,
-      dateNaissance: this.dateNaissance,
-      adresse: this.adresse
-    }).subscribe({
-      next: (response) => {
-        this.authService.saveToken(response.accessToken);
-        this.authService.saveRefreshToken(response.refreshToken);
-        this.authService.saveUser(response);
-        this.router.navigate(['/patient/dashboard']);
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.message || err.error?.error || 'Erreur lors de l\'inscription';
-      }
-    });
+    if (this.numTelephone && !/^(0\d{9}|\+212\d{9})$/.test(this.numTelephone.trim())) {
+      this.errorMessage = 'Numéro invalide (ex: 0612345678 ou +212612345678).';
+      return;
+    }
+
+    let phoneToSend: string = '';
+    if (this.numTelephone) {
+      const raw = this.numTelephone.trim();
+      phoneToSend = raw.startsWith('+212') ? raw.slice(4) : raw.slice(1);
+    }
+
+    this.authService
+      .register({
+        email: this.email,
+        password: this.password,
+        nom: this.nom,
+        prenom: this.prenom,
+        cin: this.cin,
+        sex: this.sex,
+        numTelephone: phoneToSend,
+        dateNaissance: this.dateNaissance,
+        adresse: this.adresse,
+      })
+      .subscribe({
+        next: (response) => {
+          this.authService.saveToken(response.accessToken);
+          this.authService.saveRefreshToken(response.refreshToken);
+          this.authService.saveUser(response);
+          this.router.navigate(['/patient/dashboard']);
+        },
+        error: (err) => {
+          this.errorMessage =
+            err.error?.message || err.error?.error || "Erreur lors de l'inscription";
+        },
+      });
   }
-
-
 }

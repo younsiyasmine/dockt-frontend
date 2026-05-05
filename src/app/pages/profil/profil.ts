@@ -47,9 +47,11 @@ export class ProfilComponent implements OnInit {
       const u = this.user.user;
       this.patientId = u?.idPatient;
 
-      // Prepend 0 for display (DB stores 9 digits without leading 0)
-      const rawPhone = u?.numTelephone?.toString() ?? '';
-      const displayPhone = rawPhone ? '0' + rawPhone : '';
+      const rawPhone = u?.numTelephone?.toString().trim() ?? '';
+      let displayPhone = '';
+      if (rawPhone) {
+        displayPhone = rawPhone.startsWith('+212') ? rawPhone : '0' + rawPhone;
+      }
 
       this.form = {
         nom: u?.nom,
@@ -89,8 +91,8 @@ export class ProfilComponent implements OnInit {
     if (!this.patientId) return;
 
     const phone = this.form.numTelephone?.toString().trim();
-    if (!phone || !/^0\d{9}$/.test(phone)) {
-      this.errorMessage = 'Le numéro doit contenir exactement 10 chiffres et commencer par 0.';
+    if (!phone || !/^(0\d{9}|\+212\d{9})$/.test(phone)) {
+      this.errorMessage = 'Numéro invalide (ex: 0612345678 ou +212612345678).';
       setTimeout(() => { this.errorMessage = ''; this.cdr.detectChanges(); }, 3000);
       return;
     }
@@ -99,15 +101,18 @@ export class ProfilComponent implements OnInit {
     this.errorMessage = '';
 
     const payload: any = { ...this.form };
-    // Strip leading 0 before sending to backend
-    payload.numTelephone = Number(phone.slice(1));
+    if (phone.startsWith('+212')) {
+      payload.numTelephone = Number(phone.slice(4));
+    } else {
+      payload.numTelephone = Number(phone.slice(1));
+    }
     delete payload.email;
 
     this.patientService.updateProfil(this.patientId, payload).subscribe({
       next: (updatedPatient) => {
-        // Rebuild display phone: prepend 0 to whatever backend returns
-        const updatedPhone = updatedPatient.numTelephone
-          ? '0' + updatedPatient.numTelephone.toString()
+        const rawUpdated = updatedPatient.numTelephone?.toString().trim() ?? '';
+        const updatedPhone = rawUpdated
+          ? (rawUpdated.startsWith('+212') ? rawUpdated : '0' + rawUpdated)
           : '';
 
         this.authService.updateCurrentUser({

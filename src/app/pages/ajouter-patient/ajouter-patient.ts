@@ -31,7 +31,7 @@ export class AjouterPatientComponent {
     this.patientForm = this.fb.group({
       prenom: ['', [Validators.required, Validators.maxLength(100)]],
       nom: ['', [Validators.required, Validators.maxLength(100)]],
-      num_telephone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      num_telephone: ['', [Validators.required, Validators.pattern(/^(0\d{9}|\+212\d{9})$/)]],
       cin: ['', [Validators.required, Validators.maxLength(20)]],
       sex: ['', Validators.required],
       date_naissance: ['', Validators.required],
@@ -79,10 +79,19 @@ export class AjouterPatientComponent {
     const form = this.patientForm.value;
     const tel = form.num_telephone?.toString().trim();
 
+    let numTelephone: number | null = null;
+    if (tel) {
+      if (tel.startsWith('+212')) {
+        numTelephone = parseInt(tel.slice(1)); // stores 212XXXXXXXXX
+      } else if (tel.startsWith('0')) {
+        numTelephone = parseInt(tel.slice(1)); // stores 6XXXXXXXX
+      }
+    }
+
     const payload = {
       nom: form.nom,
       prenom: form.prenom,
-      numTelephone: tel && /^\d+$/.test(tel) ? parseInt(tel, 10) : null,
+      numTelephone,
       cin: form.cin || null,
       sex: form.sex === 'Homme' ? true : form.sex === 'Femme' ? false : null,
       dateNaissance: form.date_naissance || null,

@@ -165,8 +165,21 @@ export class VueOrdonnance implements OnInit {
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(0, 0, 0);
-    const lines = pdf.splitTextToSize(this.ordonnance.contenuTexte, pageWidth - 30);
-    pdf.text(lines, 15, y);
+    const contenu = this.ordonnance.contenuTexte ?? '';
+    const lines = pdf.splitTextToSize(contenu, pageWidth - 30);
+
+    const lineHeight = 7;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const marginBottom = 30;
+
+    for (const line of lines) {
+      if (y + lineHeight > pageHeight - marginBottom) {
+        pdf.addPage();
+        y = 20;
+      }
+      pdf.text(line, 15, y);
+      y += lineHeight;
+    }
 
     // Footer - only signature
     y = 265;
