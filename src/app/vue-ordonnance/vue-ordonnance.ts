@@ -1,6 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 import { OrdonnanceService } from '../core/services/ordonnance.service';
 import { Ordonnance } from '../core/models/models';
 
@@ -16,11 +18,16 @@ export class VueOrdonnance implements OnInit {
   loading = true;
   error = false;
 
+  patientName = '';
+  medecinName = '';
+  rdvDate = '';
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private ordonnanceService: OrdonnanceService,
     private cdr: ChangeDetectorRef,
+    private http: HttpClient,
   ) {}
 
   ngOnInit() {
@@ -29,6 +36,7 @@ export class VueOrdonnance implements OnInit {
       this.ordonnanceService.getOrdonnanceById(+id).subscribe({
         next: (data: any) => {
           this.ordonnance = data;
+          if (data.idRdv) this.chargerInfosOrdonnance(data.idRdv);
           this.loading = false;
           this.cdr.detectChanges(); // ← ADD
         },
@@ -52,6 +60,35 @@ export class VueOrdonnance implements OnInit {
     });
   }
 
+  private chargerInfosOrdonnance(idRdv: number): void {
+    // One call gets RDV + nested patient
+    this.http.get<any>(`${environment.apiUrl}/rdv/${idRdv}`).subscribe({
+      next: (rdv) => {
+        this.rdvDate = rdv.datePrevue ?? '';
+        if (rdv.patient) {
+          this.patientName = `${rdv.patient.prenom} ${rdv.patient.nom}`;
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.rdvDate = '';
+        this.cdr.detectChanges();
+      },
+    });
+
+    // Doctor — id=1 for now
+    this.http.get<any>(`${environment.authUrl}/medecins/1`).subscribe({
+      next: (m) => {
+        this.medecinName = `Dr. ${m.nom} ${m.prenom}`;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.medecinName = 'Dr. Inconnu';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   retour() {
     window.history.back();
   }
@@ -72,7 +109,7 @@ export class VueOrdonnance implements OnInit {
     // Header - Doctor info
     pdf.setFontSize(16);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('DR. BOUABDELLAH SOUAD', 15, y);
+    pdf.text(this.medecinName.toUpperCase(), 15, y);
     pdf.setFontSize(11);
     pdf.setFont('helvetica', 'normal');
     pdf.text('DOCKT', pageWidth - 15, y, { align: 'right' });
@@ -111,12 +148,17 @@ export class VueOrdonnance implements OnInit {
     pdf.setFontSize(18);
     pdf.setTextColor(0, 0, 0);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('— Patient —', pageWidth / 2, y, { align: 'center' });
+    pdf.text(this.patientName || '— Patient —', pageWidth / 2, y, { align: 'center' });
     y += 6;
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'italic');
     pdf.setTextColor(120, 120, 120);
-    pdf.text(`RDV réf. ${this.ordonnance.idRdv}`, pageWidth / 2, y, { align: 'center' });
+    pdf.text(
+      `RDV réf. ${this.ordonnance.idRdv} — ${this.formatDate(this.rdvDate)}`,
+      pageWidth / 2,
+      y,
+      { align: 'center' },
+    );
 
     // Content
     y += 15;
@@ -137,6 +179,11 @@ export class VueOrdonnance implements OnInit {
     pdf.setTextColor(0, 0, 0);
     pdf.text('Signature et Cachet :', pageWidth - 15, y, { align: 'right' });
 
-    pdf.save(`ordonnance-${this.ordonnance.idOrdonnance}.pdf`);
+    const date = this.ordonnance.dateEmmission
+      ? new Date(this.ordonnance.dateEmmission).toLocaleDateString('fr-FR').replace(/\//g, '-')
+      : 'sans-date';
+    const nomPatient = this.patientName.replace(/\s+/g, '-') || 'patient';
+    pdf.save(`ordonnance-${nomPatient}-${date}.pdf`);
+
   }
 }

@@ -117,8 +117,9 @@
               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400 cursor-pointer">
         <option value="" disabled selected>Sélectionnez un rendez-vous</option>
         @for (rdv of rendezVousList; track rdv.id) {
-          <option [value]="rdv.id">
+          <option [value]="rdv.id" [disabled]="rdvDejaDemande(rdv.id)">
             {{ rdv.datePrevue }} à {{ rdv.heurePrevue }}
+            {{ rdvDejaDemande(rdv.id) ? '(CR déjà demandé)' : '' }}
           </option>
         }
       </select>

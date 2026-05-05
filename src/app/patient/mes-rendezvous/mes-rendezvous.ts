@@ -28,7 +28,8 @@ export class MesRendezvousComponent implements OnInit {
   toastMessage = '';
 
   patientNames: { [id: number]: string } = {};
-  readonly MEDECIN_NAME = 'Dr. Bouabdellah Souad';
+  medecinName = ''; // loading placeholder
+
 
   constructor(
     private router: Router,
@@ -41,6 +42,7 @@ export class MesRendezvousComponent implements OnInit {
 
   ngOnInit(): void {
     this.chargerMesRdv();
+    this.chargerNomMedecin();
 
     this.route.queryParams.subscribe((params) => {
       if (params['success']) {
@@ -82,8 +84,8 @@ export class MesRendezvousComponent implements OnInit {
   }
 
   private chargerNomPatients(rdvs: RDV[]): void {
-    const ids = [...new Set(rdvs.map(r => r.idPatient).filter(Boolean))] as number[];
-    ids.forEach(id => {
+    const ids = [...new Set(rdvs.map((r) => r.idPatient).filter(Boolean))] as number[];
+    ids.forEach((id) => {
       this.http.get<PatientResponse>(`http://localhost:8082/api/patients/${id}`).subscribe({
         next: (p) => {
           this.patientNames[id] = `${p.prenom} ${p.nom}`;
@@ -92,8 +94,21 @@ export class MesRendezvousComponent implements OnInit {
         error: () => {
           this.patientNames[id] = `Patient #${id}`;
           this.cdr.detectChanges();
-        }
+        },
       });
+    });
+  }
+
+  private chargerNomMedecin(): void {
+    this.http.get<any>('http://localhost:8082/api/medecins/1').subscribe({
+      next: (m) => {
+        this.medecinName = `Dr. ${m.nom} ${m.prenom}`;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.medecinName = 'Dr. inconnu';
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -105,7 +120,7 @@ export class MesRendezvousComponent implements OnInit {
       next: (data) => {
         this.rendezVousList = data;
         this.trierParDateAsc();
-        this.chargerNomPatients(data);  // ← add this line
+        this.chargerNomPatients(data); // ← add this line
         this.isLoading = false;
         this.cdr.detectChanges();
       },

@@ -155,7 +155,9 @@ export class PatientsComponent implements OnInit {
   }
 
   voirDossier(idPatient: number): void {
-    this.router.navigate(['/gerer-dossier', idPatient]);
+    this.router.navigate(['/gerer-dossier', idPatient], {
+      queryParams: { source: 'listPatient' }
+    });
   }
 
   supprimerPatient(id: number): void {

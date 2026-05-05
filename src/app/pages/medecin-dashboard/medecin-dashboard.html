@@ -34,10 +34,10 @@
         <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600 mb-4">
           <i class="fa-solid fa-file-pen text-xl"></i>
         </div>
-        <h3 class="text-3xl font-bold text-slate-800">—</h3>
+        <h3 class="text-3xl font-bold text-slate-800">{{ demandesCR }}</h3>
         <p class="text-sm text-slate-400 mt-1">Documents à traiter</p>
         @if (role === 'MEDECIN') {
-          <a routerLink="/dicter-compte-rendu" class="inline-block mt-3 text-xs text-teal-600 font-semibold hover:underline">Remplir →</a>
+          <a routerLink="/traiter-document" class="inline-block mt-3 text-xs text-teal-600 font-semibold hover:underline">Remplir →</a>
         }
       </div>
 

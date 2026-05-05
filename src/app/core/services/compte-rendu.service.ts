@@ -10,6 +10,11 @@ export class CompteRenduService {
 
   constructor(private http: HttpClient) {}
 
+  // ✅ NEW — for patient history view
+  getComptesRendusParPatient(patientId: number): Observable<CompteRendu[]> {
+    return this.http.get<CompteRendu[]>(`${this.url}/patient/${patientId}`);
+  }
+
   getComptesRendusParRdv(idRdv: number): Observable<CompteRendu[]> {
     return this.http.get<CompteRendu[]>(`${this.url}/rdv/${idRdv}`);
   }
@@ -36,5 +41,9 @@ export class CompteRenduService {
 
   validerCompteRenduExistant(id: number, cr: CompteRendu): Observable<CompteRendu> {
     return this.http.put<CompteRendu>(`${this.url}/valider/${id}`, cr);
+  }
+
+  getComptesRendusParStatut(statut: string): Observable<CompteRendu[]> {
+    return this.http.get<CompteRendu[]>(`${this.url}/statut/${statut}`);
   }
 }

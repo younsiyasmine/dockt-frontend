@@ -1,11 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
-import { NotificationService } from '../../core/services/notification.service';
-import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-topbar',
@@ -15,17 +13,13 @@ import { ChangeDetectorRef } from '@angular/core';
 })
 export class Topbar implements OnInit, OnDestroy {
   menuOpen = false;
-  notificationsOpen = false;
   user: any = null;
-  notifications: any[] = [];
-  unreadCount = 0;
 
   private sub = new Subscription();
   private readonly apiBase = 'http://localhost:8082/api';
 
   constructor(
     private authService: AuthService,
-    private notifService: NotificationService,
     private http: HttpClient,
     private router: Router,
     private cdr: ChangeDetectorRef,
@@ -45,7 +39,6 @@ export class Topbar implements OnInit, OnDestroy {
     );
 
     this.loadFreshUser();
-    this.loadNotifications();
   }
 
   ngOnDestroy() {
@@ -71,7 +64,6 @@ export class Topbar implements OnInit, OnDestroy {
         if (data && (data.nom || data.prenom)) {
           this.authService.updateCurrentUser(data);
         }
-        // if data is garbage, do nothing — keep the localStorage version
       },
       error: () => {
         const stored = this.authService.getUser() as any;
@@ -80,42 +72,8 @@ export class Topbar implements OnInit, OnDestroy {
     });
   }
 
-  loadNotifications() {
-    this.notifService.getUnreadCount().subscribe({
-      next: (count) => (this.unreadCount = count),
-      error: () => {},
-    });
-    this.notifService.getAll().subscribe({
-      next: (data) => (this.notifications = data),
-      error: () => {},
-    });
-  }
-
-  markAsRead(id: number) {
-    this.notifService.markAsRead(id).subscribe({
-      next: () => this.loadNotifications(),
-      error: () => {},
-    });
-  }
-
-  markAllRead() {
-    this.notifService.markAllAsRead().subscribe({
-      next: () => this.loadNotifications(),
-      error: () => {},
-    });
-  }
-
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
-    if (this.menuOpen) this.notificationsOpen = false;
-  }
-
-  toggleNotifications() {
-    this.notificationsOpen = !this.notificationsOpen;
-    if (this.notificationsOpen) {
-      this.menuOpen = false;
-      this.loadNotifications();
-    }
   }
 
   logout() {

@@ -1,6 +1,8 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // Nécessaire pour la zone de texte
+import { FormsModule } from '@angular/forms';
+import { CompteRenduService } from '../core/services/compte-rendu.service';
+import { CompteRendu } from '../core/models/models';
 
 @Component({
   selector: 'app-dicter-compte-rendu',
@@ -8,29 +10,32 @@ import { FormsModule } from '@angular/forms'; // Nécessaire pour la zone de tex
   templateUrl: './dicter-compte-rendu.html',
   styleUrl: './dicter-compte-rendu.css',
 })
-export class DicterCompteRendu {
-  // Les émetteurs pour communiquer avec le Dossier Patient
+export class DicterCompteRendu implements OnInit {
   @Output() fermerModale = new EventEmitter<void>();
+  @Output() compteRenduValide = new EventEmitter<{ action: 'brouillon' | 'valider'; cr: CompteRendu }>();
+  @Input() idRdv: number = 0;
+  @Input() patientNom: string = '';
+  @Input() crExistant: CompteRendu | null = null;
 
-  // 👇 1. MODIFICATION ICI : On précise que l'émetteur enverra 'brouillon' ou 'valider'
-  @Output() compteRenduValide = new EventEmitter<'brouillon' | 'valider'>();
-
-  // Les variables d'état
   isRecording: boolean = false;
   texteCompteRendu: string = '';
+  isSaving: boolean = false;
 
-  // Fonction pour simuler la dictée vocale de l'IA
+  constructor(private compteRenduService: CompteRenduService) {}
+
+  ngOnInit() {
+    if (this.crExistant) {
+      this.texteCompteRendu = this.crExistant.contenu;
+    }
+  }
+
   toggleMicrophone() {
     this.isRecording = !this.isRecording;
-
     if (this.isRecording) {
-      // Simulation : L'IA "écoute" pendant 3 secondes puis écrit un rapport complet
       setTimeout(() => {
         if (this.isRecording) {
           const texteSimule =
             "Motif de consultation : Patiente se plaignant d'une fatigue générale depuis environ 2 semaines. Pas de fièvre signalée.\n\nExamen clinique : Tension artérielle mesurée à 12/8. L'auscultation cardio-pulmonaire est sans anomalie. Palpation abdominale souple et indolore.\n\nConclusion : Asthénie. Prescription d'un bilan sanguin complet et recommandation de repos.";
-
-          // Ajoute le texte avec un double saut de ligne s'il y a déjà du texte
           this.texteCompteRendu += (this.texteCompteRendu ? '\n\n' : '') + texteSimule;
           this.isRecording = false;
         }
@@ -38,26 +43,61 @@ export class DicterCompteRendu {
     }
   }
 
-  // Vider la zone de texte
   effacerTexte() {
     this.texteCompteRendu = '';
   }
 
-  // Bouton Annuler
   annuler() {
     this.fermerModale.emit();
   }
 
-  // Le fameux bouton Brouillon !
   sauvegarderBrouillon() {
-    console.log('Brouillon sauvegardé dans la base de données :', this.texteCompteRendu);
-    // 👇 2. MODIFICATION ICI : On prévient le dossier que c'est un brouillon
-    this.compteRenduValide.emit('brouillon');
+    if (!this.texteCompteRendu.trim()) return;
+    this.isSaving = true;
+
+    const cr: CompteRendu = {
+      contenu: this.texteCompteRendu,
+      idRdv: this.crExistant?.idRdv ?? this.idRdv,
+    };
+
+    const call = this.crExistant
+      ? this.compteRenduService.mettreAJourBrouillon(this.crExistant.idCr!, cr)
+      : this.compteRenduService.sauvegarderBrouillon(cr);
+
+    call.subscribe({
+      next: (saved) => {
+        this.isSaving = false;
+        this.compteRenduValide.emit({ action: 'brouillon', cr: saved });
+      },
+      error: (err) => {
+        console.error('Erreur sauvegarde brouillon:', err);
+        this.isSaving = false;
+      },
+    });
   }
 
-  // Bouton Valider
   valider() {
-    // 👇 3. MODIFICATION ICI : On prévient le dossier que c'est une validation finale
-    this.compteRenduValide.emit('valider');
+    if (!this.texteCompteRendu.trim()) return;
+    this.isSaving = true;
+
+    const cr: CompteRendu = {
+      contenu: this.texteCompteRendu,
+      idRdv: this.crExistant?.idRdv ?? this.idRdv,
+    };
+
+    const call = this.crExistant
+      ? this.compteRenduService.validerCompteRenduExistant(this.crExistant.idCr!, cr)
+      : this.compteRenduService.validerCompteRendu(cr);
+
+    call.subscribe({
+      next: (saved) => {
+        this.isSaving = false;
+        this.compteRenduValide.emit({ action: 'valider', cr: saved });
+      },
+      error: (err) => {
+        console.error('Erreur validation CR:', err);
+        this.isSaving = false;
+      },
+    });
   }
 }

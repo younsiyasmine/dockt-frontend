@@ -17,6 +17,7 @@ import { VueCompteRendu } from './vue-compte-rendu/vue-compte-rendu';
 import { authGuard } from './core/guards/auth-guard';
 
 // Mehdi's pages
+import {HomeComponent} from './pages/home/home';
 import { LoginComponent } from './pages/login/login';
 import { LoginAdminComponent } from './pages/login-admin/login-admin';
 import { RegisterComponent } from './pages/register/register';
@@ -25,6 +26,7 @@ import { ProfilComponent } from './pages/profil/profil';
 import { MedecinDashboard } from './pages/medecin-dashboard/medecin-dashboard';
 import { PatientsComponent } from './pages/patients/patients';
 import { Parametres } from './pages/parametres/parametres';
+import { TraiterDocument } from './pages/traiter-document/traiter-document';
 
 // Marwa tab1 & tab 2
 import { TabletteCheckinComponent } from './tablette-checkin/tablette-checkin';
@@ -32,7 +34,8 @@ import { TabletteConsultationComponent } from './tablette-consultation/tablette-
 
 export const routes: Routes = [
   // Auth (public)
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: 'home', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   { path: 'login-admin', component: LoginAdminComponent },
   { path: 'register', component: RegisterComponent },
@@ -55,6 +58,7 @@ export const routes: Routes = [
   { path: 'ajouter-rdv', component: AjouterRdv, canActivate: [authGuard] },
   { path: 'ajouter-rdv/:id', component: AjouterRdv, canActivate: [authGuard] },
   { path: 'dossier-patient', component: GererDossier },
+  { path: 'traiter-document', component: TraiterDocument },
   { path: 'dicter-ordonnance', component: DicterOrdonnance },
   { path: 'dicter-compte-rendu', component: DicterCompteRendu },
   { path: 'voir-ordonnance/:id', component: VueOrdonnance },

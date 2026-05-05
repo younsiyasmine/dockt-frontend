@@ -17,6 +17,7 @@ export class DicterOrdonnance {
   @Output() fermerModale = new EventEmitter<void>();
   @Output() ordonnanceValidee = new EventEmitter<void>();
   @Input() idRdv: number = 1;
+  @Input() patientNom: string = '';
 
   isRecording = false;
   texteOrdonnance = '';
@@ -64,10 +65,8 @@ export class DicterOrdonnance {
 
   async toggleMicrophone() {
     if (this.isRecording) {
-      // Arrêter l'enregistrement
       this.stopRecording();
     } else {
-      // Démarrer l'enregistrement
       await this.startRecording();
     }
   }
@@ -85,7 +84,6 @@ export class DicterOrdonnance {
       };
 
       this.mediaRecorder.onstop = () => {
-        // Envoyer l'audio à Python
         this.transcribeAudio();
       };
 
@@ -115,11 +113,11 @@ export class DicterOrdonnance {
         this.isTranscribing = false;
         const nouveauTexte = response.texte_transcrit;
         this.texteOrdonnance += (this.texteOrdonnance ? '\n' : '') + nouveauTexte;
-        console.log('✅ Transcription reçue:', nouveauTexte);
+        console.log('Transcription reçue:', nouveauTexte);
       },
       error: (error) => {
         this.isTranscribing = false;
-        console.error('❌ Erreur transcription:', error);
+        console.error('Erreur transcription:', error);
       },
     });
   }
