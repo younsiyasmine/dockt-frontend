@@ -82,6 +82,8 @@ export class Navbar implements OnInit, OnDestroy {
       case 'CONFIRMATION_RDV':   return 'fa-solid fa-calendar-check';
       case 'CONFIRMATION_MODIF': return 'fa-solid fa-calendar-pen';
       case 'REFUS_MODIF':        return 'fa-solid fa-calendar-xmark';
+      case 'ANNULATION_RDV':     return 'fa-solid fa-calendar-xmark';
+      case 'POSITION_FILE':      return 'fa-solid fa-list-ol';
       case 'RAPPEL':             return 'fa-solid fa-bell';
       default:                   return 'fa-solid fa-circle-info';
     }
@@ -92,6 +94,8 @@ export class Navbar implements OnInit, OnDestroy {
       case 'CONFIRMATION_RDV':   return 'Rendez-vous confirmé';
       case 'CONFIRMATION_MODIF': return 'Modification confirmée';
       case 'REFUS_MODIF':        return 'Modification refusée';
+      case 'ANNULATION_RDV':     return 'Rendez-vous annulé';
+      case 'POSITION_FILE':      return 'Position dans la file';
       case 'RAPPEL':             return 'Rappel de rendez-vous';
       default:                   return 'Notification';
     }
@@ -102,6 +106,8 @@ export class Navbar implements OnInit, OnDestroy {
       case 'CONFIRMATION_RDV':   return 'bg-teal-100 text-teal-600';
       case 'CONFIRMATION_MODIF': return 'bg-blue-100 text-blue-600';
       case 'REFUS_MODIF':        return 'bg-red-100 text-red-600';
+      case 'ANNULATION_RDV':     return 'bg-red-100 text-red-600';
+      case 'POSITION_FILE':      return 'bg-purple-100 text-purple-600';
       case 'RAPPEL':             return 'bg-orange-100 text-orange-600';
       default:                   return 'bg-slate-100 text-slate-500';
     }
