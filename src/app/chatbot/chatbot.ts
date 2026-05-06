@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, ChangeDetectorRef, NgZone, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -28,7 +28,7 @@ const FAQ_ITEMS = [
   templateUrl: './chatbot.html',
   styleUrl: './chatbot.css',
 })
-export class ChatbotComponent {
+export class ChatbotComponent implements OnInit {
   isOpen = false;
   messages: Message[] = [];
   userInput = '';
@@ -55,7 +55,14 @@ export class ChatbotComponent {
       text: '👋 Bonjour ! Je suis votre assistant DOCKT.\n\nVoici ce que je peux faire pour vous :',
     });
     this.messages.push({ role: 'bot', faq: true });
-    this.messages.push({ role: 'bot', text: '⚠️ Urgence médicale ? Appelez le 150 immédiatement.' });
+    this.messages.push({
+      role: 'bot',
+      text: '⚠️ Urgence médicale ? Appelez le 150 immédiatement.',
+    });
+  }
+
+  ngOnInit(): void {
+    this.checkVisibility();
   }
 
   checkVisibility(): void {
@@ -64,13 +71,13 @@ export class ChatbotComponent {
     const path = window.location.pathname;
 
     const isPublicPage = path === '/' || path.includes('/home');
-    const isLoginPage  = path.includes('/login');
+    const isLoginPage = path.includes('/login');
 
     if (isLoginPage) {
       this.isPatient = false;
-    } else if (role === 'PATIENT') {
+    } else if (isPublicPage) {          // ← show on home for EVERYONE
       this.isPatient = true;
-    } else if (role === null && isPublicPage) {
+    } else if (role === 'PATIENT') {    // ← show in app only for patients
       this.isPatient = true;
     } else {
       this.isPatient = false;
@@ -107,19 +114,22 @@ export class ChatbotComponent {
     this.scrollToBottom();
 
     const isPharma =
-      text.toLowerCase().includes('pharmacie') ||
-      text.toLowerCase().includes('garde');
+      text.toLowerCase().includes('pharmacie') || text.toLowerCase().includes('garde');
 
     if (isPharma) {
       this.http.get<any>(`${this.api}/api/pharmacies`).subscribe({
         next: (data) => {
           this.ngZone.run(() => {
-            const liste  = Array.isArray(data) ? data : (data.data || []);
+            const liste = Array.isArray(data) ? data : data.data || [];
             const source = data.source || 'fallback';
             if (liste.length > 0) {
               this.messages.push({ role: 'bot', pharmacies: liste, source });
             } else {
-              this.messages.push({ role: 'bot', text: 'Aucune pharmacie trouvée. Appelez le 150.', blocked: true });
+              this.messages.push({
+                role: 'bot',
+                text: 'Aucune pharmacie trouvée. Appelez le 150.',
+                blocked: true,
+              });
             }
             this.loading = false;
             this.scrollToBottom();
@@ -127,7 +137,11 @@ export class ChatbotComponent {
         },
         error: () => {
           this.ngZone.run(() => {
-            this.messages.push({ role: 'bot', text: '⚠️ Impossible de joindre le serveur.', blocked: true });
+            this.messages.push({
+              role: 'bot',
+              text: '⚠️ Impossible de joindre le serveur.',
+              blocked: true,
+            });
             this.loading = false;
             this.scrollToBottom();
           });
@@ -138,10 +152,18 @@ export class ChatbotComponent {
         next: (data) => {
           this.ngZone.run(() => {
             if (data.pharmacies) {
-              this.messages.push({ role: 'bot', pharmacies: data.pharmacies, source: data.source || 'live' });
+              this.messages.push({
+                role: 'bot',
+                pharmacies: data.pharmacies,
+                source: data.source || 'live',
+              });
             }
             if (data.reply) {
-              this.messages.push({ role: 'bot', text: data.reply, blocked: data.reply.includes('autorisé') });
+              this.messages.push({
+                role: 'bot',
+                text: data.reply,
+                blocked: data.reply.includes('autorisé'),
+              });
             }
             if (data.faq) {
               this.messages.push({ role: 'bot', faq: true });
