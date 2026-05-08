@@ -2,8 +2,8 @@
 
   <!-- Bouton flottant -->
   <button (click)="toggleChat()"
-          class="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg
-                 flex items-center justify-center z-[60] transition-all duration-200 cursor-pointer"
+          class="fixed bottom-8 right-8 w-14 h-14 rounded-full shadow-lg
+                 flex items-center justify-center z-[40] transition-all duration-200 cursor-pointer"
           style="background: linear-gradient(135deg, #0f766e, #14b8a6)">
     <svg *ngIf="!isOpen" width="24" height="24" viewBox="0 0 24 24" fill="white">
       <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
@@ -15,8 +15,13 @@
 
   <!-- Fenêtre chat -->
   <div *ngIf="isOpen"
-       class="fixed bottom-24 right-6 z-[60] rounded-2xl overflow-hidden flex flex-col"
-       style="width:400px; height:580px; box-shadow:0 8px 32px rgba(0,0,0,0.15); background:#fff;">
+       class="fixed right-8 z-[40] rounded-2xl overflow-hidden flex flex-col"
+       style="bottom: 90px;
+       width: 380px;
+       height: calc(95vh - 155px);
+       max-height: 560px;
+       box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+       background: #fff;">
 
     <!-- Header -->
     <div style="background: linear-gradient(135deg, #0f766e, #14b8a6); padding:16px 20px; flex-shrink:0;"
@@ -131,7 +136,9 @@
               </div>
             </div>
 
-            <p style="font-size:11px;color:#6b7280;">Appelez avant de vous déplacer. Urgence : 150</p>
+            <p style="font-size:11px;color:#6b7280;">
+              Appelez avant de vous déplacer. Urgence : 150
+            </p>
           </div>
         </div>
 
@@ -145,7 +152,8 @@
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
           </svg>
         </div>
-        <div class="px-3 py-2 rounded-2xl" style="background:#fff;border:1px solid #e2e8f0;">
+        <div class="px-3 py-2 rounded-2xl"
+             style="background:#fff;border:1px solid #e2e8f0;">
           <div class="flex gap-1 items-center" style="padding:4px 2px;">
             <span class="typing-dot"></span>
             <span class="typing-dot" style="animation-delay:0.2s"></span>
@@ -159,15 +167,16 @@
     <!-- Boutons rapides -->
     <div class="flex flex-wrap gap-2 px-3 py-2"
          style="background:#fff;border-top:1px solid #e2e8f0;flex-shrink:0;">
-      <button (click)="sendPreset('Comment prendre un rendez-vous ?')"            class="qbtn">📅 Prendre un RDV</button>
-      <button (click)="sendPreset('Comment créer un compte ?')"                   class="qbtn">📝 Créer un compte</button>
+      <button (click)="sendPreset('Comment prendre un rendez-vous ?')"             class="qbtn">📅 Prendre un RDV</button>
+      <button (click)="sendPreset('Comment créer un compte ?')"                    class="qbtn">📝 Créer un compte</button>
       <button (click)="sendPreset('Comment annuler ou modifier un rendez-vous ?')" class="qbtn">❌ Annuler un RDV</button>
-      <button (click)="sendPreset('Comment faire mon check-in ?')"                class="qbtn">✅ Check-in</button>
-      <button (click)="sendPreset('Pharmacie de garde à Oujda')"                  class="qbtn">💊 Pharmacie de garde</button>
+      <button (click)="sendPreset('Comment faire mon check-in ?')"                 class="qbtn">✅ Check-in</button>
+      <button (click)="sendPreset('Pharmacie de garde à Oujda')"                   class="qbtn">💊 Pharmacie de garde</button>
     </div>
 
     <!-- Input -->
-    <div class="flex gap-2 p-3" style="background:#fff;border-top:1px solid #e2e8f0;flex-shrink:0;">
+    <div class="flex gap-2 p-3"
+         style="background:#fff;border-top:1px solid #e2e8f0;flex-shrink:0;">
       <textarea
         [(ngModel)]="userInput"
         (keydown)="onKeyDown($event)"

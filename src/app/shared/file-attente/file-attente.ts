@@ -18,6 +18,8 @@ interface PatientAttente {
   tempsNegatif: boolean;
   statut: string;
   checkIn: boolean;
+  leaving?: boolean;
+  waitMinutes: number;
 }
 
 @Component({
@@ -29,9 +31,10 @@ interface PatientAttente {
   animations: [
     trigger('slideOut', [
       transition(':leave', [
+        style({ opacity: 1, transform: 'translateY(0)', overflow: 'hidden' }),
         animate('400ms ease-in', style({
           opacity: 0,
-          transform: 'translateY(-20px)',
+          transform: 'translateY(-30px)',
           height: '0px',
           padding: '0px'
         }))
@@ -40,6 +43,7 @@ interface PatientAttente {
   ]
 })
 export class FileAttente implements OnInit, OnDestroy {
+
   patients: PatientAttente[] = [];
   private pollInterval: any;
 
@@ -52,25 +56,21 @@ export class FileAttente implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadFile();
-    this.pollInterval = setInterval(() => this.loadFile(), 30000);
+
+    // refresh every 30s
+    this.pollInterval = setInterval(() => this.checkForUpdates(), 30000);
   }
 
   ngOnDestroy(): void {
     clearInterval(this.pollInterval);
   }
 
-  formatTemps(minutes: number): string {
-    if (minutes <= 0) return 'Immédiat';
-    if (minutes < 60) return `${minutes} min`;
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return m > 0 ? `${h}h ${m}min` : `${h}h`;
-  }
-
+  // =========================
+  // LOAD INITIAL DATA
+  // =========================
   loadFile(): void {
     this.fileAttenteService.getFileDuJourAvecDetails().subscribe({
       next: (rdvs: RDV[]) => {
-        console.log('RDVs:', rdvs.map((r) => ({ id: r.id, statutConsultation: r.statutConsultation })));
 
         this.patients = rdvs.map((rdv) => ({
           id: rdv.id!,
@@ -83,12 +83,13 @@ export class FileAttente implements OnInit, OnDestroy {
           tempsNegatif: false,
           statut: this.formatStatut(rdv.statutConsultation as string),
           checkIn: rdv.checkIn ?? false,
+          leaving: false,
+          waitMinutes: 0,
         }));
 
         this.cdr.detectChanges();
 
         rdvs.forEach((rdv, i) => {
-          // Fetch missing patient name from MS1
           if (!rdv.patient && rdv.idPatient) {
             this.http
               .get<PatientResponse>(`http://localhost:8082/api/patients/${rdv.idPatient}`)
@@ -96,26 +97,95 @@ export class FileAttente implements OnInit, OnDestroy {
                 next: (p) => {
                   this.patients[i].nom = `${p.prenom} ${p.nom}`;
                   this.cdr.detectChanges();
-                },
-                error: () => {},
+                }
               });
           }
 
-          // Fetch wait time
-          this.fileAttenteService.getWaitTime(rdv.id!).subscribe({
-            next: (minutes: number) => {
-              this.patients[i].tempsAttente = this.formatTemps(minutes);
-              this.patients[i].tempsNegatif = minutes <= 0;
-              this.cdr.detectChanges();
-            },
-            error: () => {
-              this.patients[i].tempsAttente = '--';
-            },
-          });
+          this.fetchAndStartCountdown(rdv.id!, i);
         });
       },
       error: (err) => console.error('Erreur chargement file attente:', err),
     });
+  }
+
+  // =========================
+  // POLLING UPDATE
+  // =========================
+  checkForUpdates(): void {
+    this.fileAttenteService.getFileDuJourAvecDetails().subscribe({
+      next: (rdvs: RDV[]) => {
+
+        const newIds = new Set(rdvs.map(r => r.id!));
+
+        // remove finished patients
+        this.patients.forEach(p => {
+          if (!newIds.has(p.id) && !p.leaving) {
+            p.leaving = true;
+
+            setTimeout(() => {
+              this.patients = this.patients.filter(x => x.id !== p.id);
+              this.cdr.detectChanges();
+            }, 400);
+          }
+        });
+
+        // update existing patients
+        rdvs.forEach(rdv => {
+          const existing = this.patients.find(p => p.id === rdv.id);
+
+          if (existing) {
+            existing.statut = this.formatStatut(rdv.statutConsultation as string);
+            existing.checkIn = rdv.checkIn ?? false;
+
+            const index = this.patients.findIndex(p => p.id === rdv.id);
+            if (index !== -1) {
+              this.fetchAndStartCountdown(rdv.id!, index);
+            }
+          }
+        });
+
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Erreur poll:', err),
+    });
+  }
+
+  // =========================
+  // BACKEND WAIT TIME ONLY
+  // =========================
+  fetchAndStartCountdown(rdvId: number, index: number): void {
+
+    this.fileAttenteService.getWaitTime(rdvId).subscribe({
+      next: (minutes: number) => {
+
+        const patient = this.patients[index];
+        if (!patient) return;
+
+        patient.waitMinutes = minutes;
+        patient.tempsAttente = this.formatTemps(minutes);
+        patient.tempsNegatif = minutes <= 0;
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        if (this.patients[index]) {
+          this.patients[index].tempsAttente = '--';
+        }
+      },
+    });
+  }
+
+  // =========================
+  // FORMAT HELPERS
+  // =========================
+  formatTemps(minutes: number): string {
+    if (minutes <= 0) return 'Immédiat';
+    if (minutes < 60) return `${minutes} min`;
+
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+
+    return m > 0 ? `${h}h ${m}min` : `${h}h`;
   }
 
   formatStatut(statut: string | undefined): string {
@@ -127,20 +197,16 @@ export class FileAttente implements OnInit, OnDestroy {
     }
   }
 
-  voirDossier(patient: PatientAttente) {
+  // =========================
+  // NAVIGATION
+  // =========================
+  voirDossier(patient: PatientAttente): void {
     this.router.navigate(['/gerer-dossier', patient.idPatient], {
       queryParams: { rdvId: patient.id, source: 'fileAttente' },
     });
   }
 
-  toggleCheckIn(patient: PatientAttente): void {
-    this.fileAttenteService.checkIn(patient.id).subscribe({
-      next: () => {
-        patient.checkIn = true;
-        patient.statut = 'En attente';
-        this.cdr.detectChanges();
-      },
-      error: (err) => console.error('Erreur check-in:', err),
-    });
+  trackById(index: number, patient: PatientAttente): number {
+    return patient.id;
   }
 }

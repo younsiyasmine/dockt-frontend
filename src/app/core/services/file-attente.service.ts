@@ -4,11 +4,13 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { RDV } from '../models/models'; // ← import from models
 
+
 @Injectable({ providedIn: 'root' })
 export class FileAttenteService {
   private url = `${environment.apiUrl}/file-attente`;
 
   constructor(private http: HttpClient) {}
+
 
   getFileDuJour(): Observable<RDV[]> {
     return this.http.get<RDV[]>(`${this.url}/today`);

@@ -29,8 +29,9 @@
 
         <!-- Body -->
         <tbody>
-        <tr *ngFor="let patient of patients"
+        <tr *ngFor="let patient of patients; trackBy: trackById"
             [@slideOut]
+            [class.opacity-50]="patient.leaving"
             class="border-b border-gray-50 hover:bg-green-50 transition">
 
           <!-- Patient -->
@@ -47,9 +48,15 @@
           </td>
 
           <!-- Temps attente -->
+          <!-- Temps attente -->
           <td class="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
-            <span class="text-xs sm:text-sm font-medium"
-                  [ngClass]="patient.tempsNegatif ? 'text-green-600' : 'text-orange-600'">
+            <span
+              class="text-xs sm:text-sm font-medium"
+              [ngClass]="{
+                  'text-green-600': patient.tempsNegatif,
+                  'text-orange-600': !patient.tempsNegatif
+              }"
+              title="Temps estimé fourni par le système">
               {{ patient.tempsAttente }}
             </span>
           </td>
