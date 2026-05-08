@@ -172,14 +172,13 @@ export class MesRendezvousComponent implements OnInit {
   confirmCancel(): void {
     if (!this.selectedRdv?.id) return;
 
-    // FIX 3: no libererCreneau() needed — ANNULE status already frees the slot
-    // because creerRDV() only blocks on CONFIRME status
-    this.rdvService.mettreAJourStatut(this.selectedRdv.id, StatutRDV.ANNULE).subscribe({
+    // ✅ Appelle DELETE /supprimer/{id} → supprimerRDV() → notif ANNULATION_RDV
+    this.rdvService.supprimerRDV(this.selectedRdv.id).subscribe({
       next: () => {
-        this.rendezVousList = this.rendezVousList.map((r) =>
-          r.id === this.selectedRdv!.id ? { ...r, statutRdv: StatutRDV.ANNULE } : r,
+        this.rendezVousList = this.rendezVousList.filter(
+          (r) => r.id !== this.selectedRdv!.id
         );
-        this.trierParDateAsc(); // FIX 4: re-sort after mutation
+        this.trierParDateAsc();
 
         this.showCancelModal = false;
         this.selectedRdv = null;
@@ -199,7 +198,6 @@ export class MesRendezvousComponent implements OnInit {
       },
     });
   }
-
   getStatusClass(statut: string | undefined): string {
     switch (statut) {
       case StatutRDV.CONFIRME:
