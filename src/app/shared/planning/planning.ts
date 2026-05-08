@@ -36,8 +36,6 @@ export class Planning implements OnInit {
   currentDate: Date = new Date();
   daysOfWeek: any[] = [];
   hours = [
-    '8:00',
-    '8:30',
     '9:00',
     '9:30',
     '10:00',
