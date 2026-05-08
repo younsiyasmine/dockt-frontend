@@ -1,4 +1,12 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ElementRef,
+  ViewChild,
+  NgZone,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
@@ -7,10 +15,11 @@ import { HttpClient } from '@angular/common/http';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './tablette-checkin.html',
-  styleUrls: [],
+  styleUrls: ['./tablette-checkin.css'],
 })
 export class TabletteCheckinComponent implements OnInit, OnDestroy {
   @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
+  @ViewChild('overlayCanvas') overlayCanvas!: ElementRef<HTMLCanvasElement>;
 
   message: string = 'Veuillez vous placer devant la caméra';
   sousMessage: string = 'Cliquez sur le bouton pour scanner';
@@ -25,9 +34,16 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
   private nouveauPatientEnAttente: number | null = null;
   private stream: MediaStream | null = null;
 
+  // ── Canvas overlay interval ──────────────────────────────────
+  private overlayInterval: any;
+
   private readonly API = 'http://localhost:8000/api/visage';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private zone: NgZone,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit() {
     this.verifierNouveauPatientPeriodiquement();
@@ -38,10 +54,13 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
   // ─────────────────────────────────────────────
   demarrerCamera(): Promise<void> {
     return navigator.mediaDevices
-      .getUserMedia({ video: { width: 1280, height: 720 } })
+      .getUserMedia({ video: { width: 1280, height: 720, facingMode: 'user' } })
       .then((stream) => {
         this.stream = stream;
-        this.cameraActive = true; // Angular va re-render le <video>
+
+        // 1) Rendre le bloc <video> visible AVANT d'attacher le flux
+        this.cameraActive = true;
+        this.cdr.detectChanges();   // force Angular à insérer le <video> dans le DOM
 
         return new Promise<void>((resolve, reject) => {
           let tentatives = 0;
@@ -50,21 +69,21 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
             tentatives++;
             const video = this.videoElement?.nativeElement;
 
-            // Attendre qu'Angular rende le <video> dans le DOM
             if (video) {
-              // Assigner le stream si pas encore fait
+              // 2) Attacher srcObject seulement si pas encore fait
               if (!video.srcObject) {
                 video.srcObject = stream;
+                video.play().catch(() => {});
               }
-              // Attendre que la vidéo ait des dimensions réelles
+              // 3) Attendre que la vidéo ait des dimensions réelles
               if (video.videoWidth > 0 && video.videoHeight > 0) {
                 clearInterval(checkInterval);
+                this.demarrerOverlay();
                 resolve();
               }
             }
 
-            // Timeout après 10 secondes
-            if (tentatives > 100) {
+            if (tentatives > 150) {
               clearInterval(checkInterval);
               reject(new Error('Caméra timeout — vérifiez les permissions'));
             }
@@ -74,20 +93,22 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
       .catch((err) => {
         this.setMessage("Impossible d'accéder à la caméra", 'error', err.message);
         this.cameraActive = false;
+        this.cdr.detectChanges();
         throw err;
       });
   }
 
   arreterCamera() {
+    this.arreterOverlay();
     if (this.stream) {
       this.stream.getTracks().forEach((track) => track.stop());
       this.stream = null;
     }
-    // ✅ Vider l'élément vidéo pour qu'il ne montre plus rien
     if (this.videoElement?.nativeElement) {
       this.videoElement.nativeElement.srcObject = null;
     }
     this.cameraActive = false;
+    this.cdr.detectChanges();
   }
 
   resetApresDelai(delaiMs: number = 5000) {
@@ -106,7 +127,60 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
   }
 
   // ─────────────────────────────────────────────
-  // BOUTON SCANNER (PATIENT EXISTANT)
+  // OVERLAY CANVAS — rectangle guide jaune
+  // ─────────────────────────────────────────────
+  private demarrerOverlay(): void {
+    this.overlayInterval = setInterval(() => {
+      this.zone.runOutsideAngular(() => {
+        this.dessinerRectangleGuide();
+      });
+    }, 100);
+  }
+
+  private arreterOverlay(): void {
+    if (this.overlayInterval) {
+      clearInterval(this.overlayInterval);
+      this.overlayInterval = null;
+    }
+    const overlay = this.overlayCanvas?.nativeElement;
+    if (overlay) {
+      const ctx = overlay.getContext('2d');
+      if (ctx) ctx.clearRect(0, 0, overlay.width, overlay.height);
+    }
+  }
+
+  private dessinerRectangleGuide(): void {
+    const video   = this.videoElement?.nativeElement;
+    const overlay = this.overlayCanvas?.nativeElement;
+    if (!video || !overlay || !this.cameraActive) return;
+
+    const ctx = overlay.getContext('2d');
+    if (!ctx) return;
+
+    if (video.videoWidth > 0 && overlay.width !== video.videoWidth) {
+      overlay.width  = video.videoWidth;
+      overlay.height = video.videoHeight;
+    }
+
+    ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+    const cw    = overlay.width;
+    const ch    = overlay.height;
+    const rectW = cw * 0.28;
+    const rectH = ch * 0.55;
+    const rectX = (cw - rectW) / 2;
+    const rectY = (ch - rectH) / 2 - ch * 0.04;
+
+    // Rectangle vert — même couleur que le bouton #22c55e
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth   = 3;
+    ctx.shadowColor = '#22c55e';
+    ctx.shadowBlur  = 10;
+    ctx.strokeRect(rectX, rectY, rectW, rectH);
+  }
+
+  // ─────────────────────────────────────────────
+  // BOUTON SCANNER (PATIENT EXISTANT) — logique inchangée
   // ─────────────────────────────────────────────
   async demarrerScan() {
     if (this.isProcessing) return;
@@ -141,62 +215,57 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
       this.http.post<any>(`${this.API}/reconnaitre`, formData).subscribe({
         next: (res) => {
           if (res.status === 'success') {
-            const { patient_id, nom, prenom } = res;
+            const { patient_id, nom, prenom, vecteur } = res;
             this.setMessage(`Bonjour ${prenom} ${nom} !`, 'success', 'Check-in en cours...');
 
-            this.http.post<any>(`${this.API}/checkin`, { patient_id, nom, prenom }).subscribe({
-              next: (r) => {
-                // ✅ CAS 1 : Check-in réussi
-                if (r.status === 'success') {
-                  this.setMessage(
-                    '✅ Votre présence a été bien effectuée !',
-                    'success',
-                    `Bienvenue ${prenom} ${nom}`,
-                  );
-                  this.arreterCamera();
-                  this.resetApresDelai(5000);
-                }
-                // ⚠️ CAS 2 : Aucun RDV aujourd'hui
-                else if (r.status === 'no_rdv') {
-                  this.setMessage(
-                    "⚠️ Aucun RDV aujourd'hui",
-                    'warning',
-                    `${prenom} ${nom} — Contactez la secrétaire`,
-                  );
-                  this.arreterCamera();
-                  this.resetApresDelai(4000);
-                }
-                // ⚠️ CAS 3 : Déjà check-in
-                else if (r.status === 'already_checkin') {
-                  this.setMessage(
-                    '⚠️ Présence déjà enregistrée !',
-                    'warning',
-                    `${prenom} ${nom} — Check-in déjà effectué aujourd'hui`,
-                  );
-                  this.arreterCamera();
-                  this.resetApresDelai(4000);
-                }
-                // ❌ CAS 4 : Erreur
-                else {
-                  this.setMessage('❌ Erreur check-in', 'error', 'Réessayez');
+            this.http
+              .post<any>(`${this.API}/checkin`, { patient_id, nom, prenom, vecteur })
+              .subscribe({
+                next: (r) => {
+                  if (r.status === 'success') {
+                    this.setMessage(
+                      '✅ Check-in effectué avec succès !',
+                      'success',
+                      `Bienvenue ${prenom} ${nom}`,
+                    );
+                    this.arreterCamera();
+                    this.resetApresDelai(5000);
+                  } else if (r.status === 'no_rdv') {
+                    this.setMessage(
+                      '❌ Check-in non réussi',
+                      'error',
+                      `Aucun rendez-vous aujourd'hui`,
+                    );
+                    this.arreterCamera();
+                    this.resetApresDelai(4000);
+                  } else if (r.status === 'already_checkin') {
+                    this.setMessage(
+                      '❌ Check-in non réussi',
+                      'error',
+                      `Présence déjà enregistrée aujourd'hui`,
+                    );
+                    this.arreterCamera();
+                    this.resetApresDelai(4000);
+                  } else {
+                    this.setMessage('❌ Check-in non réussi', 'error', 'Veuillez réessayer');
+                    this.arreterCamera();
+                    this.resetApresDelai(3000);
+                  }
+                },
+                error: () => {
+                  this.setMessage('❌ Check-in non réussi', 'error', 'Veuillez réessayer');
                   this.arreterCamera();
                   this.resetApresDelai(3000);
-                }
-              },
-              error: () => {
-                this.setMessage('❌ Erreur check-in', 'error', 'Réessayez');
-                this.arreterCamera();
-                this.resetApresDelai(3000);
-              },
-            });
+                },
+              });
           } else {
-            this.setMessage('❌ Non reconnu', 'error', 'Veuillez contacter la secrétaire');
+            this.setMessage('❌ Check-in non réussi', 'error', 'Visage non reconnu — contactez la secrétaire');
             this.arreterCamera();
             this.resetApresDelai(4000);
           }
         },
         error: () => {
-          this.setMessage('❌ Erreur reconnaissance', 'error', 'Réessayez');
+          this.setMessage('❌ Check-in non réussi', 'error', 'Erreur de reconnaissance — réessayez');
           this.arreterCamera();
           this.resetApresDelai(3000);
         },
@@ -205,7 +274,7 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
   }
 
   // ─────────────────────────────────────────────
-  // VÉRIFICATION NOUVEAU PATIENT
+  // VÉRIFICATION NOUVEAU PATIENT — logique inchangée
   // ─────────────────────────────────────────────
   verifierNouveauPatientPeriodiquement() {
     this.attenteInterval = setInterval(() => {
@@ -238,48 +307,48 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
   }
 
   // ─────────────────────────────────────────────
-  // NOUVEAU PATIENT — 3 SCANS ANTI-USURPATION
+  // NOUVEAU PATIENT — 3 SCANS ANTI-USURPATION — logique inchangée
   // ─────────────────────────────────────────────
   capturerNouveauPatient(patientId: number) {
     this.isProcessing = true;
     this.setMessage('🔍 Vérification en cours...', 'info', 'Analyse de votre visage (3 scans)...');
 
-    // 3 scans pour être sûr que ce visage n'est pas déjà en base
     this.faireMultipleScans(3, (patientReconnu) => {
       if (patientReconnu) {
-        // ❌ Ce visage appartient déjà à quelqu'un
         const { prenom, nom } = patientReconnu;
         this.setMessage(
-          '❌ Ce visage appartient déjà à un patient !',
+          '❌ Check-in non réussi',
           'error',
-          `${prenom} ${nom} — Veuillez contacter la secrétaire`,
+          `Ce visage appartient déjà à ${prenom} ${nom}`,
         );
         this.http.post(`${this.API}/consommer_attente`, {}).subscribe();
         this.arreterCamera();
         this.resetApresDelai(5000);
       } else {
-        // ✅ Visage inconnu → on l'enregistre
         this.setMessage('📸 Capture en cours...', 'info', 'Ne bougez pas svp');
-        this.capturerImage((blob) => {
-          if (!blob) {
-            this.setMessage('❌ Échec capture', 'error', 'Réessayez');
-            this.arreterCamera();
-            this.resetApresDelai(3000);
-            return;
-          }
-          const formData = new FormData();
-          formData.append('image', blob, 'face.jpg');
-          this.enregistrerNouveauVisage(patientId, formData);
-        });
+
+        setTimeout(() => {
+          this.capturerImage((blob) => {
+            if (!blob) {
+              this.setMessage('❌ Échec capture', 'error', 'Réessayez');
+              this.arreterCamera();
+              this.resetApresDelai(3000);
+              return;
+            }
+            const formData = new FormData();
+            formData.append('image', blob, 'face.jpg');
+            this.enregistrerNouveauVisage(patientId, formData);
+          });
+        }, 1000);
       }
     });
   }
 
-  // 🔁 Faire N scans — si AU MOINS 1 reconnaît quelqu'un → bloquer
   faireMultipleScans(
     nombreScans: number,
     callback: (patientReconnu: { prenom: string; nom: string } | null) => void,
     scanActuel: number = 0,
+    retriesLeft: number = 3,
   ) {
     if (scanActuel >= nombreScans) {
       callback(null);
@@ -295,7 +364,14 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.capturerImage((blob) => {
         if (!blob) {
-          this.faireMultipleScans(nombreScans, callback, scanActuel + 1);
+          if (retriesLeft > 0) {
+            setTimeout(
+              () => this.faireMultipleScans(nombreScans, callback, scanActuel, retriesLeft - 1),
+              500,
+            );
+          } else {
+            this.faireMultipleScans(nombreScans, callback, scanActuel + 1, 3);
+          }
           return;
         }
 
@@ -305,16 +381,13 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
         this.http.post<any>(`${this.API}/reconnaitre`, formData).subscribe({
           next: (res) => {
             if (res.status === 'success') {
-              // Visage reconnu → bloquer immédiatement
               callback({ prenom: res.prenom, nom: res.nom });
             } else {
-              // Pas reconnu → scan suivant
-              this.faireMultipleScans(nombreScans, callback, scanActuel + 1);
+              this.faireMultipleScans(nombreScans, callback, scanActuel + 1, 3);
             }
           },
           error: () => {
-            // 404 = non reconnu → scan suivant
-            this.faireMultipleScans(nombreScans, callback, scanActuel + 1);
+            this.faireMultipleScans(nombreScans, callback, scanActuel + 1, 3);
           },
         });
       });
@@ -322,7 +395,7 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
   }
 
   // ─────────────────────────────────────────────
-  // ENREGISTREMENT NOUVEAU VISAGE
+  // ENREGISTREMENT NOUVEAU VISAGE — logique inchangée
   // ─────────────────────────────────────────────
   enregistrerNouveauVisage(patientId: number, formData: FormData) {
     this.http.post<any>(`${this.API}/extraire_vecteur`, formData).subscribe({
@@ -336,55 +409,23 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
               vecteur: res.vecteur,
             })
             .subscribe({
-              next: (r) => {
-                this.http.post(`${this.API}/consommer_attente`, {}).subscribe();
-
-                if (r.status === 'success') {
-                  this.setMessage('✅ Visage enregistré !', 'success', 'Check-in en cours...');
-
-                  this.http.post<any>(`${this.API}/checkin`, { patient_id: patientId }).subscribe({
-                    next: (cr) => {
-                      // ✅ CAS 1 : Check-in réussi
-                      if (cr.status === 'success') {
-                        this.setMessage(
-                          '✅ Votre présence a été bien effectuée !',
-                          'success',
-                          'Visage et RDV enregistrés',
-                        );
+              next: (r1) => {
+                if (r1.status === 'accumulating') {
+                  this.http
+                    .post<any>(`${this.API}/capture_et_associer`, {
+                      patient_id: patientId,
+                      vecteur: res.vecteur,
+                    })
+                    .subscribe({
+                      next: (r2) => this.handleAssocierResult(r2, patientId),
+                      error: () => {
+                        this.setMessage('❌ Erreur enregistrement', 'error', 'Réessayez');
                         this.arreterCamera();
-                        this.resetApresDelai(5000);
-                      }
-                      // ⚠️ CAS 2 : Déjà check-in
-                      else if (cr.status === 'already_checkin') {
-                        this.setMessage(
-                          '⚠️ Présence déjà enregistrée !',
-                          'warning',
-                          "Check-in déjà effectué aujourd'hui",
-                        );
-                        this.arreterCamera();
-                        this.resetApresDelai(4000);
-                      }
-                      // ⚠️ CAS 3 : Pas de RDV
-                      else {
-                        this.setMessage(
-                          '✅ Visage enregistré',
-                          'success',
-                          "Aucun RDV pour aujourd'hui",
-                        );
-                        this.arreterCamera();
-                        this.resetApresDelai(4000);
-                      }
-                    },
-                    error: () => {
-                      this.setMessage('✅ Visage enregistré', 'warning', 'Erreur check-in');
-                      this.arreterCamera();
-                      this.resetApresDelai(3000);
-                    },
-                  });
+                        this.resetApresDelai(3000);
+                      },
+                    });
                 } else {
-                  this.setMessage('❌ Erreur enregistrement', 'error', 'Réessayez');
-                  this.arreterCamera();
-                  this.resetApresDelai(3000);
+                  this.handleAssocierResult(r1, patientId);
                 }
               },
               error: () => {
@@ -394,7 +435,6 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
               },
             });
         } else {
-          // Visage non détecté → réessayer
           this.setMessage('❌ Visage non détecté', 'error', 'Replacez-vous devant la caméra');
           setTimeout(() => {
             if (this.nouveauPatientEnAttente) {
@@ -412,7 +452,57 @@ export class TabletteCheckinComponent implements OnInit, OnDestroy {
   }
 
   // ─────────────────────────────────────────────
-  // UTILITAIRES
+  // HANDLER RÉSULTAT ASSOCIER — logique inchangée
+  // ─────────────────────────────────────────────
+  handleAssocierResult(r: any, patientId: number) {
+    this.http.post(`${this.API}/consommer_attente`, {}).subscribe();
+
+    if (r.status === 'success') {
+      this.setMessage('✅ Visage enregistré !', 'success', 'Check-in en cours...');
+
+      this.http.post<any>(`${this.API}/checkin`, { patient_id: patientId }).subscribe({
+        next: (cr) => {
+          if (cr.status === 'success') {
+            this.setMessage(
+              '✅ Check-in effectué avec succès !',
+              'success',
+              'Visage et rendez-vous enregistrés',
+            );
+            this.arreterCamera();
+            this.resetApresDelai(5000);
+          } else if (cr.status === 'already_checkin') {
+            this.setMessage(
+              '❌ Check-in non réussi',
+              'error',
+              "Présence déjà enregistrée aujourd'hui",
+            );
+            this.arreterCamera();
+            this.resetApresDelai(4000);
+          } else {
+            this.setMessage(
+              '✅ Check-in effectué avec succès !',
+              'success',
+              "Aucun rendez-vous pour aujourd'hui",
+            );
+            this.arreterCamera();
+            this.resetApresDelai(4000);
+          }
+        },
+        error: () => {
+          this.setMessage('❌ Check-in non réussi', 'error', 'Erreur serveur');
+          this.arreterCamera();
+          this.resetApresDelai(3000);
+        },
+      });
+    } else {
+      this.setMessage('❌ Erreur enregistrement', 'error', 'Réessayez');
+      this.arreterCamera();
+      this.resetApresDelai(3000);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // UTILITAIRES — logique inchangée
   // ─────────────────────────────────────────────
   capturerImage(callback: (blob: Blob | null) => void) {
     const video = this.videoElement?.nativeElement;

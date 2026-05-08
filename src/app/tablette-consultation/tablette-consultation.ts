@@ -10,16 +10,16 @@ import {
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
-// Trois états UI possibles :
+// Quatre états UI possibles :
 // - 'attente'      : bouton visible, caméra inactive
 // - 'scanning'     : caméra active, détection en cours
-// - 'succes'       : résultat positif (début ou fin OK)
+// - 'succes'       : résultat positif (début, fin OK, ou déjà terminé)
 // - 'non_reconnu'  : patient non reconnu / pas son tour / pas de check-in
 type EtatUI = 'attente' | 'scanning' | 'succes' | 'non_reconnu';
 
 interface ResultatFlask {
-  status:          string;  // success | no_face | inconnu | patient_non_reconnu | error
-  action?:         string;  // "debut" | "fin"
+  status:          string;  // success | no_face | inconnu | patient_non_reconnu | deja_termine | erreur_statut | error
+  action?:         string;  // "debut" | "fin" | "deja_termine"
   message?:        string;
   patient_id?:     string;
   nom?:            string;
@@ -259,12 +259,16 @@ export class TabletteConsultationComponent implements OnDestroy, AfterViewInit {
       // Début ou fin de consultation réussie
       this.etat    = 'succes';
       this.message = res.message || '';
+
+    } else if (res.status === 'deja_termine') {
+      // Consultation déjà terminée — overlay vert avec message info
+      this.etat    = 'succes';
+      this.message = res.message || 'Votre consultation est déjà terminée. Bonne journée !';
+
     } else {
-      // patient_non_reconnu | inconnu | error | no_checkin | mauvais_patient
-      // → dans tous ces cas, on affiche "Patient non reconnu"
+      // patient_non_reconnu | inconnu | error | erreur_statut
       this.etat    = 'non_reconnu';
       this.message = 'Patient non reconnu.';
-      // On vide le nom pour ne pas l'afficher
       this.nomPatient    = '';
       this.prenomPatient = '';
     }
